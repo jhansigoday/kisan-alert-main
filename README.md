@@ -3,6 +3,7 @@
 KṛṣakaSevā (Kisan Alert) is an **AI-powered agricultural assistance platform** designed to help farmers make better decisions about crop selection, crop health, weather, market prices, profitability, and farming practices.
 
 The platform is designed with **accessibility in mind**, allowing farmers with smartphones to use the web application while also providing a **voice-based AI assistance system for farmers using basic phones**.
+
 Live Demo:https://kisan-pied.vercel.app/
 
 ## 🚜 Features
