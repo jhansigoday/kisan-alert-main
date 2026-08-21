@@ -1,6 +1,6 @@
 import os, json, shutil
 
-# 1. Patch api/farmer_profile.py (Vercel read-only crash)
+# 1. Patch api/farmer_profile.py (Vercel read-only filesystem crash)
 filepath = 'api/farmer_profile.py'
 if os.path.exists(filepath):
     with open(filepath, 'r', encoding='utf-8') as f:
@@ -40,7 +40,7 @@ if os.path.exists(filepath):
     with open(filepath, 'w', encoding='utf-8') as f:
         f.write(code)
 
-# 2. Patch script.js (Signout crash)
+# 2. Patch script.js (Signout freeze crash)
 filepath = 'script.js'
 if os.path.exists(filepath):
     with open(filepath, 'r', encoding='utf-8') as f:
@@ -60,7 +60,7 @@ if os.path.exists(filepath):
     with open(filepath, 'w', encoding='utf-8') as f:
         f.write(code)
 
-# 3. Patch api/index.py (Signup duplicate auto-login + Chatbot hi/which bug)
+# 3. Patch api/index.py (Signup duplicate auto-login + Chatbot hi/which/this bug)
 filepath = 'api/index.py'
 if os.path.exists(filepath):
     with open(filepath, 'r', encoding='utf-8') as f:
@@ -71,7 +71,7 @@ if os.path.exists(filepath):
     new_signup = '    existing_profile = get_profile(phone)\n    if existing_profile:\n        return jsonify(existing_profile), 200'
     code = code.replace(old_signup, new_signup)
 
-    # Fix greeting hi/which conflict in fallback matching
+    # Fix greeting hi/which/this conflict in fallback matching
     old_greeting = """    # Greetings fallbacks
     if "helo" in msg or "hello" in msg or "hi" in msg or "hey" in msg:
         return "Hello! I am KṛṣakaSevā AI. How can I help you today with your farming questions?" """
