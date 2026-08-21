@@ -447,7 +447,7 @@ def farmer_profile_create():
     # Check for duplicate profile
     existing_profile = get_profile(phone)
     if existing_profile:
-        return jsonify({"error": "Account already exists. Please Log In instead."}), 400
+        return jsonify(existing_profile), 200
         
     profile = create_or_update_profile(
         phone=phone,

@@ -1740,11 +1740,6 @@ document.getElementById("signOutBtn").addEventListener("click", () => {
     // Clear inputs in the login box
     document.getElementById("auth-phone-input").value = "";
     document.getElementById("auth-name-input").value = "";
-    document.getElementById("auth-state").value = "";
-    document.getElementById("auth-district").value = "";
-    document.getElementById("auth-mandal").value = "";
-    document.getElementById("auth-village").value = "";
-    document.getElementById("auth-pin").value = "";
     
     // Hide registration form if open
     document.getElementById("farmerRegistrationForm").style.display = "none";
