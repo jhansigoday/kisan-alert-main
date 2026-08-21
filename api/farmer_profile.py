@@ -42,6 +42,12 @@ def normalize_phone(phone):
         phone = phone[-10:]
     return phone
 
+def normalize_phone(phone):
+    phone = "".join(filter(str.isdigit, str(phone)))
+    if len(phone) > 10 and phone.startswith("91"):
+        phone = phone[-10:]
+    return phone
+
 def create_or_update_profile(phone: str, name: str = "", location: str = "",
                               land_size_acres: float = None, crop_type: str = "",
                               soil_type: str = "", irrigation_method: str = "",
