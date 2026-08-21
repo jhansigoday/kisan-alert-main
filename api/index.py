@@ -3,6 +3,12 @@ index.py — Flask app, route definitions (configured for Vercel)
 """
 
 import os
+
+def normalize_phone(phone):
+    phone = "".join(filter(str.isdigit, str(phone)))
+    if len(phone) > 10 and phone.startswith("91"):
+        phone = phone[-10:]
+    return phone
 import sys
 import uuid
 
