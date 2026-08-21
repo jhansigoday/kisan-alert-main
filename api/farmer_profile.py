@@ -1,71 +1,37 @@
-"""
-farmer_profile.py — simple farmer profiling ("Krishi Sakhi" style)
-Day 1/2 version: local JSON file storage. Swap for a real DB (SQLite/Postgres)
-if the team has time later.
-"""
-
 import os
 import json
+import urllib.request
 
-SOURCE_PATH = os.path.join(os.path.dirname(__file__), "farmer_profiles.json")
-PROFILE_PATH = "/tmp/farmer_profiles.json"
-
+BUCKET_URL = "https://kvdb.io/kisan_alert_f47fcdd7/profiles"
+LOCAL_PATH = os.path.join(os.path.dirname(__file__), "farmer_profiles.json")
 
 def _load_all():
-    if not os.path.exists(PROFILE_PATH):
-        import shutil
-        if os.path.exists(SOURCE_PATH):
-            try:
-                shutil.copy(SOURCE_PATH, PROFILE_PATH)
-            except Exception as e:
-                print("Failed to copy profiles to /tmp, fallback to loading directly:", e)
-                try:
-                    with open(SOURCE_PATH, "r", encoding="utf-8") as f:
-                        return json.load(f)
-                except Exception:
-                    return {}
-        else:
-            return {}
     try:
-        with open(PROFILE_PATH, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
+        req = urllib.request.Request(BUCKET_URL)
+        with urllib.request.urlopen(req, timeout=5) as r:
+            return json.loads(r.read().decode('utf-8'))
+    except Exception as e:
+        print("Cloud load failed, reading local:", e)
+        if os.path.exists(LOCAL_PATH):
+            try:
+                with open(LOCAL_PATH, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except Exception:
+                return {}
         return {}
 
-def _save_all(data: dict):
-    with open(PROFILE_PATH, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2)
-
-
-def translate_name_to_telugu(name: str) -> str:
-    """Uses Groq to phonetically translate the English name to Telugu script."""
-    if not name:
-        return ""
+def _save_all(profiles):
     try:
-        from groq import Groq
-        import os
-        import re
-        groq_key = os.environ.get("GROQ_API_KEY", "")
-        if groq_key:
-            client = Groq(api_key=groq_key)
-            res = client.chat.completions.create(
-                model="qwen/qwen3.6-27b",
-                messages=[
-                    {"role": "system", "content": "You are a translation assistant. Translate the following English name phonetically to Telugu script. Respond ONLY with the translated Telugu script name. No explanation, no punctuation, no other words."},
-                    {"role": "user", "content": name}
-                ],
-                max_tokens=500,
-                temperature=0.0
-            )
-            reply = res.choices[0].message.content.strip()
-            reply = re.sub(r"<think>.*?</think>", "", reply, flags=re.DOTALL)
-            if "<think>" in reply:
-                reply = reply.split("<think>")[0]
-            return reply.strip()
+        req = urllib.request.Request(
+            BUCKET_URL,
+            data=json.dumps(profiles).encode('utf-8'),
+            headers={"Content-Type": "application/json"},
+            method="POST"
+        )
+        with urllib.request.urlopen(req, timeout=5) as r:
+            pass
     except Exception as e:
-        print("Name translation failed:", e)
-    return name
-
+        print("Cloud save failed:", e)
 
 def create_or_update_profile(phone: str, name: str = "", location: str = "",
                               land_size_acres: float = None, crop_type: str = "",
