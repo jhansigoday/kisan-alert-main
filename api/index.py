@@ -200,7 +200,7 @@ def weather_alert():
 @app.route("/api/auth/login-no-otp", methods=["POST"])
 def login_no_otp():
     data = request.get_json(force=True) or {}
-    phone = data.get("phone", "").strip()
+    phone = normalize_phone(data.get("phone", "").strip())
     if not phone:
         return jsonify({"error": "Missing 'phone' field"}), 400
         
@@ -220,7 +220,7 @@ _active_otps = {}
 @app.route("/api/auth/send-otp", methods=["POST"])
 def send_otp():
     data = request.get_json(force=True) or {}
-    phone = data.get("phone", "").strip()
+    phone = normalize_phone(data.get("phone", "").strip())
     if not phone:
         return jsonify({"error": "Missing 'phone' field"}), 400
         
@@ -241,7 +241,7 @@ def send_otp():
 @app.route("/api/auth/verify-otp", methods=["POST"])
 def verify_otp():
     data = request.get_json(force=True) or {}
-    phone = data.get("phone", "").strip()
+    phone = normalize_phone(data.get("phone", "").strip())
     otp = data.get("otp", "").strip()
     if not phone or not otp:
         return jsonify({"error": "Missing 'phone' or 'otp' fields"}), 400
@@ -272,7 +272,7 @@ def verify_otp():
 @app.route("/api/sos/broadcast", methods=["POST"])
 def sos_broadcast():
     data = request.get_json(force=True) or {}
-    phone = data.get("phone", "").strip()
+    phone = normalize_phone(data.get("phone", "").strip())
     event_type = data.get("event_type", "General Emergency").strip()
     lat = data.get("latitude", "unknown")
     lon = data.get("longitude", "unknown")
@@ -315,7 +315,7 @@ def sos_broadcast():
 @app.route("/api/sos/call-farmer", methods=["POST"])
 def sos_call_farmer():
     data = request.get_json(force=True) or {}
-    phone = data.get("phone", "").strip()
+    phone = normalize_phone(data.get("phone", "").strip())
     if not phone:
         return jsonify({"error": "Missing 'phone' field"}), 400
 
@@ -403,7 +403,7 @@ def sos_web_step():
     data = request.get_json(force=True) or {}
     session_id = data.get("session_id") or "web_sos_session"
     digit = data.get("digit", "1")
-    phone = data.get("phone", "")
+    phone = normalize_phone(data.get("phone", ""))
     
     from sos_flow import get_sos_session, handle_sos_language_selection, handle_sos_disaster_selection
     session = get_sos_session(session_id)
@@ -684,7 +684,7 @@ def chat_query():
     data = request.get_json(force=True) or {}
     message = data.get("message", "").strip()
     history = data.get("history", [])
-    phone = data.get("phone", "").strip()
+    phone = normalize_phone(data.get("phone", "").strip())
 
     if not message:
         return jsonify({"error": "Missing 'message' field"}), 400
@@ -755,7 +755,7 @@ def chat_query():
 @app.route("/api/trigger-alerts", methods=["POST"])
 def trigger_alerts():
     data = request.get_json(force=True) or {}
-    phone = data.get("phone", "").strip()
+    phone = normalize_phone(data.get("phone", "").strip())
     if not phone:
         return jsonify({"error": "Missing 'phone' parameter"}), 400
         
@@ -811,7 +811,7 @@ def voice_advisory():
 @app.route("/api/ivr/trigger-outbound", methods=["POST"])
 def ivr_trigger_outbound():
     data = request.get_json(force=True) or {}
-    phone = data.get("phone", "").strip()
+    phone = normalize_phone(data.get("phone", "").strip())
     if not phone:
         return jsonify({"error": "Missing 'phone' field"}), 400
         

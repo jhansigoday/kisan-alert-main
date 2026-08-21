@@ -36,6 +36,12 @@ def _save_all(profiles):
     except Exception as e:
         print("Cloud save failed:", e)
 
+def normalize_phone(phone):
+    phone = "".join(filter(str.isdigit, str(phone)))
+    if len(phone) > 10 and phone.startswith("91"):
+        phone = phone[-10:]
+    return phone
+
 def create_or_update_profile(phone: str, name: str = "", location: str = "",
                               land_size_acres: float = None, crop_type: str = "",
                               soil_type: str = "", irrigation_method: str = "",
@@ -68,7 +74,7 @@ def create_or_update_profile(phone: str, name: str = "", location: str = "",
         "latitude": latitude if latitude is not None else profile.get("latitude", 14.4426),
         "longitude": longitude if longitude is not None else profile.get("longitude", 79.9865),
     })
-    profiles[phone] = profile
+    profiles[normalize_phone(phone)] = profile
     _save_all(profiles)
     return profile
 
@@ -79,7 +85,7 @@ def get_profile(phone: str) -> dict:
     if profile and profile.get("name") and not profile.get("name_telugu"):
         # Auto-translate for existing old database records
         profile["name_telugu"] = translate_name_to_telugu(profile["name"])
-        profiles[phone] = profile
+        profiles[normalize_phone(phone)] = profile
         _save_all(profiles)
     return profile
 
