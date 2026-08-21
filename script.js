@@ -1734,6 +1734,7 @@ document.getElementById("signOutBtn").addEventListener("click", () => {
     : "Are you sure you want to sign out from KṛṣakaSevā?";
   if (confirm(confirmMsg)) {
     localStorage.removeItem("krushakseva_phone");
+    localStorage.removeItem("krushakseva_profile");
     registeredFarmer = null;
     resetChecklist();
     
