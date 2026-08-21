@@ -5,16 +5,15 @@ import urllib.request
 BUCKET_URL = "https://kvdb.io/kisan_alert_f47fcdd7/profiles"
 LOCAL_PATH = os.path.join(os.path.dirname(__file__), "farmer_profiles.json")
 
-def translate_name_to_telugu(name):
-    return name
-
 def _load_all():
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
     try:
-        req = urllib.request.Request(BUCKET_URL)
+        req = urllib.request.Request(BUCKET_URL, headers=headers)
         with urllib.request.urlopen(req, timeout=5) as r:
             return json.loads(r.read().decode('utf-8'))
     except Exception as e:
-        print("Cloud load failed, reading local:", e)
+        import traceback
+        print("Cloud load failed, error:", traceback.format_exc())
         if os.path.exists(LOCAL_PATH):
             try:
                 with open(LOCAL_PATH, "r", encoding="utf-8") as f:
@@ -24,17 +23,22 @@ def _load_all():
         return {}
 
 def _save_all(profiles):
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Content-Type": "application/json"
+    }
     try:
         req = urllib.request.Request(
             BUCKET_URL,
             data=json.dumps(profiles).encode('utf-8'),
-            headers={"Content-Type": "application/json"},
+            headers=headers,
             method="POST"
         )
         with urllib.request.urlopen(req, timeout=5) as r:
             pass
     except Exception as e:
-        print("Cloud save failed:", e)
+        import traceback
+        print("Cloud save failed, error:", traceback.format_exc())
 
 def normalize_phone(phone):
     phone = "".join(filter(str.isdigit, str(phone)))
