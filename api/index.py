@@ -644,7 +644,7 @@ def get_local_fallback_response(message):
         return "For pest infestations, spray neem oil at 5ml per litre of water or use carbaryl at 2g per litre as a chemical alternative."
         
     # Question 4: Crop recommendation / profit
-    if "crop" in msg and ("grow" in msg or "profit" in msg or "better" in msg or "recommend" in msg or "labham" in msg):
+    if "crop" in msg and ("grow" in msg or "profit" in msg or "better" in msg or "recommend" in msg or "labham" in msg or "best" in msg or "suitable" in msg):
         return "Based on your black soil and irrigation, growing cotton, chilli, or groundnut offers high profit margins. Crop rotation is advised."
 
     # Question 5: Yellow leaves

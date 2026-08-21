@@ -60,14 +60,35 @@ if os.path.exists(filepath):
     with open(filepath, 'w', encoding='utf-8') as f:
         f.write(code)
 
-# 3. Patch api/index.py (Signup duplicate auto-login)
+# 3. Patch api/index.py (Signup duplicate auto-login + Chatbot hi/which bug)
 filepath = 'api/index.py'
 if os.path.exists(filepath):
     with open(filepath, 'r', encoding='utf-8') as f:
         code = f.read()
+    
+    # Enable signup duplicate auto-login
     old_signup = '    existing_profile = get_profile(phone)\n    if existing_profile:\n        return jsonify({"error": "Account already exists. Please Log In instead."}), 400'
     new_signup = '    existing_profile = get_profile(phone)\n    if existing_profile:\n        return jsonify(existing_profile), 200'
     code = code.replace(old_signup, new_signup)
+
+    # Fix greeting hi/which conflict in fallback matching
+    old_greeting = """    # Greetings fallbacks
+    if "helo" in msg or "hello" in msg or "hi" in msg or "hey" in msg:
+        return "Hello! I am KṛṣakaSevā AI. How can I help you today with your farming questions?" """
+    
+    new_greeting = """    # Greetings fallbacks
+    words = msg.split()
+    greetings = {"helo", "hello", "hi", "hey", "namaskaram"}
+    if any(w in greetings for w in words):
+        return "Hello! I am KṛṣakaSevā AI. How can I help you today with your farming questions?" """
+    
+    code = code.replace(old_greeting, new_greeting)
+
+    # Improve crop recommendation keywords (add best/suitable)
+    old_crop = """    if "crop" in msg and ("grow" in msg or "profit" in msg or "better" in msg or "recommend" in msg or "labham" in msg):"""
+    new_crop = """    if "crop" in msg and ("grow" in msg or "profit" in msg or "better" in msg or "recommend" in msg or "labham" in msg or "best" in msg or "suitable" in msg):"""
+    code = code.replace(old_crop, new_crop)
+
     with open(filepath, 'w', encoding='utf-8') as f:
         f.write(code)
 
