@@ -1,9 +1,3 @@
-flask
-flask-cors
-python-dotenv
-pillow
-gTTS
-requests
-groq
-anthropic
-twilio
+Flask==3.0.0
+groq==0.4.2
+requests==2.31.0
