@@ -7,15 +7,30 @@ if the team has time later.
 import os
 import json
 
-PROFILE_PATH = os.path.join(os.path.dirname(__file__), "farmer_profiles.json")
+SOURCE_PATH = os.path.join(os.path.dirname(__file__), "farmer_profiles.json")
+PROFILE_PATH = "/tmp/farmer_profiles.json"
 
 
-def _load_all() -> dict:
+def _load_all():
     if not os.path.exists(PROFILE_PATH):
+        import shutil
+        if os.path.exists(SOURCE_PATH):
+            try:
+                shutil.copy(SOURCE_PATH, PROFILE_PATH)
+            except Exception as e:
+                print("Failed to copy profiles to /tmp, fallback to loading directly:", e)
+                try:
+                    with open(SOURCE_PATH, "r", encoding="utf-8") as f:
+                        return json.load(f)
+                except Exception:
+                    return {}
+        else:
+            return {}
+    try:
+        with open(PROFILE_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
         return {}
-    with open(PROFILE_PATH, "r", encoding="utf-8") as f:
-        return json.load(f)
-
 
 def _save_all(data: dict):
     with open(PROFILE_PATH, "w", encoding="utf-8") as f:
