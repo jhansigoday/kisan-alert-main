@@ -1,0 +1,177 @@
+{
+  "9999999999": {
+    "phone": "9999999999",
+    "name": "Ravi",
+    "location": "Visakhapatnam",
+    "land_size_acres": 2.0,
+    "crop_type": "potato",
+    "soil_type": "alluvial",
+    "irrigation_method": "canal"
+  },
+  "99599999145": {
+    "phone": "99599999145",
+    "name": "Ravi",
+    "location": "srikakulam",
+    "land_size_acres": 3,
+    "crop_type": "rice",
+    "soil_type": "black",
+    "irrigation_method": "canal"
+  },
+  "0475827415": {
+    "phone": "0475827415",
+    "name": "",
+    "location": "unknown",
+    "land_size_acres": 5.0,
+    "crop_type": "wheat",
+    "soil_type": "black",
+    "irrigation_method": "adequate water"
+  },
+  "8150143019": {
+    "phone": "8150143019",
+    "name": "",
+    "location": "unknown",
+    "land_size_acres": 5.0,
+    "crop_type": "wheat",
+    "soil_type": "black",
+    "irrigation_method": "adequate water"
+  },
+  "+919515259020": {
+    "phone": "+919515259020",
+    "name": "",
+    "location": "unknown",
+    "land_size_acres": 5.0,
+    "crop_type": "wheat",
+    "soil_type": "black",
+    "irrigation_method": "adequate water"
+  },
+  "9012083075": {
+    "phone": "9012083075",
+    "name": "",
+    "location": "unknown",
+    "land_size_acres": null,
+    "crop_type": "rice",
+    "soil_type": "black",
+    "irrigation_method": ""
+  },
+  "+918247543026": {
+    "phone": "+918247543026",
+    "name": "Jhansi",
+    "location": "Visakhapatnam, Visakhapatnam Urban, Andhra Pradesh",
+    "land_size_acres": 3,
+    "crop_type": "wheat",
+    "soil_type": "alluvial",
+    "irrigation_method": "borewell",
+    "water_availability": "Medium",
+    "soil_ph": 6.5,
+    "latitude": 17.746740813897322,
+    "longitude": 83.25850212147681,
+    "name_telugu": "Jhansi"
+  },
+  "0307061330": {
+    "phone": "0307061330",
+    "name": "",
+    "location": "unknown",
+    "land_size_acres": null,
+    "crop_type": "wheat",
+    "soil_type": "alluvial",
+    "irrigation_method": ""
+  },
+  "2048909560": {
+    "phone": "2048909560",
+    "name": "",
+    "location": "unknown",
+    "land_size_acres": null,
+    "crop_type": "rice",
+    "soil_type": "alluvial",
+    "irrigation_method": ""
+  },
+  "8155512449": {
+    "phone": "8155512449",
+    "name": "",
+    "location": "unknown",
+    "land_size_acres": null,
+    "crop_type": "rice",
+    "soil_type": "black",
+    "irrigation_method": ""
+  },
+  "824754326": {
+    "phone": "824754326",
+    "name": "Jhansi",
+    "location": "Visakhapatnam, Visakhapatnam Urban, Andhra Pradesh",
+    "land_size_acres": 5,
+    "crop_type": "wheat",
+    "soil_type": "alluvial",
+    "irrigation_method": "borewell",
+    "water_availability": "Medium",
+    "soil_ph": 7,
+    "latitude": 17.74675129634632,
+    "longitude": 83.25847234833249
+  },
+  "9876543210": {
+    "phone": "9876543210",
+    "name": "Jhansi",
+    "location": "Guntur, Andhra Pradesh",
+    "land_size_acres": 1.0,
+    "crop_type": "Rice",
+    "soil_type": "Alluvial",
+    "irrigation_method": "borewell",
+    "water_availability": "Medium",
+    "soil_ph": 6.5,
+    "latitude": 16.3067,
+    "longitude": 80.4365
+  },
+  "72896523451": {
+    "phone": "72896523451",
+    "name": "Harry",
+    "location": "Visakhapatnam, Visakhapatnam Urban, Andhra Pradesh",
+    "land_size_acres": 1.0,
+    "crop_type": "Rice",
+    "soil_type": "Alluvial",
+    "irrigation_method": "borewell",
+    "water_availability": "Medium",
+    "soil_ph": 6.5,
+    "latitude": 17.74677045485576,
+    "longitude": 83.2585900812617
+  },
+  "+919247114869": {
+    "phone": "+919247114869",
+    "name": "Jhansi Goday",
+    "location": "Andhra Pradesh",
+    "land_size_acres": 1.0,
+    "crop_type": "Rice",
+    "soil_type": "Alluvial",
+    "irrigation_method": "borewell",
+    "water_availability": "Medium",
+    "soil_ph": 6.5,
+    "latitude": 17.746756407219504,
+    "longitude": 83.25850100055004
+  },
+  "+917777777777": {
+    "phone": "+917777777777",
+    "name": "Rama Rao",
+    "name_telugu": "\u0c30\u0c3e\u0c2e\u0c3e\u0c30\u0c3e\u0c35\u0c41",
+    "location": "Vijayawada, Andhra Pradesh",
+    "land_size_acres": 3.5,
+    "crop_type": "Maize",
+    "soil_type": "black",
+    "irrigation_method": "canal",
+    "water_availability": "High",
+    "soil_ph": 7.0,
+    "latitude": 16.5062,
+    "longitude": 80.648
+  },
+  "+918888888888": {
+    "phone": "+918888888888",
+    "name": "Rama Rao",
+    "name_telugu": "\u0c30\u0c3e\u0c2e\u0c3e\u0c30\u0c3e\u0c35\u0c41",
+    "location": "Vijayawada, Andhra Pradesh",
+    "land_size_acres": 3.5,
+    "crop_type": "Maize",
+    "soil_type": "black",
+    "irrigation_method": "canal",
+    "water_availability": "High",
+    "soil_ph": 7.0,
+    "latitude": 16.5062,
+    "longitude": 80.648
+  }
+}

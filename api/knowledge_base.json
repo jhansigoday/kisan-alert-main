@@ -1,0 +1,81 @@
+{
+  "issues": [
+    {
+      "id": "leaf_blight",
+      "crop": "rice",
+      "symptoms": "Brown lesions with yellow halos on leaves, spreading in wet weather",
+      "cause": "Fungal infection (Bacterial/Fungal leaf blight), worsened by excess nitrogen and standing water",
+      "remedy": "Improve field drainage, avoid excess nitrogen fertilizer, apply a copper-based fungicide spray if available, use resistant seed varieties next season"
+    },
+    {
+      "id": "powdery_mildew",
+      "crop": "chilli",
+      "symptoms": "White powdery coating on leaves, leaves curling and yellowing",
+      "cause": "Fungal infection favored by high humidity and poor air circulation",
+      "remedy": "Space plants for airflow, spray diluted neem oil solution weekly, remove and destroy heavily infected leaves"
+    },
+    {
+      "id": "yellowing_leaves",
+      "crop": "cotton",
+      "symptoms": "Uniform yellowing starting from older/lower leaves upward",
+      "cause": "Often nitrogen deficiency, sometimes overwatering leading to root stress",
+      "remedy": "Apply a balanced NPK or urea top-dressing in small doses, check soil isn't waterlogged, retest after 5-7 days"
+    },
+    {
+      "id": "aphid_infestation",
+      "crop": "vegetables (general)",
+      "symptoms": "Curled leaves, sticky residue, clusters of small insects on undersides of leaves",
+      "cause": "Aphid colonization, often worse in dry warm weather",
+      "remedy": "Spray a soap-water solution (mild dish soap + water) directly on aphids, introduce ladybird beetles if possible, avoid broad-spectrum pesticides that kill natural predators"
+    },
+    {
+      "id": "fruit_rot",
+      "crop": "tomato",
+      "symptoms": "Dark sunken spots on fruit, sometimes with concentric rings",
+      "cause": "Fungal infection (e.g., anthracnose), spread by water splash and high humidity",
+      "remedy": "Remove and destroy affected fruit, avoid overhead watering, apply a copper-based fungicide, mulch to reduce soil splash"
+    },
+    {
+      "id": "stunted_growth",
+      "crop": "maize",
+      "symptoms": "Plants shorter than expected for growth stage, pale green color",
+      "cause": "Often phosphorus deficiency or compacted soil restricting root growth",
+      "remedy": "Loosen soil around root zone, apply DAP or a phosphorus-rich fertilizer at recommended dose, ensure adequate but not excess watering"
+    },
+    {
+      "id": "wilting_despite_watering",
+      "crop": "brinjal",
+      "symptoms": "Plant wilts even though soil is moist, sometimes one-sided",
+      "cause": "Possible bacterial wilt or root damage from waterlogging/pests",
+      "remedy": "Check roots for rot or grubs, improve drainage, remove severely affected plants to prevent spread, avoid replanting brinjal in same soil next season"
+    },
+    {
+      "id": "leaf_curl_virus",
+      "crop": "chilli",
+      "symptoms": "Leaves curl upward and become leathery, stunted new growth",
+      "cause": "Viral infection transmitted by whiteflies",
+      "remedy": "Control whitefly population with yellow sticky traps or neem spray, remove infected plants, avoid planting near other virus-prone crops"
+    },
+    {
+      "id": "root_rot",
+      "crop": "groundnut",
+      "symptoms": "Plant yellows and collapses, roots appear dark and mushy when pulled",
+      "cause": "Fungal root rot from waterlogged or poorly drained soil",
+      "remedy": "Improve drainage immediately, avoid over-irrigation, apply a soil fungicide drench if available, rotate crops next season"
+    },
+    {
+      "id": "nutrient_burn",
+      "crop": "general",
+      "symptoms": "Leaf tips and edges turning brown/crispy shortly after fertilizing",
+      "cause": "Over-fertilization, especially with high-nitrogen chemical fertilizers",
+      "remedy": "Flush soil with plain water, halt fertilizer application for 1-2 weeks, resume at half the previous dose"
+    },
+    {
+      "id": "early_blight",
+      "crop": "potato",
+      "symptoms": "Dark concentric ring spots on older leaves, yellowing around spots",
+      "cause": "Fungal infection (Alternaria solani), worse in warm humid weather with plant stress",
+      "remedy": "Remove and destroy infected leaves, avoid overhead watering, apply a copper-based or mancozeb fungicide, rotate crops away from potato/tomato next season"
+    }
+  ]
+}

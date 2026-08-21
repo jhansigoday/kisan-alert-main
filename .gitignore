@@ -1,0 +1,19 @@
+# Environment variables
+backend/.env
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Virtual environment
+venv/
+.venv/
+
+# Uploaded/generated files
+backend/static/audio_replies/
+backend/temp_audio/
+backend/uploads/
+
+# Logs
+*.log

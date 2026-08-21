@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>कृषकसेवा (KṛṣakaSevā) — Premium AI-Powered Agricultural Platform</title>
+  
+  <!-- Modern Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- SIDEBAR NAVIGATION -->
+  <aside class="sidebar">
+    <div class="logo-area">
+      <span class="logo-icon"><i class="fa-solid fa-wheat-awn"></i></span>
+      <div class="logo-text">
+        <h2 id="logo-title-text" style="font-size: 18px; font-weight: 800; color: var(--primary);">कृषकसेवा</h2>
+        <span data-translate-key="app_subtitle" style="font-size: 11px; font-weight: 500; opacity: 0.95;">हे कृषक, सुखी भव।</span>
+      </div>
+    </div>
+    
+    <nav class="nav-menu">
+      <a href="#" class="nav-link active" data-tab="landing"><i class="fa-solid fa-house"></i> <span data-translate-key="nav_home">Home</span></a>
+      <a href="#" class="nav-link" data-tab="dashboard"><i class="fa-solid fa-chart-line"></i> <span data-translate-key="nav_dashboard">Dashboard</span></a>
+      <a href="#" class="nav-link" data-tab="advisor"><i class="fa-solid fa-seedling"></i> <span data-translate-key="nav_advisor">Crop Advisor</span></a>
+      <a href="#" class="nav-link" data-tab="market"><i class="fa-solid fa-store"></i> <span data-translate-key="nav_market">Mandi Market</span></a>
+      <a href="#" class="nav-link" data-tab="doctor"><i class="fa-solid fa-user-doctor"></i> <span data-translate-key="nav_doctor">Crop Doctor</span></a>
+      <a href="#" class="nav-link" data-tab="ivr"><i class="fa-solid fa-phone-volume"></i> <span data-translate-key="nav_ivr">IVR Helpline</span></a>
+      <a href="#" class="nav-link" data-tab="extension"><i class="fa-solid fa-hands-holding-circle"></i> <span data-translate-key="nav_extension">Services</span></a>
+      <a href="#" class="nav-link" data-tab="analytics"><i class="fa-solid fa-chart-pie"></i> <span data-translate-key="nav_analytics">Analytics</span></a>
+    </nav>
+    
+    <div class="sidebar-footer">
+      <div class="user-profile-badge">
+        <div class="avatar"><i class="fa-solid fa-user-gear"></i></div>
+        <div class="badge-info">
+          <h4 id="badge-name">Guest Farmer</h4>
+          <p id="badge-phone">Unregistered</p>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN WINDOW CONTAINER -->
+  <div class="main-container">
+    
+    <!-- TOP UTILITIES BAR -->
+    <header class="top-bar">
+      <div class="search-bar-mock">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" placeholder="Search farm inputs, advisories, weather..." readonly />
+      </div>
+      
+      <div class="actions-area">
+        <!-- Language Switch -->
+        <button id="langToggleBtn" class="utility-btn lang-btn">
+          <i class="fa-solid fa-language"></i> <span>తెలుగు (Telugu)</span>
+        </button>
+        
+        <!-- Theme Toggle -->
+        <button id="themeToggleBtn" class="utility-btn theme-btn">
+          <i class="fa-solid fa-moon"></i>
+        </button>
+        
+        <!-- Emergency SOS Trigger -->
+        <button id="emergencyBtn" class="utility-btn sos-btn">
+          <i class="fa-solid fa-circle-exclamation"></i> <span data-translate-key="btn_sos">SOS Help</span>
+        </button>
+
+        <!-- Sign Out Button -->
+        <button id="signOutBtn" class="utility-btn theme-btn" style="background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); color: #ef4444;" title="Sign Out">
+          <i class="fa-solid fa-right-from-bracket"></i>
+        </button>
+      </div>
+    </header>
+    
+    <!-- PAGES WRAPPER -->
+    <main class="page-content">
+      
+      <!-- 1. LANDING & REGISTRATION PORTAL -->
+      <section class="tab-panel active" id="panel-landing">
+        <div class="hero-card">
+          <div class="hero-info">
+            <span class="premium-badge"><i class="fa-solid fa-sparkles"></i> AI-Powered Agricultural Ecosystem</span>
+            <h1 data-translate-key="hero_title">Your AI Farming Companion</h1>
+            <p data-translate-key="hero_desc">Optimize yields, diagnose diseases in under 2 seconds, consult bilingual voice assistants, and get real-time mandi weather predictions customized for your fields.</p>
+            <div class="hero-actions">
+              <a href="#register" class="btn primary-btn" id="heroRegisterBtn" data-translate-key="btn_register">Get Registered Profile</a>
+              <a href="#demo" class="btn secondary-btn" id="heroDemoBtn" data-translate-key="btn_try_demo">Try Web Demo</a>
+            </div>
+          </div>
+          <div class="hero-visual">
+            <div class="visual-placeholder"><i class="fa-solid fa-microchip-awn"></i></div>
+          </div>
+        </div>
+        
+        <div class="features-grid">
+          <div class="feat-card">
+            <div class="feat-icon"><i class="fa-solid fa-microphone-lines"></i></div>
+            <h3 data-translate-key="feat_voice_title">Voice AI Assistant</h3>
+            <p data-translate-key="feat_voice_desc">Speak naturally in English or Telugu to receive crop advisory solutions.</p>
+          </div>
+          <div class="feat-card">
+            <div class="feat-icon"><i class="fa-solid fa-cloud-bolt"></i></div>
+            <h3 data-translate-key="feat_weather_title">Climate Warnings</h3>
+            <p data-translate-key="feat_weather_desc">Receive dry-spell hazards, rain forecasts, and cyclone warnings.</p>
+          </div>
+          <div class="feat-card">
+            <div class="feat-icon"><i class="fa-solid fa-notes-medical"></i></div>
+            <h3 data-translate-key="feat_doctor_title">Doctor Crop Diagnosis</h3>
+            <p data-translate-key="feat_doctor_desc">Upload leaf photos to identify infections and retrieve organic therapies.</p>
+          </div>
+        </div>
+        
+        <!-- REGISTRATION FORM SECTION -->
+        <div class="panel-section" id="register-section">
+          <div class="panel-header">
+            <h2 data-translate-key="reg_header">Farmer Registration Portal</h2>
+            <p data-translate-key="reg_hint">Setup your profile to customize weather warnings, mandi price alerts, and crop recommendation scores.</p>
+          </div>
+          
+          <!-- SECURE PHONE AUTHENTICATION PORTAL (NO OTP) -->
+          <div class="calculator-box" id="auth-portal-box" style="max-width: 480px; margin: 0 auto 24px auto; padding: 24px; border-radius: 12px; background: var(--bg-card); border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 16px;">
+            <h3 style="color: var(--primary); display: flex; align-items: center; gap: 8px; margin:0;"><i class="fa-solid fa-user-check"></i> <span data-translate-key="login_title">Farmer Login</span></h3>
+            <p data-translate-key="login_desc" style="font-size: 13px; color: var(--text-muted); margin:0;">Enter your registered mobile number to log in.</p>
+            
+            <div id="auth-form-fields">
+              <div class="field-row" style="margin-bottom: 12px;">
+                <label data-translate-key="lbl_phone_req">Mobile Number (Required)</label>
+                <input type="text" id="auth-phone-input" placeholder="e.g. +918247543026" data-translate-key="placeholder_phone" style="width: 100%;" required />
+              </div>
+
+              <button id="loginNoOtpBtn" class="btn primary-btn" style="width: 100%; margin-top: 8px;"><i class="fa-solid fa-right-to-bracket"></i> <span data-translate-key="btn_enter_dashboard">Enter Dashboard</span></button>
+              
+              <p style="font-size: 13px; text-align: center; margin: 12px 0 0 0; color: var(--text-muted);">
+                Don't have an account? <a href="#" id="toggle-to-signup" style="color: var(--primary); font-weight: 600; text-decoration: underline;">Sign Up / Register</a>
+              </p>
+            </div>
+          </div>
+
+          <form id="farmerRegistrationForm" class="modern-form" style="display: none;">
+            <div class="form-grid">
+              <!-- Personal Details -->
+              <div class="form-group-card">
+                <h3><i class="fa-solid fa-id-card"></i> Personal Details</h3>
+                <div class="field-row">
+                  <label data-translate-key="form_name">Full Name</label>
+                  <input type="text" id="reg-name" placeholder="Enter Full Name" data-translate-key="placeholder_name" required />
+                </div>
+                <div class="field-row">
+                  <label data-translate-key="form_phone">Mobile Number</label>
+                  <input type="text" id="reg-phone" placeholder="e.g. +918247543026" data-translate-key="placeholder_phone" required />
+                </div>
+                <div class="field-row-split">
+                  <div>
+                    <label data-translate-key="form_age">Age</label>
+                    <input type="number" id="reg-age" placeholder="Age" min="18" max="100" />
+                  </div>
+                  <div>
+                    <label data-translate-key="form_gender">Gender</label>
+                    <select id="reg-gender">
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Location Details -->
+              <div class="form-group-card">
+                <h3><i class="fa-solid fa-map-location-dot"></i> Farm Location</h3>
+                <button type="button" id="detectGpsBtn" class="inline-action-btn"><i class="fa-solid fa-location-crosshairs"></i> Auto-detect GPS</button>
+                <div class="field-row-split">
+                  <div>
+                    <label data-translate-key="form_state">State</label>
+                    <input type="text" id="reg-state" placeholder="State" required />
+                  </div>
+                  <div>
+                    <label data-translate-key="form_district">District</label>
+                    <input type="text" id="reg-district" placeholder="District" required />
+                  </div>
+                </div>
+                <div class="field-row-split">
+                  <div>
+                    <label data-translate-key="form_mandal">Mandal</label>
+                    <input type="text" id="reg-mandal" placeholder="Mandal" required />
+                  </div>
+                  <div>
+                    <label data-translate-key="form_village">Village</label>
+                    <input type="text" id="reg-village" placeholder="Village" required />
+                  </div>
+                </div>
+                <div class="field-row">
+                  <label data-translate-key="form_pin">PIN Code</label>
+                  <input type="text" id="reg-pin" placeholder="PIN Code" required />
+                </div>
+              </div>
+              
+              <!-- Farm Specifications -->
+              <div class="form-group-card">
+                <h3><i class="fa-solid fa-gauge"></i> Farm Specifications</h3>
+                <div class="field-row">
+                  <label data-translate-key="form_acres">Land Size (Acres)</label>
+                  <input type="number" id="reg-acres" step="0.1" placeholder="e.g. 4.5" required />
+                </div>
+                <div class="field-row">
+                  <label data-translate-key="form_soil">Soil Type</label>
+                  <select id="reg-soil">
+                    <option value="alluvial">Alluvial</option>
+                    <option value="black">Black</option>
+                    <option value="red">Red</option>
+                    <option value="laterite">Laterite</option>
+                    <option value="saline">Saline</option>
+                    <option value="mountain">Mountain</option>
+                    <option value="sandy">Sandy / Desert</option>
+                  </select>
+                </div>
+                <div class="field-row">
+                  <label data-translate-key="form_water">Water Source</label>
+                  <select id="reg-water">
+                    <option value="borewell">Borewell</option>
+                    <option value="canal">Canal</option>
+                    <option value="river">River</option>
+                    <option value="rain-fed">Rain-fed</option>
+                    <option value="drip">Drip Irrigation</option>
+                    <option value="sprinkler">Sprinkler</option>
+                  </select>
+                </div>
+                <div class="field-row">
+                  <label>Water Availability</label>
+                  <select id="reg-water-availability">
+                    <option value="Low">Low</option>
+                    <option value="Medium" selected>Medium</option>
+                    <option value="High">High</option>
+                  </select>
+                </div>
+                <div class="field-row">
+                  <label>Soil pH (Optional Manual Entry)</label>
+                  <input type="number" id="reg-soil-ph" step="0.1" placeholder="e.g. 6.5 (leave blank for GPS query)" />
+                </div>
+                <div class="field-row">
+                  <label data-translate-key="form_crop">Current Crop</label>
+                  <input type="text" id="reg-crop" placeholder="e.g. Rice" required />
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-actions-full" style="display: flex; flex-direction: column; align-items: center; gap: 12px;">
+              <button type="submit" class="btn primary-btn"><i class="fa-solid fa-circle-check"></i> <span data-translate-key="btn_save_profile">Create Profile & Enter Dashboard</span></button>
+              <p style="font-size: 13px; text-align: center; margin: 0; color: var(--text-muted);">
+                Already have an account? <a href="#" id="toggle-to-login" style="color: var(--primary); font-weight: 600; text-decoration: underline;">Log In</a>
+              </p>
+            </div>
+          </form>
+        </div>
+      </section>
+      
+      <!-- 2. SMART FARMER DASHBOARD -->
+      <section class="tab-panel" id="panel-dashboard">
+        <div class="dashboard-banner">
+          <div class="welcome-badge">
+            <h2 id="dash-greeting">Welcome back, Farmer!</h2>
+            <p id="dash-sub">Here is your live farm health report summary for today.</p>
+            <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 6px;">
+              <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button id="callMyNumberBtn" class="btn primary-btn" style="background: #2563eb; border-color: #1d4ed8; padding: 10px 18px; font-size: 13px; font-weight: 700; border-radius: 8px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); color: white;"><i class="fa-solid fa-phone"></i> Call My Number</button>
+                <button id="triggerEmergencyBtn" class="btn primary-btn" style="background: #ef4444; border-color: #dc2626; padding: 10px 18px; font-size: 13px; font-weight: 700; border-radius: 8px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); color: white;"><i class="fa-solid fa-triangle-exclamation"></i> SOS Emergency</button>
+              </div>
+              <div id="callMyNumberStatus" style="font-size: 13px; font-weight: 600; color: #2563eb; margin-top: 4px; display: none; align-items: center; gap: 6px;"></div>
+            </div>
+          </div>
+          <div class="health-score-dial">
+            <div class="gauge-ring">
+              <div class="gauge-value" id="healthScoreValue">85</div>
+            </div>
+            <div class="gauge-label">
+              <strong data-translate-key="farm_health_title">AI Farm Health Score</strong>
+              <span id="healthScoreMsg">Optimal Soil & Water state</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="dashboard-grid">
+        <!-- Weather Widget -->
+        <div class="dash-card span-col-2" style="grid-column: span 2;">
+          <h3><i class="fa-solid fa-cloud-sun-rain"></i> <span data-translate-key="dash_weather">Weather Forecast</span></h3>
+          <div class="weather-summary-grid" style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 20px; align-items: center; margin-top: 12px;">
+            <div class="weather-summary-main" style="display: flex; align-items: center; gap: 16px;">
+              <div class="weather-main-icon" id="weather-icon-main" style="font-size: 48px; color: var(--primary);"><i class="fa-solid fa-cloud-sun"></i></div>
+              <div>
+                <div class="weather-temp" style="font-size: 32px; font-weight: 700; color: var(--text-main);"><span id="dash-temp">29</span>°C</div>
+                <div class="weather-desc" id="dash-weather-condition" style="font-weight: 600; color: var(--text-muted);">Partly Cloudy</div>
+              </div>
+            </div>
+            <div class="weather-details-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px;">
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 4px;">
+                <span style="color: var(--text-muted);" data-translate-key="w_feels_like">Feels Like:</span> <strong id="dash-feels">31°C</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 4px;">
+                <span style="color: var(--text-muted);" data-translate-key="w_humidity">Humidity:</span> <strong id="dash-humidity">65%</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 4px;">
+                <span style="color: var(--text-muted);" data-translate-key="w_wind_speed">Wind Speed:</span> <strong id="dash-wind">12 km/h</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 4px;">
+                <span style="color: var(--text-muted);" data-translate-key="w_wind_dir">Wind Dir:</span> <strong id="dash-wind-dir">180°</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 4px;">
+                <span style="color: var(--text-muted);" data-translate-key="w_uv_index">UV Index:</span> <strong id="dash-uv">5</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 4px;">
+                <span style="color: var(--text-muted);" data-translate-key="w_visibility">Visibility:</span> <strong id="dash-visibility">10 km</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 4px;">
+                <span style="color: var(--text-muted);" data-translate-key="w_pressure">Pressure:</span> <strong id="dash-pressure">1012 hPa</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 4px;">
+                <span style="color: var(--text-muted);" data-translate-key="w_rain_prob">Rain Prob:</span> <strong id="dash-rain-prob">10%</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 4px;">
+                <span style="color: var(--text-muted);" data-translate-key="w_sunrise">Sunrise:</span> <strong id="dash-sunrise">05:40</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 4px;">
+                <span style="color: var(--text-muted);" data-translate-key="w_sunset">Sunset:</span> <strong id="dash-sunset">18:35</strong>
+              </div>
+            </div>
+          </div>
+          
+          <h4 id="weather-forecast-title-heading" style="margin-top: 20px; font-weight: 600; font-size: 14px; border-top: 1px solid var(--border-color); padding-top: 12px; color: var(--text-main);">7-Day Local Forecast</h4>
+          <div class="weather-forecast-list" id="weather-forecast-list" style="margin-top: 10px; display: grid; grid-template-columns: repeat(auto-fit, minmax(70px, 1fr)); gap: 10px;">
+            <!-- Dynamically populated via script.js -->
+          </div>
+        </div>
+          
+          <!-- Crop Health Card -->
+          <div class="dash-card">
+            <h3><i class="fa-solid fa-leaf"></i> <span data-translate-key="dash_crop_status">Crop Health Status</span></h3>
+            <div class="status-gauge-bar">
+              <div class="gauge-fill green-fill" style="width: 80%;"></div>
+            </div>
+            <div class="status-details">
+              <div class="status-row"><span data-translate-key="c_crop">Crop:</span><strong id="dash-crop-name">Rice</strong></div>
+              <div class="status-row"><span data-translate-key="c_growth_stage">Growth Stage:</span><strong id="dash-crop-stage">Vegetative</strong></div>
+              <div class="status-row"><span data-translate-key="c_est_yield">Estimated Yield:</span><strong id="dash-crop-yield">85% (Excellent)</strong></div>
+            </div>
+          </div>
+          
+          <!-- Climate alert warnings list -->
+          <div class="dash-card span-col-2">
+            <h3><i class="fa-solid fa-triangle-exclamation"></i> <span data-translate-key="dash_alerts">Personalized Climate Alerts</span></h3>
+            <ul class="alerts-list" id="dash-alerts-box">
+              <li class="alert-item high-alert">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <div class="alert-details">
+                  <strong>Dry-spell Alert in Nellore</strong>
+                  <span>Zero rain forecasted for the next 7 days. Ensure drip irrigation cycles are active today.</span>
+                </div>
+              </li>
+              <li class="alert-item info-alert">
+                <i class="fa-solid fa-circle-info"></i>
+                <div class="alert-details">
+                  <strong>Subsidy Alert</strong>
+                  <span>Government scheme PM-KUSUM provides 60% solar water pump subsidy in your district.</span>
+                </div>
+              </li>
+            </ul>
+          </div>
+          
+          <!-- Mandi Market Prices -->
+          <div class="dash-card span-col-2">
+            <h3><i class="fa-solid fa-money-bill-trend-up"></i> <span data-translate-key="dash_mandi">Live Market Mandi Prices</span></h3>
+            <div class="table-container">
+              <table class="prices-table">
+                <thead>
+                  <tr>
+                    <th data-translate-key="th_mandi_crop">Crop</th>
+                    <th data-translate-key="th_mandi_price">Current Price</th>
+                    <th data-translate-key="th_mandi_trend">30-Day Trend</th>
+                    <th data-translate-key="th_mandi_market">Market Location</th>
+                  </tr>
+                </thead>
+                <tbody id="dash-prices-body">
+                  <tr>
+                    <td>Rice (Paddy)</td>
+                    <td>₹2,180 / Quintal</td>
+                    <td class="trend-up"><i class="fa-solid fa-arrow-trend-up"></i> +4.2%</td>
+                    <td>Nellore Mandi</td>
+                  </tr>
+                  <tr>
+                    <td>Groundnut</td>
+                    <td>₹6,850 / Quintal</td>
+                    <td class="trend-up"><i class="fa-solid fa-arrow-trend-up"></i> +1.8%</td>
+                    <td>Visakhapatnam Mandi</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- 3. PERSONALIZED CROP ADVISOR & CALCULATOR -->
+      <section class="tab-panel" id="panel-advisor">
+        <div class="panel-section">
+          <div class="panel-header">
+            <h2 data-translate-key="nav_advisor">Personalized AI Crop Advisor</h2>
+            <p data-translate-key="adv_panel_desc">Compare soil compatibility and forecast estimated profits to choose the optimal crop before sowing.</p>
+          </div>
+          
+        <!-- CROP PREFERENCE CHECKLISTS -->
+        <div class="panel-section">
+          <div class="panel-header">
+            <h3 data-translate-key="adv_select_title"><i class="fa-solid fa-square-check"></i> Select Crops of Interest to Compare</h3>
+            <p data-translate-key="adv_select_desc">Choose 3 to 5 crops you are interested in growing. The AI will evaluate coordinates soil composition, pH indexes, rainfall metrics, and mandi rates to find your optimal crop choice.</p>
+          </div>
+          <div class="calculator-box" style="padding: 24px; display: flex; flex-direction: column; gap: 16px; border-radius: 12px; background: var(--bg-card); border: 1px solid var(--border-color);">
+            <div class="checkbox-group" style="display: flex; gap: 20px; flex-wrap: wrap;">
+              <label style="display: flex; align-items: center; gap: 8px; font-weight:600; cursor: pointer; color: var(--text-main);"><input type="checkbox" name="crop_compare_pref" value="Rice" checked> <span data-translate-key="crop_rice">Rice (Paddy)</span></label>
+              <label style="display: flex; align-items: center; gap: 8px; font-weight:600; cursor: pointer; color: var(--text-main);"><input type="checkbox" name="crop_compare_pref" value="Groundnut" checked> <span data-translate-key="crop_groundnut">Groundnut</span></label>
+              <label style="display: flex; align-items: center; gap: 8px; font-weight:600; cursor: pointer; color: var(--text-main);"><input type="checkbox" name="crop_compare_pref" value="Maize" checked> <span data-translate-key="crop_maize">Maize (Corn)</span></label>
+              <label style="display: flex; align-items: center; gap: 8px; font-weight:600; cursor: pointer; color: var(--text-main);"><input type="checkbox" name="crop_compare_pref" value="Cotton"> <span data-translate-key="crop_cotton">Cotton</span></label>
+              <label style="display: flex; align-items: center; gap: 8px; font-weight:600; cursor: pointer; color: var(--text-main);"><input type="checkbox" name="crop_compare_pref" value="Tomato"> <span data-translate-key="crop_tomato">Tomato</span></label>
+              <label style="display: flex; align-items: center; gap: 8px; font-weight:600; cursor: pointer; color: var(--text-main);"><input type="checkbox" name="crop_compare_pref" value="Wheat"> <span data-translate-key="crop_wheat">Wheat</span></label>
+            </div>
+            <button id="compareCropsBtn" class="btn primary-btn" style="align-self: flex-start;"><i class="fa-solid fa-wand-magic-sparkles"></i> <span data-translate-key="btn_compare_crops">Compare Selected Crops</span></button>
+          </div>
+        </div>
+        
+        <!-- DETAILED COMPARATIVE TABLE -->
+        <div class="panel-section" id="advisorComparisonResultBox" style="display:none;">
+          <div class="panel-header">
+            <h3 data-translate-key="adv_title">🌾 AI Comparative Crop Advisor Summary</h3>
+            <p data-translate-key="adv_desc">Detailed matrix analysis of selected crops compared under your farm's properties.</p>
+          </div>
+          
+          <div id="compareCropsLoading" class="skeleton-loader" style="display:none;">
+            <div class="skeleton-line"></div>
+            <div class="skeleton-line"></div>
+            <div class="skeleton-line"></div>
+          </div>
+          
+          <div class="table-container">
+            <table class="prices-table" id="cropComparisonTable">
+                <thead>
+                  <tr style="background-color: var(--bg-primary);">
+                    <th data-translate-key="th_comp_crop">Crop</th>
+                    <th data-translate-key="th_comp_score">Suitability Score</th>
+                    <th data-translate-key="th_comp_soil">Soil Compatibility</th>
+                    <th data-translate-key="th_comp_water">Water Requirement</th>
+                    <th data-translate-key="th_comp_climate">Climate Suitability</th>
+                    <th data-translate-key="th_comp_invest">Est. Investment</th>
+                    <th data-translate-key="th_comp_yield">Est. Yield</th>
+                    <th data-translate-key="th_comp_revenue">Expected Revenue</th>
+                    <th data-translate-key="th_comp_profit">Expected Profit</th>
+                    <th data-translate-key="th_comp_risk">Disease Risk</th>
+                    <th data-translate-key="th_comp_demand">Market Demand</th>
+                    <th data-translate-key="th_comp_price">Nearby Mandi Price</th>
+                  </tr>
+                </thead>
+              <tbody id="cropComparisonTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+          
+          <!-- Best recommendation banner -->
+          <div class="alert-item info-alert" id="bestCropRecommendationBanner" style="margin-top: 16px;">
+            <i class="fa-solid fa-circle-check"></i>
+            <div class="alert-details">
+              <strong>Best Crop Choice: <span id="bestCropNameText">Rice</span></strong>
+              <p id="bestCropExplanationText" style="margin-top:4px; font-size:13px; line-height:1.4;"></p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- PROFIT CALCULATOR -->
+        <div class="panel-section">
+          <div class="panel-header">
+            <h3><i class="fa-solid fa-calculator"></i> <span data-translate-key="calc_title">AI Profit Calculator</span></h3>
+            <p data-translate-key="calc_desc">Estimate costs and profit yields dynamically depending on land specifications.</p>
+          </div>
+          
+          <div class="calculator-box">
+            <div class="calc-inputs">
+              <div class="field-row">
+                <label data-translate-key="lbl_select_land">Select Land Size (Acres)</label>
+                <input type="number" id="calc-acres" value="5" min="1" max="100" />
+              </div>
+              <div class="field-row">
+                <label data-translate-key="lbl_select_season">Select Season</label>
+                <select id="calc-season">
+                  <option value="kharif" data-translate-key="opt_kharif">Kharif (Monsoon)</option>
+                  <option value="rabi" data-translate-key="opt_rabi">Rabi (Winter)</option>
+                  <option value="zaid" data-translate-key="opt_zaid">Zaid (Summer)</option>
+                </select>
+              </div>
+              <button id="calculateProfitBtn" class="btn primary-btn"><i class="fa-solid fa-wand-magic-sparkles"></i> <span data-translate-key="btn_calculate_profit">Calculate Profit</span></button>
+            </div>
+            
+            <div class="calc-results">
+              <div class="table-container">
+                <table class="calc-table">
+                  <thead>
+                    <tr>
+                      <th data-translate-key="th_crop_option">Crop Option</th>
+                      <th data-translate-key="th_est_cost">Est. Cost</th>
+                      <th data-translate-key="th_expected_yield">Expected Yield</th>
+                      <th data-translate-key="th_expected_revenue">Expected Revenue</th>
+                      <th data-translate-key="th_net_profit">Net Profit</th>
+                      <th data-translate-key="th_profit_margin">Profit Margin</th>
+                    </tr>
+                  </thead>
+                  <tbody id="calc-results-body">
+                    <tr>
+                      <td>🌾 <span data-translate-key="crop_rice_label">Rice (Paddy)</span></td>
+                      <td>₹45,000</td>
+                      <td>120 <span data-translate-key="unit_quintals">Quintals</span></td>
+                      <td>₹2,61,600</td>
+                      <td class="net-profit-val">₹2,16,600</td>
+                      <td>82.8%</td>
+                    </tr>
+                    <tr>
+                      <td>🥜 <span data-translate-key="crop_groundnut_label">Groundnut</span></td>
+                      <td>₹55,000</td>
+                      <td>40 <span data-translate-key="unit_quintals">Quintals</span></td>
+                      <td>₹2,74,000</td>
+                      <td class="net-profit-val">₹2,19,000</td>
+                      <td>79.9%</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- 4. MARKET INTELLIGENCE -->
+      <section class="tab-panel" id="panel-market">
+        <div class="panel-section">
+          <div class="panel-header">
+            <h2 data-translate-key="nav_market">Mandi Market Intelligence</h2>
+            <p>Monitor market prices, forecast price alerts, and inspect mandi rates trends in real-time.</p>
+          </div>
+          
+          <div class="market-grid">
+            <div class="chart-card">
+              <h3>30-Day Historical Mandi Price Trend</h3>
+              <div class="chart-container-large">
+                <canvas id="marketTrendChart"></canvas>
+              </div>
+            </div>
+            
+            <div class="price-insights-card">
+              <h3>Mandi Market Insights</h3>
+              <div class="insight-row">
+                <div class="icon"><i class="fa-solid fa-circle-check"></i></div>
+                <div class="info">
+                  <strong>Best Mandi to Sell</strong>
+                  <span>Guntur Mandi (highest rates recorded for Rice)</span>
+                </div>
+              </div>
+              <div class="insight-row">
+                <div class="icon"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                <div class="info">
+                  <strong>Price Prediction for next 2 weeks</strong>
+                  <span>Prices expected to increase by +2.5% due to high export demands.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- 5. DOCTOR CROP (DISEASE DIAGNOSIS) -->
+      <section class="tab-panel" id="panel-doctor">
+        <div class="doctor-container">
+          <!-- Query Form -->
+          <div class="doctor-input-card">
+            <h2 data-translate-key="doctor_photo_title">Doctor Crop Diagnosis</h2>
+            <p data-translate-key="doctor_photo_desc">Upload a leaf image of your infected crop and record a voice description to get diagnosis remedies.</p>
+            
+            <!-- File Upload -->
+            <div class="upload-zone" onclick="document.getElementById('leafImageInput').click();">
+              <i class="fa-solid fa-cloud-arrow-up"></i>
+              <p data-translate-key="click_to_upload">Click here to upload leaf photo</p>
+              <span id="uploadFileName" data-translate-key="no_file_selected">No file selected</span>
+              <input type="file" id="leafImageInput" accept="image/*" style="display:none;" />
+            </div>
+            
+            <!-- Voice Record -->
+            <div class="voice-query-box">
+              <h3 data-translate-key="voice_symptom_title">Voice Symptom Description</h3>
+              <div class="recording-bar">
+                <button type="button" id="recordSymptomBtn" class="action-btn call-btn"><i class="fa-solid fa-microphone"></i> <span data-translate-key="btn_start_record">Start Record</span></button>
+                <button type="button" id="stopSymptomBtn" class="action-btn hangup-btn" disabled><i class="fa-solid fa-circle-stop"></i> <span data-translate-key="btn_stop_record">Stop</span></button>
+              </div>
+              <div id="recordingWave" class="mini-waveform" style="display:none;" data-translate-key="recording_status">Recording...</div>
+            </div>
+            
+            <button id="getDiagnosisBtn" class="btn primary-btn-full"><i class="fa-solid fa-user-doctor"></i> <span data-translate-key="btn_diagnose_crop">Diagnose Crop Health</span></button>
+          </div>
+          
+          <!-- Diagnosis Result -->
+          <div class="doctor-result-card">
+            <h3 data-translate-key="result_title">Advisory Diagnosis Report</h3>
+            <div id="diagnosisLoading" class="skeleton-loader" style="display:none;">
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
+            </div>
+            <div id="diagnosisResultBox" class="result-box">
+              <div class="empty-state">
+                <i class="fa-solid fa-notes-medical"></i>
+                <p data-translate-key="diagnosis_prompt">Upload an infected leaf photo to trigger the AI doctor diagnosis recommendations.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- 6. SMART IVR HELPLINE CALL SIMULATOR -->
+      <section class="tab-panel" id="panel-ivr">
+        <div class="ivr-grid">
+          <!-- Smartphone simulator Mockup -->
+          <div class="phone-card">
+            <div class="phone-frame">
+              <div class="phone-notch"></div>
+              <div class="phone-screen">
+                <div class="screen-header">
+                  <span>📶 Jio 5G</span>
+                  <span>🔋 99%</span>
+                </div>
+                
+                <div class="caller-area">
+                  <div class="dialer-avatar"><i class="fa-solid fa-phone-volume"></i></div>
+                  <h3>कृषकसेवा Helpline</h3>
+                  <p id="phone-call-status">Helpline Active: 1800-419-8800</p>
+                  <div id="phoneCallTimer" style="display:none;">00:00</div>
+                </div>
+                
+                <div class="keypad-zone" id="dialerKeypad" style="display:none;">
+                  <button class="keypad-key" data-key="1">1<span>EN</span></button>
+                  <button class="keypad-key" data-key="2">2<span>TE</span></button>
+                  <button class="keypad-key" data-key="3">3</button>
+                  <button class="keypad-key" data-key="4">4</button>
+                  <button class="keypad-key" data-key="5">5</button>
+                  <button class="keypad-key" data-key="6">6</button>
+                  <button class="keypad-key" data-key="7">7</button>
+                  <button class="keypad-key" data-key="8">8</button>
+                  <button class="keypad-key" data-key="9">9</button>
+                  <button class="keypad-key" data-key="*">*</button>
+                  <button class="keypad-key" data-key="0">0</button>
+                  <button class="keypad-key" data-key="#">#</button>
+                </div>
+                
+                <div class="call-actions-area">
+                  <button id="dialCallBtn" class="dial-btn"><i class="fa-solid fa-phone"></i> Call</button>
+                  <button id="hangCallBtn" class="hang-btn" style="display:none;"><i class="fa-solid fa-phone-slash"></i> Hang Up</button>
+                </div>
+                
+                <!-- Hidden HTML Audio player for simulator audio play -->
+                <audio id="simulatorAudioPlayer" style="display:none;"></audio>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Extractor Dashboard & Transcript Logger -->
+          <div class="extraction-card panel">
+            <h2 data-translate-key="extraction_title">Live AI Parameter Extractor</h2>
+            <p data-translate-key="extraction_hint">As the farmer presses keys, the IVR state machine automatically updates your profile variables in the database:</p>
+            
+            <div class="checklist-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+              <div class="checklist-item" id="chk-crop_type">
+                <span class="check-icon"><i class="fa-regular fa-circle"></i></span>
+                <div class="check-details">
+                  <strong>Crop Selected:</strong>
+                  <span class="check-value">—</span>
+                </div>
+              </div>
+              <div class="checklist-item" id="chk-land_size">
+                <span class="check-icon"><i class="fa-regular fa-circle"></i></span>
+                <div class="check-details">
+                  <strong>Land Size:</strong>
+                  <span class="check-value">—</span>
+                </div>
+              </div>
+              <div class="checklist-item" id="chk-soil_type">
+                <span class="check-icon"><i class="fa-regular fa-circle"></i></span>
+                <div class="check-details">
+                  <strong>Soil Type:</strong>
+                  <span class="check-value">—</span>
+                </div>
+              </div>
+              <div class="checklist-item" id="chk-water_availability">
+                <span class="check-icon"><i class="fa-regular fa-circle"></i></span>
+                <div class="check-details">
+                  <strong>Water Avail:</strong>
+                  <span class="check-value">—</span>
+                </div>
+              </div>
+              <div class="checklist-item" id="chk-problem">
+                <span class="check-icon"><i class="fa-regular fa-circle"></i></span>
+                <div class="check-details">
+                  <strong>Main Problem:</strong>
+                  <span class="check-value">—</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="call-log-box">
+              <h3 data-translate-key="transcript_log">Call Dialogue Log</h3>
+              <div id="simTranscriptBox" class="transcript-logs">
+                <div class="system-msg">Click 'Call' to trigger an inbound helpline simulation call.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- 7. EXTENSION SERVICES & SCHEMES -->
+      <section class="tab-panel" id="panel-extension">
+        <div class="panel-section">
+          <div class="panel-header">
+            <h2>Bilingual Agriculture Extension Services</h2>
+            <p>Access active government welfare subsidies and check nearby Rythu Seva Kendras (RSK).</p>
+          </div>
+          
+          <div class="services-row">
+            <!-- Government Schemes -->
+            <div class="services-block-half">
+              <h3><i class="fa-solid fa-landmark"></i> Personalized Government Schemes</h3>
+              <div class="schemes-list">
+                <div class="scheme-item" style="border: 1px solid var(--border-color); padding: 16px; border-radius: 12px; margin-bottom: 12px; background: var(--bg-card);">
+                  <div class="scheme-badge">Active</div>
+                  <h4 style="margin-top: 8px; font-weight: 700; color: var(--text-main);">PM Kisan Samman Nidhi</h4>
+                  <p style="font-size:13px; margin: 4px 0; color: var(--text-main);"><strong>Benefits:</strong> ₹6,000 per year in 3 installments.</p>
+                  <p style="font-size:13px; margin: 4px 0; color: var(--text-main);"><strong>Eligibility:</strong> Land holding up to 2 hectares.</p>
+                  <p style="font-size:13px; margin: 4px 0; color: var(--text-main);"><strong>Documents:</strong> Aadhaar Card, Land Registry, Bank Passbook.</p>
+                  <p style="font-size:13px; margin: 4px 0; color: var(--text-main);"><strong>Last Date:</strong> 31st August 2026</p>
+                  <p style="font-size:13px; margin: 4px 0; color: var(--text-muted);"><strong>Source:</strong> Ministry of Agriculture & Farmers Welfare</p>
+                  <a href="https://pmkisan.gov.in/" target="_blank" class="btn primary-btn" style="display:inline-block; font-size:12px; padding: 6px 12px; margin-top:8px; text-decoration:none; text-align:center;">Apply on PM-Kisan Portal <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                </div>
+                
+                <div class="scheme-item" style="border: 1px solid var(--border-color); padding: 16px; border-radius: 12px; background: var(--bg-card);">
+                  <div class="scheme-badge">Active</div>
+                  <h4 style="margin-top: 8px; font-weight: 700; color: var(--text-main);">YSR Rythu Bharosa (AP)</h4>
+                  <p style="font-size:13px; margin: 4px 0; color: var(--text-main);"><strong>Benefits:</strong> ₹13,500 financial assistance per year.</p>
+                  <p style="font-size:13px; margin: 4px 0; color: var(--text-main);"><strong>Eligibility:</strong> All landowning farmer families in AP.</p>
+                  <p style="font-size:13px; margin: 4px 0; color: var(--text-main);"><strong>Documents:</strong> Aadhaar Card, Pattadar Passbook, IFSC Bank details.</p>
+                  <p style="font-size:13px; margin: 4px 0; color: var(--text-main);"><strong>Last Date:</strong> 15th November 2026</p>
+                  <p style="font-size:13px; margin: 4px 0; color: var(--text-muted);"><strong>Source:</strong> Government of Andhra Pradesh</p>
+                  <a href="https://ysrrythubharosa.ap.gov.in/" target="_blank" class="btn primary-btn" style="display:inline-block; font-size:12px; padding: 6px 12px; margin-top:8px; text-decoration:none; text-align:center;">Apply on Rythu Bharosa Portal <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                </div>
+              </div>
+            </div>
+            
+            <!-- RSK Locations -->
+            <div class="services-block-half">
+              <h3><i class="fa-solid fa-map-location"></i> Nearby RSK & Seeds Centers</h3>
+              <div class="centers-list">
+                <div class="center-item">
+                  <h4>Rythu Seva Kendra (RSK) - Nellore East</h4>
+                  <p>📍 <strong>Distance:</strong> 2.4 km away</p>
+                  <p>📞 <strong>Phone:</strong> +919848012345</p>
+                  <p>🕒 <strong>Hours:</strong> 9:00 AM - 5:00 PM</p>
+                </div>
+                <div class="center-item">
+                  <h4>Venkata Soil Testing Laboratory</h4>
+                  <p>📍 <strong>Distance:</strong> 4.8 km away</p>
+                  <p>🕒 <strong>Hours:</strong> 10:00 AM - 4:00 PM</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- AI SEASONAL PLANNER -->
+        <div class="panel-section">
+          <div class="panel-header">
+            <h3><i class="fa-solid fa-calendar-days"></i> AI Seasonal Crop Planner</h3>
+            <p>Chronological timeline schedule generated dynamically by Llama 3.1 depending on your crop type.</p>
+          </div>
+          <div class="timeline-visual">
+            <div class="timeline-step">
+              <div class="circle">1</div>
+              <div class="details">
+                <h4>Soil Preparation</h4>
+                <p>Add organic manure and check topsoil acidity before sowing.</p>
+              </div>
+            </div>
+            <div class="timeline-step">
+              <div class="circle">2</div>
+              <div class="details">
+                <h4>Sowing / Seeding</h4>
+                <p>Plant seeds at 5cm spacing with adequate soil moisture.</p>
+              </div>
+            </div>
+            <div class="timeline-step">
+              <div class="circle">3</div>
+              <div class="details">
+                <h4>Irrigation & Weeding</h4>
+                <p>Maintain consistent moisture levels during vegetative growth.</p>
+              </div>
+            </div>
+            <div class="timeline-step">
+          <div class="timeline-step">
+              <div class="circle">4</div>
+              <div class="details">
+                <h4>Harvesting</h4>
+                <p>Harvest during dry climate conditions to maximize grain prices.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- 8. FARM HISTORY & ANALYTICS -->
+      <section class="tab-panel" id="panel-analytics">
+        <div class="panel-section">
+          <div class="panel-header">
+            <h2>Farm Historical Analytics</h2>
+            <p>Visualize rainfall metrics, seasonal net profits, and crop yields historical trends.</p>
+          </div>
+          
+          <!-- Fallback State Card -->
+          <div class="alert-item warning-alert" id="analyticsFallbackBox" style="padding: 24px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; margin-top: 16px;">
+            <i class="fa-solid fa-chart-pie" style="font-size: 40px; color: var(--text-muted);"></i>
+            <h3 style="margin-top: 8px; color: var(--text-main);">Analytics Unavailable</h3>
+            <p style="color: var(--text-muted); max-width: 450px; font-size: 14px; line-height: 1.5;">Your analytics will become available after your farm information and farming activity have been recorded.</p>
+          </div>
+
+          <!-- Active Analytics Content -->
+          <div class="analytics-grid" id="analyticsChartsBox" style="display: none; margin-top: 16px;">
+            <div class="analytics-chart-card">
+              <h3>Net Profit Yield Trends</h3>
+              <div class="chart-container-medium">
+                <canvas id="profitTrendChart"></canvas>
+              </div>
+            </div>
+            
+            <div class="analytics-chart-card">
+              <h3>Rainfall History (mm)</h3>
+              <div class="chart-container-medium">
+                <canvas id="rainHistoryChart"></canvas>
+              </div>
+            </div>
+            
+            <div class="analytics-summary-box">
+              <h3>Quick Statistics</h3>
+              <div class="stat-bubble">
+                <span class="label">Total Profit (2025)</span>
+                <span class="value" id="analytics-total-profit">₹3,42,000</span>
+              </div>
+              <div class="stat-bubble">
+                <span class="label">Water Savings (Drip)</span>
+                <span class="value" id="analytics-water-savings">+35% efficiency</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+    </main>
+    
+  </div>
+
+  <!-- FLOATING CHATBOT TOGGLE WIDGET -->
+  <div class="chatbot-floating-widget" id="chatbotWidget">
+    <button id="toggleChatBtn" class="chat-toggle-btn"><i class="fa-solid fa-comment-dots"></i></button>
+    
+    <div class="chat-window" id="chatWindow" style="display:none;">
+      <div class="chat-header">
+        <div class="ai-avatar"><i class="fa-solid fa-sparkles"></i></div>
+        <div>
+          <h4><span data-translate-key="chat_title">कृषकसेवा AI Assistant</span></h4>
+          <span data-translate-key="chat_status">Online 24/7</span>
+        </div>
+        <button id="closeChatBtn" class="chat-close"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      
+      <div class="chat-messages" id="chatMessagesBox">
+        <div class="ai-msg" id="chat-welcome-msg" data-translate-key="chat_welcome">Hello! I am कृषकसेवा (KṛṣakaSevā) AI. Ask me anything about crop selection, soil, water management, weather alerts, or market prices!</div>
+      </div>
+      
+      <div class="chat-input-bar">
+        <input type="text" id="chatInputText" placeholder="Type a message..." data-translate-key="chat_placeholder" />
+        <button id="sendChatBtn" class="chat-send"><i class="fa-solid fa-paper-plane"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SOS EMERGENCY MODAL OVERLAY -->
+  <div id="sosEmergencyModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); z-index: 9999; align-items: center; justify-content: center; padding: 16px;">
+    <div class="modal-card" style="background: var(--bg-card); border: 2px solid var(--border-color); border-radius: 16px; max-width: 550px; width: 100%; padding: 28px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); display: flex; flex-direction: column; gap: 20px; box-sizing: border-box;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+        <h2 style="color: #ef4444; margin: 0; display: flex; align-items: center; gap: 10px; font-size: 20px;"><i class="fa-solid fa-triangle-exclamation"></i> <span data-translate-key="sos_title">KṛṣakaSevā SOS Portal</span></h2>
+        <button id="closeSosBtn" style="background: none; border: none; font-size: 20px; color: var(--text-muted); cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;" data-translate-key="sos_desc">Your registered location details will be sent with the SOS alert.</p>
+        <div style="background: var(--bg-primary); padding: 12px; border-radius: 8px; font-size: 13px; line-height: 1.5; color: var(--text-main); border: 1px solid var(--border-color);">
+          📍 <strong data-translate-key="sos_lbl_curr_loc">Current Location:</strong> <span id="sos-location-text" data-translate-key="sos_detecting_gps">Detecting GPS...</span><br/>
+          🌐 <strong data-translate-key="sos_lbl_coords">Coordinates:</strong> Lat: <span id="sos-lat-text">—</span>, Lon: <span id="sos-lon-text">—</span>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <label style="font-size: 14px; font-weight: 600; color: var(--text-main);" data-translate-key="sos_select_event">Select Emergency Event Type</label>
+        <select id="sos-emergency-type" style="padding: 10px; border-radius: 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); font-size: 13px;">
+          <option value="Severe Pest Outbreak / Locust Attack" data-translate-key="sos_opt_pest">🐛 Severe Pest Outbreak / Locust Attack</option>
+          <option value="Flash Flood / Waterlogging" data-translate-key="sos_opt_flood">🌊 Flash Flood / Waterlogging</option>
+          <option value="Cyclone / Wind Damage" data-translate-key="sos_opt_cyclone">🌪️ Cyclone / Wind Damage</option>
+          <option value="Severe Drought / Crop Wilting" data-translate-key="sos_opt_drought">☀️ Severe Drought / Crop Wilting</option>
+        </select>
+      </div>
+
+      <div>
+        <h4 style="margin: 0 0 10px 0; color: var(--text-main); font-size: 14px;" data-translate-key="sos_helplines">Emergency Regional Helplines</h4>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <a href="tel:+919848012345" class="btn secondary-btn" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; font-size: 12px; font-weight: 600; color: var(--text-main); border: 1px solid var(--border-color); border-radius: 8px; text-decoration: none;">
+            <i class="fa-solid fa-phone"></i> MEO: +91 98480 12345
+          </a>
+          <a href="tel:+919490154321" class="btn secondary-btn" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; font-size: 12px; font-weight: 600; color: var(--text-main); border: 1px solid var(--border-color); border-radius: 8px; text-decoration: none;">
+            <i class="fa-solid fa-phone-volume"></i> Lab: +91 94901 54321
+          </a>
+          <a href="tel:+918008855667" class="btn secondary-btn" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; font-size: 12px; font-weight: 600; color: var(--text-main); border: 1px solid var(--border-color); border-radius: 8px; text-decoration: none;">
+            <i class="fa-solid fa-bug"></i> Pest Unit: +91 80088 55667
+          </a>
+          <a href="tel:1070" class="btn secondary-btn" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; font-size: 12px; font-weight: 600; color: var(--text-main); border: 1px solid #ef4444; border-radius: 8px; text-decoration: none;">
+            <i class="fa-solid fa-tower-broadcast"></i> State Relief: 1070
+          </a>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
+        <button id="sendSosBroadcastBtn" class="btn primary-btn" style="background: #ef4444; border-color: #dc2626; padding: 14px; font-size: 14px; font-weight: 700; width: 100%; border-radius: 8px;"><i class="fa-solid fa-tower-cell"></i> <span data-translate-key="btn_broadcast_sos">Broadcast SOS GPS Alert</span></button>
+        <button id="callFarmerSosBtn" class="btn primary-btn" style="background: var(--primary); border-color: var(--primary); padding: 14px; font-size: 14px; font-weight: 700; width: 100%; border-radius: 8px;"><i class="fa-solid fa-phone-volume"></i> <span data-translate-key="btn_trigger_sos_call">Trigger Voice Call & SMS Alert to My Number</span></button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
