@@ -5,6 +5,9 @@ import urllib.request
 BUCKET_URL = "https://kvdb.io/kisan_alert_f47fcdd7/profiles"
 LOCAL_PATH = os.path.join(os.path.dirname(__file__), "farmer_profiles.json")
 
+def translate_name_to_telugu(name):
+    return name
+
 def _load_all():
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
     try:
