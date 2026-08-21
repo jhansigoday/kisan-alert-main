@@ -628,7 +628,11 @@ def field_health():
     return jsonify(get_field_health_report(lat, lon, field_id))
 
 
-def get_local_fallback_response(message):
+def get_local_fallback_response(message, profile=None):
+    if not profile:
+        profile = {}
+    soil = profile.get('soil_type', 'black').lower()
+    irrigation = profile.get('irrigation_method', 'irrigation').lower()
     msg = message.lower().strip()
     
     # Question 1: Planting time / when to plant rice
@@ -645,7 +649,7 @@ def get_local_fallback_response(message):
         
     # Question 4: Crop recommendation / profit
     if "crop" in msg and ("grow" in msg or "profit" in msg or "better" in msg or "recommend" in msg or "labham" in msg or "best" in msg or "suitable" in msg):
-        return "Based on your black soil and irrigation, growing cotton, chilli, or groundnut offers high profit margins. Crop rotation is advised."
+        return f"Based on your {soil} soil and {irrigation}, growing cotton, chilli, or groundnut offers high profit margins. Crop rotation is advised."
 
     # Question 5: Yellow leaves
     if "yellow" in msg and ("leaf" in msg or "leaves" in msg or "color" in msg or "why" in msg):
@@ -727,7 +731,7 @@ def chat_query():
             raise Exception("Missing Groq API Key")
     except Exception as e:
         print("Chatbot query failed, using local English fallback:", e)
-        reply = get_local_fallback_response(message)
+        reply = get_local_fallback_response(message, profile)
 
     return jsonify({"reply": reply})
 
