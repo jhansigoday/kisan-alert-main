@@ -671,7 +671,9 @@ def chat_query():
 
     profile = {}
     if phone:
-        profile = get_profile(phone)
+        p = get_profile(phone)
+        if p:
+            profile = p
 
     # Use local static estimated values to avoid calling slow external APIs in the chatbot loop
     weather_summary = "Sunny, 29C, Humidity: 65%"
