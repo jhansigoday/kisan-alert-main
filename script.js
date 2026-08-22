@@ -1735,6 +1735,7 @@ document.getElementById("signOutBtn").addEventListener("click", () => {
   if (confirm(confirmMsg)) {
     localStorage.removeItem("krushakseva_phone");
     localStorage.removeItem("krushakseva_profile");
+    localStorage.removeItem("krushakseva_profile");
     registeredFarmer = null;
     resetChecklist();
     

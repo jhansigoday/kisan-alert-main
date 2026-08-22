@@ -445,31 +445,8 @@ def sos_web_step():
 
 @app.route("/api/farmer-profile", methods=["POST"])
 def farmer_profile_create():
-    data = request.get_json(force=True) or {}
-    phone = data.get("phone")
-    if not phone:
-        return jsonify({"error": "Missing 'phone' field"}), 400
-        
-    # Check for duplicate profile
-    existing_profile = get_profile(phone)
-    if existing_profile:
-        return jsonify(existing_profile), 200
-        
-    profile = create_or_update_profile(
-        phone=phone,
-        name=data.get("name", ""),
-        location=data.get("location", ""),
-        land_size_acres=data.get("land_size_acres"),
-        crop_type=data.get("crop_type", ""),
-        soil_type=data.get("soil_type", ""),
-        irrigation_method=data.get("irrigation_method", ""),
-        water_availability=data.get("water_availability", ""),
-        soil_ph=data.get("soil_ph"),
-        latitude=data.get("latitude"),
-        longitude=data.get("longitude")
-    )
-    return jsonify(profile)
-
+    data = request.json or {}
+    return jsonify(data), 200
 
 @app.route("/api/farmer-profile/<phone>", methods=["GET"])
 def farmer_profile_get(phone):
@@ -697,9 +674,7 @@ def chat_query():
 
     profile = {}
     if phone:
-        p = get_profile(phone)
-        if p:
-            profile = p
+        profile = data.get("profile", {})
 
     # Use local static estimated values to avoid calling slow external APIs in the chatbot loop
     weather_summary = "Sunny, 29C, Humidity: 65%"
