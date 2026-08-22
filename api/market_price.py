@@ -16,6 +16,31 @@ def _location_terms(location: str) -> set:
     }
 
 
+_OFFICIAL_COMMODITY_NAMES = {
+    "rice": "Paddy(Dhan)(Common)",
+    "paddy": "Paddy(Dhan)(Common)",
+    "maize": "Maize",
+    "corn": "Maize",
+    "groundnut": "Groundnut",
+    "cotton": "Cotton",
+    "chilli": "Chilly",
+    "tomato": "Tomato",
+}
+
+_INDIAN_STATES = (
+    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
+    "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka",
+    "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram",
+    "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana",
+    "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal",
+)
+
+
+def _state_from_location(location: str) -> str:
+    normalized = (location or "").lower()
+    return next((state for state in _INDIAN_STATES if state.lower() in normalized), "")
+
+
 def get_market_price(crop: str, lat: float = 14.4426, lon: float = 79.9865, location: str = "") -> dict:
     """
     Fetches official AGMARKNET records through data.gov.in when a data.gov.in
@@ -24,6 +49,8 @@ def get_market_price(crop: str, lat: float = 14.4426, lon: float = 79.9865, loca
     """
     crop_clean = crop.lower().strip()
     location_terms = _location_terms(location)
+    official_commodity = _OFFICIAL_COMMODITY_NAMES.get(crop_clean, crop.title())
+    state = _state_from_location(location)
     
     api_key = os.environ.get("DATA_GOV_API_KEY")
     if not api_key:
@@ -37,15 +64,19 @@ def get_market_price(crop: str, lat: float = 14.4426, lon: float = 79.9865, loca
     # AGMARKNET's public daily-price resource maintained by the Ministry of
     # Agriculture. Prices are wholesale rupees per quintal.
     api_url = "https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070"
+    params = {
+        "api-key": api_key,
+        "format": "json",
+        # A small result set is enough for the dashboard and prevents the
+        # official service timing out on a large nationwide response.
+        "limit": 10,
+        "filters[commodity]": official_commodity,
+    }
+    if state:
+        params["filters[state]"] = state
+
     try:
-        response = requests.get(api_url, params={
-            "api-key": api_key,
-            "format": "json",
-            # A small result set is enough for the dashboard and prevents the
-            # official service timing out on a large nationwide response.
-            "limit": 25,
-            "filters[commodity]": crop_clean.title(),
-        }, timeout=6)
+        response = requests.get(api_url, params=params, timeout=10)
         response.raise_for_status()
         records = response.json().get("records", [])
     except requests.Timeout:
