@@ -624,14 +624,20 @@ def field_health():
     return jsonify(get_field_health_report(lat, lon, field_id))
 
 
-def get_local_fallback_response(message, profile=None):
+def get_local_fallback_response(message, profile=None, lang="en"):
     if not profile:
         profile = {}
     msg = message.lower().strip()
+    # Honour the selected UI language, while also recognising a Telugu question
+    # when a farmer writes in Telugu without switching the page language.
+    response_language = "te" if lang == "te" or any("\u0c00" <= char <= "\u0c7f" for char in message) else "en"
     soil = profile.get("soil_type", "black").lower()
     crop = profile.get("crop_type", "Rice")
     irrigation = profile.get("irrigation_method", "borewell").lower()
     water_availability = profile.get("water_availability", "medium").lower()
+
+    def localized(english, telugu):
+        return telugu if response_language == "te" else english
 
     def live_weather_answer():
         """Answer weather questions from the farmer's saved coordinates, free of charge."""
@@ -651,19 +657,31 @@ def get_local_fallback_response(message, profile=None):
                 probability = day.get("rain_prob", 0)
                 rainfall = day.get("rain_mm", 0)
                 if probability >= 60 or rainfall >= 5:
-                    return f"Tomorrow has a {probability}% chance of rain, with about {rainfall} mm forecast. Avoid spraying pesticides if rain arrives."
-                return f"Tomorrow has only a {probability}% chance of rain, with about {rainfall} mm forecast. Irrigate only if your field needs it."
+                    return localized(
+                        f"Tomorrow has a {probability}% chance of rain, with about {rainfall} mm forecast. Avoid spraying pesticides if rain arrives.",
+                        f"రేపు వర్షం పడే అవకాశం {probability}%; సుమారు {rainfall} మి.మీ. వర్షం అంచనా ఉంది. వర్షం వచ్చే అవకాశం ఉంటే పురుగుమందులు పిచికారీ చేయవద్దు."
+                    )
+                return localized(
+                    f"Tomorrow has only a {probability}% chance of rain, with about {rainfall} mm forecast. Irrigate only if your field needs it.",
+                    f"రేపు వర్షం పడే అవకాశం కేవలం {probability}%; సుమారు {rainfall} మి.మీ. వర్షం అంచనా ఉంది. అవసరమైతేనే నీరు పెట్టండి."
+                )
 
             total_rain = round(sum(day.get("rain_mm", 0) for day in forecast[:7]), 1)
             wet_days = sum(1 for day in forecast[:7] if day.get("rain_prob", 0) >= 50)
             current = weather_data.get("weather", {})
-            return (
+            return localized(
                 f"For your farm, it is currently {current.get('condition', 'unknown')} at "
                 f"{current.get('temp_c', 'unknown')}°C. The next 7 days show about {total_rain} mm "
-                f"of rain across {wet_days} likely rainy day(s); plan irrigation around those days."
+                f"of rain across {wet_days} likely rainy day(s); plan irrigation around those days.",
+                f"మీ పొలం వద్ద ప్రస్తుతం {current.get('condition', 'తెలియదు')}, ఉష్ణోగ్రత "
+                f"{current.get('temp_c', 'తెలియదు')}°C ఉంది. రాబోయే 7 రోజుల్లో సుమారు {total_rain} మి.మీ. "
+                f"వర్షం, {wet_days} వర్షపు రోజు/రోజులు ఉండే అవకాశం ఉంది; దానికి అనుగుణంగా నీరు పెట్టండి."
             )
         except (TypeError, ValueError, RuntimeError):
-            return "I could not reach the live weather service for your saved location. Please try again shortly."
+            return localized(
+                "I could not reach the live weather service for your saved location. Please try again shortly.",
+                "మీ నమోదైన ప్రాంతానికి ప్రత్యక్ష వాతావరణ సేవను చేరుకోలేకపోయాను. కొద్దిసేపటి తర్వాత మళ్లీ ప్రయత్నించండి."
+            )
 
     def profile_crop_advice():
         """Useful no-key crop advice when the optional AI service is unavailable."""
@@ -674,14 +692,14 @@ def get_local_fallback_response(message, profile=None):
 
         if any(term in soil for term in ("mountain", "hill", "hilly", "slope")):
             if plentiful_water:
-                return "For hilly land with a river source, turmeric, ginger, and beans are better fits than cotton. Use contour beds and drainage; choose crops after checking local market demand."
-            return "For hilly land with limited water, choose millets, pigeon pea, or horse gram. Use contour bunds and mulching to retain moisture."
+                return localized("For hilly land with a river source, turmeric, ginger, and beans are better fits than cotton. Use contour beds and drainage; choose crops after checking local market demand.", "కొండ నేల మరియు నది నీటి వనరుతో పసుపు, అల్లం, బీన్స్ పత్తి కంటే మెరుగైనవి. కాంటూర్ బెడ్లు, డ్రైనేజీ వాడండి; స్థానిక మార్కెట్ ధరలు చూసి తుది పంటను ఎంచుకోండి.")
+            return localized("For hilly land with limited water, choose millets, pigeon pea, or horse gram. Use contour bunds and mulching to retain moisture.", "తక్కువ నీరు ఉన్న కొండ నేలకు చిరుధాన్యాలు, కందులు లేదా ఉలవలు ఎంచుకోండి. తేమ నిలుపుకోవడానికి కాంటూర్ కట్టలు, మల్చింగ్ వాడండి.")
         if "red" in soil:
             if limited_water:
-                return "Red soil with limited water is better suited to groundnut, foxtail millet, or pigeon pea. Avoid water-intensive paddy unless reliable irrigation is available."
+                return localized("Red soil with limited water is better suited to groundnut, foxtail millet, or pigeon pea. Avoid water-intensive paddy unless reliable irrigation is available.", "తక్కువ నీరు ఉన్న ఎర్ర నేలకు వేరుశనగ, కొర్రలు లేదా కందులు అనుకూలం. నమ్మకమైన నీటి వనరు లేకపోతే వరిని నివారించండి.")
             if plentiful_water:
-                return "With red soil and reliable water, groundnut, maize, and chilli are practical options. Use drip irrigation for chilli and avoid waterlogging."
-            return "For red soil with medium water, groundnut, maize, and pigeon pea are safer choices. Rotate with a pulse crop to protect soil fertility."
+                return localized("With red soil and reliable water, groundnut, maize, and chilli are practical options. Use drip irrigation for chilli and avoid waterlogging.", "ఎర్ర నేల, నమ్మకమైన నీటితో వేరుశనగ, మొక్కజొన్న, మిరప మంచి ఎంపికలు. మిరపకు డ్రిప్ వాడండి; నీరు నిలవనివ్వవద్దు.")
+            return localized("For red soil with medium water, groundnut, maize, and pigeon pea are safer choices. Rotate with a pulse crop to protect soil fertility.", "మధ్యస్థ నీరు ఉన్న ఎర్ర నేలకు వేరుశనగ, మొక్కజొన్న, కందులు సురక్షిత ఎంపికలు. నేల సారాన్ని కాపాడటానికి పప్పుధాన్యంతో పంట మార్పిడి చేయండి.")
         if any(term in soil for term in ("black", "regur", "cotton")):
             if limited_water:
                 return "Black soil with limited water suits sorghum, pigeon pea, and hardy cotton varieties. Keep wide drainage channels because black soil holds water after rain."
@@ -720,21 +738,24 @@ def get_local_fallback_response(message, profile=None):
         return "Bajra (pearl millet) is highly suitable for dry regions. It is profitable and has low input costs. Would you like to know about its sowing time or water needs?"
 
     # Weather/Rain questions use live Open-Meteo data for the saved farm location.
-    if "rain" in msg or "weather" in msg or "forecast" in msg:
+    if any(term in msg for term in ("rain", "weather", "forecast", "వర్ష", "వాతావరణ", "రేపు")):
         return live_weather_answer()
 
     # Question 4: Crop recommendation / profit (Flow 1)
-    if ("crop" in msg or "land" in msg or "soil" in msg) and ("grow" in msg or "profit" in msg or "better" in msg or "recommend" in msg or "labham" in msg or "best" in msg or "suitable" in msg or "suit" in msg):
+    if (
+        ("crop" in msg or "land" in msg or "soil" in msg or "పంట" in msg or "నేల" in msg)
+        and ("grow" in msg or "profit" in msg or "better" in msg or "recommend" in msg or "labham" in msg or "best" in msg or "suitable" in msg or "suit" in msg or "ఏది" in msg or "మంచి" in msg or "సరిపోత" in msg)
+    ):
         return profile_crop_advice()
 
     # Greetings fallbacks
     words = msg.split()
-    greetings = {"helo", "hello", "hi", "hey", "namaskaram"}
+    greetings = {"helo", "hello", "hi", "hey", "namaskaram", "నమస్కారం", "హాయ్"}
     if any(w in greetings for w in words):
-        return "Hello! I am KṛṣakaSevā AI. How can I help you today with your farming questions?"
+        return localized("Hello! I am KṛṣakaSevā AI. How can I help you today with your farming questions?", "నమస్కారం! నేను కృషకసేవ AI. మీ వ్యవసాయ ప్రశ్నలకు ఎలా సహాయం చేయగలను?")
 
     # Generic Fallbacks
-    return "I apologize, I could not fully process that request. Please specify your crop type, irrigation question, or pest problem."
+    return localized("I could not fully process that request. Please specify your crop type, irrigation question, or pest problem.", "మీ ప్రశ్నను పూర్తిగా అర్థం చేసుకోలేకపోయాను. దయచేసి పంట, నీటి అవసరం లేదా తెగులు సమస్య గురించి కొంత వివరంగా అడగండి.")
 
 
 @app.route("/api/chat", methods=["POST"])
@@ -743,6 +764,11 @@ def chat_query():
     message = data.get("message", "").strip()
     history = data.get("history", [])
     phone = normalize_phone(data.get("phone", "").strip())
+    requested_language = data.get("lang", "en").lower()
+    if requested_language not in {"en", "te"}:
+        requested_language = "en"
+    if any("\u0c00" <= char <= "\u0c7f" for char in message):
+        requested_language = "te"
 
     if not message:
         return jsonify({"error": "Missing 'message' field"}), 400
@@ -775,7 +801,7 @@ def chat_query():
 
     system_prompt = (
         "You are KṛṣakaSevā (KṛṣakaSevā), an expert agricultural scientist AI.\n"
-        "CRITICAL: You MUST respond ONLY in English. Do NOT write in Telugu or other languages.\n"
+        f"Reply in {'Telugu' if requested_language == 'te' else 'English'}. The farmer may mix Telugu and English; understand both and use {'Telugu' if requested_language == 'te' else 'English'} in your reply.\n"
         "CRITICAL: Do NOT output any greetings, taglines, slogans, or introductions. Answer the question directly and immediately.\n"
         "CRITICAL: Do NOT say 'He Kṛṣaka, Sukhī Bhava!' or any greetings. Do not repeat any slogans.\n"
         "CRITICAL: Keep your response extremely brief, direct, and under 3 sentences.\n"
@@ -821,7 +847,7 @@ def chat_query():
             raise Exception("Missing Groq API Key")
     except Exception as e:
         print("Chatbot query failed, using local English fallback:", e)
-        reply = get_local_fallback_response(message, profile)
+        reply = get_local_fallback_response(message, profile, requested_language)
 
     return jsonify({"reply": reply})
 
