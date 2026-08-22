@@ -1106,17 +1106,20 @@ async function loadMandiMarketData(crop = "Rice", lat = 14.4426, lon = 79.9865, 
 }
 
 function showMandiUnavailable(message) {
+  const safeMessage = message && !/(timeout|connectionpool|host=|traceback|exception)/i.test(message)
+    ? message
+    : "Official mandi prices are temporarily unavailable. Please try again shortly.";
   const notice = document.getElementById("marketChartNotice");
   if (notice) {
-    notice.textContent = message;
+    notice.textContent = safeMessage;
     notice.style.display = "block";
   }
   const insightsBox = document.querySelector(".price-insights-card");
   if (insightsBox) {
-    insightsBox.innerHTML = `<h3>${currentLang === "te" ? "మండి మార్కెట్ విశ్లేషణ" : "Mandi Market Insights"}</h3><div class="insight-row"><div class="icon"><i class="fa-solid fa-circle-info"></i></div><div class="info"><strong>${currentLang === "te" ? "అధికారిక డేటా అందుబాటులో లేదు" : "Official data unavailable"}</strong><span>${message}</span></div></div>`;
+    insightsBox.innerHTML = `<h3>${currentLang === "te" ? "మండి మార్కెట్ విశ్లేషణ" : "Mandi Market Insights"}</h3><div class="insight-row"><div class="icon"><i class="fa-solid fa-circle-info"></i></div><div class="info"><strong>${currentLang === "te" ? "అధికారిక డేటా అందుబాటులో లేదు" : "Official data unavailable"}</strong><span>${safeMessage}</span></div></div>`;
   }
   const source = document.getElementById("marketDataSource");
-  if (source) source.textContent = message;
+  if (source) source.textContent = safeMessage;
 }
 
 // ---------- AI PROFIT CALCULATOR STATE ----------

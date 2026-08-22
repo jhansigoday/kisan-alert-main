@@ -46,8 +46,22 @@ def get_market_price(crop: str, lat: float = 14.4426, lon: float = 79.9865, loca
         }, timeout=12)
         response.raise_for_status()
         records = response.json().get("records", [])
-    except Exception as e:
-        return {"available": False, "crop": crop, "message": f"Official mandi feed unavailable: {e}", "source": "AGMARKNET / data.gov.in"}
+    except requests.Timeout:
+        # Do not expose connection details to farmers.  The data.gov.in feed
+        # can occasionally be slow, especially during peak traffic.
+        return {
+            "available": False,
+            "crop": crop,
+            "message": "Official mandi prices are taking longer than usual. Please try again in a few minutes.",
+            "source": "AGMARKNET / data.gov.in"
+        }
+    except requests.RequestException:
+        return {
+            "available": False,
+            "crop": crop,
+            "message": "Official mandi prices are temporarily unavailable. Please try again shortly.",
+            "source": "AGMARKNET / data.gov.in"
+        }
 
     markets = []
     for record in records:
