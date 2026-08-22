@@ -1011,7 +1011,9 @@ async function loadMandiMarketData(crop = "Rice", lat = 14.4426, lon = 79.9865, 
       renderCachedMandiOrUnavailable(cacheKey, message);
       return;
     }
-    const cacheRecord = saveMandiCache(cacheKey, data);
+    // Only live responses are verified snapshots. Reference records must not
+    // later appear as if they were a live cache.
+    const cacheRecord = data.data_mode === "live" ? saveMandiCache(cacheKey, data) : { history: [] };
     renderMandiPrices(data, null, cacheRecord.history);
   } catch (err) {
     console.log("Could not load mandi prices:", err);
@@ -1061,7 +1063,7 @@ function renderMandiPrices(data, cachedAt = null, history = []) {
   const isHistorical = data.data_mode === "historical" || Boolean(cachedAt);
   const freshness = cachedAt
     ? `Live update delayed. Showing last verified official data from ${new Date(cachedAt).toLocaleString()}.`
-    : isHistorical ? "Latest Available Data — historical official market records." : "Live Government Data — latest official daily prices.";
+    : isHistorical ? "Live feed temporarily unavailable. Showing real historical market records." : "Live Government Data — latest official daily prices.";
   const body = document.getElementById("dash-prices-body");
   if (body) {
     body.innerHTML = "";
@@ -1082,20 +1084,30 @@ function renderMandiPrices(data, cachedAt = null, history = []) {
       const modal = Number(m.price ?? m.modal_price);
       const minimum = Number(m.min_price);
       const maximum = Number(m.max_price);
-      tr.innerHTML = `<td>${translateMandiTerm(m.market)}${area ? `<br><small>${area}</small>` : ""}</td><td>${m.commodity || data.crop}</td><td>₹${modal.toLocaleString()} / Quintal</td><td>${Number.isFinite(minimum) ? `₹${minimum.toLocaleString()} / Quintal` : "—"}</td><td>${Number.isFinite(maximum) ? `₹${maximum.toLocaleString()} / Quintal` : "—"}</td><td>${m.reported_date || "Not supplied"}</td>`;
+      tr.innerHTML = `<td>${translateMandiTerm(m.market)}${area ? `<br><small>${area}</small>` : ""}</td><td>${m.commodity || data.crop}</td><td>${Number.isFinite(minimum) ? `₹${minimum.toLocaleString()} / Quintal` : "—"}</td><td>${Number.isFinite(maximum) ? `₹${maximum.toLocaleString()} / Quintal` : "—"}</td><td>₹${modal.toLocaleString()} / Quintal</td><td>${m.reported_date || "Not supplied"}</td><td>${m.source || data.source || "Government market data"}</td>`;
       marketBody.appendChild(tr);
     });
   }
   const source = document.getElementById("marketDataSource");
-  if (source) source.textContent = `${freshness} ${data.source || "AGMARKNET official data"}`;
+  if (source) source.textContent = `${freshness} Source: ${data.source || "AGMARKNET official data"}`;
   setMandiStatus(isHistorical ? "historical" : "live");
   const retryButton = document.getElementById("retryMandiPricesBtn");
-  if (retryButton) retryButton.style.display = "none";
+  if (retryButton) retryButton.style.display = isHistorical ? "inline-flex" : "none";
   const notice = document.getElementById("marketChartNotice");
-  if (history.length >= 2) {
+  const comparisonTitle = document.getElementById("marketComparisonTitle");
+  if (isHistorical && markets.length) {
+    if (comparisonTitle) comparisonTitle.textContent = "Nearby Market Price Comparison";
+    if (notice) {
+      notice.textContent = "Reference records shown in the table are genuine reported market prices, not a 30-day trend.";
+      notice.style.display = "block";
+    }
+    updateMarketComparisonChart(data.crop, markets);
+  } else if (history.length >= 2) {
+    if (comparisonTitle) comparisonTitle.textContent = "30-Day Historical Mandi Price Trend";
     if (notice) notice.style.display = "none";
     updateMarketTrendChart(data.crop, history.map(item => item.price), history.map(item => item.date));
   } else if (notice) {
+    if (comparisonTitle) comparisonTitle.textContent = "30-Day Historical Mandi Price Trend";
     notice.textContent = "30-day history will build automatically from verified daily official price snapshots.";
     notice.style.display = "block";
   }
@@ -1107,6 +1119,12 @@ function renderMandiPrices(data, cachedAt = null, history = []) {
 
 function showMandiUnavailable(message) {
   const safeMessage = getSafeMandiMessage(message);
+  const comparisonTitle = document.getElementById("marketComparisonTitle");
+  if (comparisonTitle) comparisonTitle.textContent = "Market Data Unavailable";
+  if (marketTrendChartInstance) {
+    marketTrendChartInstance.destroy();
+    marketTrendChartInstance = null;
+  }
   const notice = document.getElementById("marketChartNotice");
   if (notice) {
     notice.textContent = safeMessage;
@@ -1124,7 +1142,7 @@ function showMandiUnavailable(message) {
   const body = document.getElementById("dash-prices-body");
   if (body) body.innerHTML = `<tr><td colspan="4">${safeMessage}</td></tr>`;
   const marketBody = document.getElementById("market-prices-body");
-  if (marketBody) marketBody.innerHTML = `<tr><td colspan="6">${safeMessage}</td></tr>`;
+  if (marketBody) marketBody.innerHTML = `<tr><td colspan="7">${safeMessage}</td></tr>`;
 }
 
 function setMandiStatus(status) {
@@ -1135,7 +1153,7 @@ function setMandiStatus(status) {
     badge.style.background = "#dcfce7";
     badge.style.color = "#166534";
   } else if (status === "historical") {
-    badge.textContent = "🟠 Latest Available Data";
+    badge.textContent = "🟡 Reference Market Data · Live feed unavailable";
     badge.style.background = "#fef3c7";
     badge.style.color = "#92400e";
   } else {
@@ -1702,6 +1720,36 @@ function updateMarketTrendChart(cropName, trendArray, labels = null) {
         }
       }
     }
+  });
+}
+
+function updateMarketComparisonChart(cropName, markets) {
+  const canvas = document.getElementById("marketTrendChart");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  if (marketTrendChartInstance) marketTrendChartInstance.destroy();
+
+  marketTrendChartInstance = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: markets.map(m => m.market),
+      datasets: [{
+        label: `${cropName} modal price (₹ / Quintal)`,
+        data: markets.map(m => Number(m.price ?? m.modal_price)),
+        backgroundColor: "rgba(16, 185, 129, 0.7)",
+        borderColor: "#10b981",
+        borderWidth: 1,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: false, ticks: { color: "#64748b" } },
+        x: { ticks: { color: "#64748b" } },
+      },
+    },
   });
 }
 
