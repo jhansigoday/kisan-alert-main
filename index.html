@@ -558,6 +558,7 @@
           <div class="market-grid">
             <div class="chart-card">
               <h3>30-Day Historical Mandi Price Trend</h3>
+              <p id="marketChartNotice" style="margin: 16px 0; color: var(--text-muted); line-height: 1.5;">Live mandi price history will appear after the official market-data feed is configured.</p>
               <div class="chart-container-large">
                 <canvas id="marketTrendChart"></canvas>
               </div>
@@ -565,18 +566,11 @@
             
             <div class="price-insights-card">
               <h3>Mandi Market Insights</h3>
-              <div class="insight-row">
-                <div class="icon"><i class="fa-solid fa-circle-check"></i></div>
+              <div id="marketInsightsContent" class="insight-row">
+                <div class="icon"><i class="fa-solid fa-circle-info"></i></div>
                 <div class="info">
-                  <strong>Best Mandi to Sell</strong>
-                  <span>Guntur Mandi (highest rates recorded for Rice)</span>
-                </div>
-              </div>
-              <div class="insight-row">
-                <div class="icon"><i class="fa-solid fa-arrow-trend-up"></i></div>
-                <div class="info">
-                  <strong>Price Prediction for next 2 weeks</strong>
-                  <span>Prices expected to increase by +2.5% due to high export demands.</span>
+                  <strong>Awaiting official price data</strong>
+                  <span>Set DATA_GOV_API_KEY to load daily AGMARKNET mandi prices.</span>
                 </div>
               </div>
             </div>
@@ -885,7 +879,7 @@
       <div class="chat-header">
         <div class="ai-avatar"><i class="fa-solid fa-sparkles"></i></div>
         <div>
-          <h4><span data-translate-key="chat_title">कृषकसेवा AI Assistant</span></h4>
+          <h4><span data-translate-key="chat_title">KṛṣakaSevā Bilingual AI Assistant (English &amp; తెలుగు)</span></h4>
           <span data-translate-key="chat_status">Online 24/7</span>
         </div>
         <button id="closeChatBtn" class="chat-close"><i class="fa-solid fa-xmark"></i></button>

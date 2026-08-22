@@ -236,7 +236,7 @@ const TRANSLATIONS = {
     unit_quintals: "Quintals",
     
     // Chatbot additions
-    chat_title: "KṛṣakaSevā AI Assistant",
+    chat_title: "KṛṣakaSevā Bilingual AI Assistant (English & తెలుగు)",
     chat_status: "Online 24/7",
     chat_welcome: "Hello! I am KṛṣakaSevā AI. Ask me anything about crop selection, soil, water management, weather alerts, or market prices!",
     chat_placeholder: "Type a message...",
@@ -398,7 +398,7 @@ const TRANSLATIONS = {
     unit_quintals: "క్వింటాళ్లు",
     
     // Chatbot additions
-    chat_title: "కృషకసేవ AI సహాయకుడు",
+    chat_title: "కృషకసేవ ద్విభాషా AI సహాయకుడు (English & తెలుగు)",
     chat_status: "ఆన్‌లైన్ 24/7",
     chat_welcome: "నమస్కారం! నేను కృషకసేవ AI సహాయకుడిని. పంట ఎంపిక, నేల, నీటి యాజమాన్యం, వాతావరణ హెచ్చరికలు లేదా మార్కెట్ ధరల గురించి నన్ను ఏదైనా అడగండి!",
     chat_placeholder: "సందేశాన్ని టైప్ చేయండి...",
@@ -1009,6 +1009,7 @@ async function loadMandiMarketData(crop = "Rice", lat = 14.4426, lon = 79.9865) 
       if (body) {
         body.innerHTML = `<tr><td colspan="4">${data.message || "Live mandi prices are currently unavailable."}</td></tr>`;
       }
+      showMandiUnavailable(data.message || "Live mandi prices are currently unavailable.");
       return;
     }
     if (res.ok && data.available) {
@@ -1076,11 +1077,28 @@ async function loadMandiMarketData(crop = "Rice", lat = 14.4426, lon = 79.9865) 
 
       // Render historical 30-day Chart
       if (Array.isArray(data.price_trend_30d) && data.price_trend_30d.length) {
+        const notice = document.getElementById("marketChartNotice");
+        if (notice) notice.style.display = "none";
         updateMarketTrendChart(data.crop, data.price_trend_30d);
+      } else {
+        showMandiUnavailable("Official daily prices are available, but 30-day history has not been loaded yet.");
       }
     }
   } catch (err) {
     console.log("Could not load mandi prices:", err);
+    showMandiUnavailable("Unable to reach the official mandi price service right now.");
+  }
+}
+
+function showMandiUnavailable(message) {
+  const notice = document.getElementById("marketChartNotice");
+  if (notice) {
+    notice.textContent = message;
+    notice.style.display = "block";
+  }
+  const insightsBox = document.querySelector(".price-insights-card");
+  if (insightsBox) {
+    insightsBox.innerHTML = `<h3>${currentLang === "te" ? "మండి మార్కెట్ విశ్లేషణ" : "Mandi Market Insights"}</h3><div class="insight-row"><div class="icon"><i class="fa-solid fa-circle-info"></i></div><div class="info"><strong>${currentLang === "te" ? "అధికారిక డేటా అందుబాటులో లేదు" : "Official data unavailable"}</strong><span>${message}</span></div></div>`;
   }
 }
 
