@@ -557,6 +557,16 @@
           
           <div class="market-grid">
             <div class="chart-card">
+              <h3>Latest Official Mandi Prices</h3>
+              <p id="marketDataSource" style="margin: 8px 0 16px; color: var(--text-muted); font-size: 13px;">Loading official AGMARKNET prices for your crop and saved location…</p>
+              <div class="table-container">
+                <table class="prices-table">
+                  <thead><tr><th>Market</th><th>Modal Price</th><th>Reported Date</th></tr></thead>
+                  <tbody id="market-prices-body"><tr><td colspan="3">Loading…</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="chart-card">
               <h3>30-Day Historical Mandi Price Trend</h3>
               <p id="marketChartNotice" style="margin: 16px 0; color: var(--text-muted); line-height: 1.5;">Live mandi price history will appear after the official market-data feed is configured.</p>
               <div class="chart-container-large">

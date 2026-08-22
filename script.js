@@ -449,7 +449,7 @@ function switchTab(tabId) {
     setTimeout(() => {
       const lat = registeredFarmer ? registeredFarmer.latitude : (detectedLat || 14.4426);
       const lon = registeredFarmer ? registeredFarmer.longitude : (detectedLon || 79.9865);
-      loadMandiMarketData(registeredFarmer ? registeredFarmer.crop_type : "Rice", lat, lon);
+      loadMandiMarketData(registeredFarmer ? registeredFarmer.crop_type : "Rice", lat, lon, registeredFarmer ? registeredFarmer.location : "");
     }, 100);
   } else if (tabId === "analytics") {
     setTimeout(toggleAnalyticsState, 100);
@@ -746,7 +746,7 @@ function updateDashboardWithProfile(profile) {
   loadCropRecommendations(lat, lon, profile.soil_type, profile.water_availability, profile.irrigation_method, profile.soil_ph);
   
   // Fetch location aware mandi rates
-  loadMandiMarketData(profile.crop_type || "Rice", lat, lon);
+  loadMandiMarketData(profile.crop_type || "Rice", lat, lon, profile.location || "");
   
   // Toggle analytics view
   toggleAnalyticsState();
@@ -1000,15 +1000,18 @@ if (compareCropsBtn) {
   });
 }
 
-async function loadMandiMarketData(crop = "Rice", lat = 14.4426, lon = 79.9865) {
+async function loadMandiMarketData(crop = "Rice", lat = 14.4426, lon = 79.9865, location = "") {
   try {
-    const res = await fetch(`${BACKEND_URL}/api/market-price?crop=${crop}&lat=${lat}&lon=${lon}`);
+    const query = new URLSearchParams({ crop, lat, lon, location });
+    const res = await fetch(`${BACKEND_URL}/api/market-price?${query}`);
     const data = await res.json();
     const body = document.getElementById("dash-prices-body");
     if (!res.ok || !data.available) {
       if (body) {
         body.innerHTML = `<tr><td colspan="4">${data.message || "Live mandi prices are currently unavailable."}</td></tr>`;
       }
+      const marketBody = document.getElementById("market-prices-body");
+      if (marketBody) marketBody.innerHTML = `<tr><td colspan="3">${data.message || "Live mandi prices are currently unavailable."}</td></tr>`;
       showMandiUnavailable(data.message || "Live mandi prices are currently unavailable.");
       return;
     }
@@ -1027,11 +1030,23 @@ async function loadMandiMarketData(crop = "Rice", lat = 14.4426, lon = 79.9865) 
             <td>${cropDisplay}</td>
             <td>${priceDisplay}</td>
             <td class="trend-up"><i class="fa-solid fa-arrow-trend-up"></i> ${trendDisplay}</td>
-            <td>${marketDisplay}${Number.isFinite(m.distance_km) ? ` (${m.distance_km.toFixed(1)} km)` : ""}</td>
+            <td>${marketDisplay}${m.district || m.state ? ` (${[m.district, m.state].filter(Boolean).join(", ")})` : ""}</td>
           `;
           body.appendChild(tr);
         });
       }
+      const marketBody = document.getElementById("market-prices-body");
+      if (marketBody) {
+        marketBody.innerHTML = "";
+        data.nearest_markets.forEach(m => {
+          const tr = document.createElement("tr");
+          const area = [m.district, m.state].filter(Boolean).join(", ");
+          tr.innerHTML = `<td>${translateMandiTerm(m.market)}${area ? `<br><small>${area}</small>` : ""}</td><td>₹${Number(m.price).toLocaleString()} / Quintal</td><td>${m.reported_date || "Not supplied"}</td>`;
+          marketBody.appendChild(tr);
+        });
+      }
+      const source = document.getElementById("marketDataSource");
+      if (source) source.textContent = `${data.source}. Ranked using saved location: ${data.location_filter || "not available"}.`;
 
       // Update Market Insights list
       const insightsBox = document.querySelector(".price-insights-card");
@@ -1100,6 +1115,8 @@ function showMandiUnavailable(message) {
   if (insightsBox) {
     insightsBox.innerHTML = `<h3>${currentLang === "te" ? "మండి మార్కెట్ విశ్లేషణ" : "Mandi Market Insights"}</h3><div class="insight-row"><div class="icon"><i class="fa-solid fa-circle-info"></i></div><div class="info"><strong>${currentLang === "te" ? "అధికారిక డేటా అందుబాటులో లేదు" : "Official data unavailable"}</strong><span>${message}</span></div></div>`;
   }
+  const source = document.getElementById("marketDataSource");
+  if (source) source.textContent = message;
 }
 
 // ---------- AI PROFIT CALCULATOR STATE ----------

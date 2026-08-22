@@ -4,38 +4,26 @@ Uses coordinates to dynamically predict closest mandis and prices.
 """
 
 import os
-import json
 import requests
 
-_FALLBACK_MARKETS = {
-    "rice": {
-        "crop": "Rice (Paddy)",
-        "available": True,
-        "min_price": 2150,
-        "max_price": 2350,
-        "modal_price": 2250,
-        "yesterday_price": 2240,
-        "unit": "per quintal",
-        "weekly_trend": "+1.2% (Rising)",
-        "monthly_trend": "+3.8% (Rising)",
-        "nearest_markets": [
-            {"market": "Nellore Mandi", "price": 2250, "distance_km": 4.5},
-            {"market": "Kavali Mandi", "price": 2210, "distance_km": 12.0},
-            {"market": "Guntur Mandi", "price": 2320, "distance_km": 45.0}
-        ],
-        "highest_paying_market": "Guntur Mandi (₹2,320)",
-        "lowest_paying_market": "Kavali Mandi (₹2,210)"
+
+def _location_terms(location: str) -> set:
+    """Turn a farmer's saved village/district/state text into matchable terms."""
+    return {
+        part.strip().lower()
+        for part in (location or "").replace(";", ",").split(",")
+        if len(part.strip()) >= 3
     }
-}
 
 
-def get_market_price(crop: str, lat: float = 14.4426, lon: float = 79.9865) -> dict:
+def get_market_price(crop: str, lat: float = 14.4426, lon: float = 79.9865, location: str = "") -> dict:
     """
     Fetches official AGMARKNET records through data.gov.in when a data.gov.in
     API key is configured. Never present AI-generated or random values as a
     market price.
     """
     crop_clean = crop.lower().strip()
+    location_terms = _location_terms(location)
     
     api_key = os.environ.get("DATA_GOV_API_KEY")
     if not api_key:
@@ -53,7 +41,7 @@ def get_market_price(crop: str, lat: float = 14.4426, lon: float = 79.9865) -> d
         response = requests.get(api_url, params={
             "api-key": api_key,
             "format": "json",
-            "limit": 100,
+            "limit": 500,
             "filters[commodity]": crop_clean.title(),
         }, timeout=12)
         response.raise_for_status()
@@ -62,21 +50,40 @@ def get_market_price(crop: str, lat: float = 14.4426, lon: float = 79.9865) -> d
         return {"available": False, "crop": crop, "message": f"Official mandi feed unavailable: {e}", "source": "AGMARKNET / data.gov.in"}
 
     markets = []
-    for record in records[:3]:
+    for record in records:
         try:
+            state = str(record.get("state") or "").strip()
+            district = str(record.get("district") or "").strip()
+            market = str(record.get("market") or record.get("market_name") or "Reported mandi").strip()
+            # The official feed has mandi names and administrative areas, but
+            # not their coordinates. Rank local district/state records first;
+            # never fabricate a distance from the farm's GPS point.
+            match_score = sum(
+                term in {state.lower(), district.lower(), market.lower()}
+                for term in location_terms
+            )
             markets.append({
-                "market": record.get("market") or record.get("market_name") or "Reported mandi",
+                "market": market,
                 "price": float(record.get("modal_price") or record.get("modal price")),
                 "distance_km": None,
+                "state": state,
+                "district": district,
+                "reported_date": record.get("arrival_date") or record.get("price_date") or "",
+                "match_score": match_score,
             })
         except (TypeError, ValueError):
             continue
     if not markets:
         return {"available": False, "crop": crop, "message": "No current official records found for this crop.", "source": "AGMARKNET / data.gov.in"}
-    prices = [market["price"] for market in markets]
+    markets.sort(key=lambda item: (-item["match_score"], item["market"].lower()))
+    selected_markets = markets[:3]
+    prices = [market["price"] for market in selected_markets]
+    for market in selected_markets:
+        market.pop("match_score", None)
     return {
         "available": True, "crop": crop, "min_price": min(prices), "max_price": max(prices),
-        "modal_price": markets[0]["price"], "unit": "per quintal", "nearest_markets": markets,
+        "modal_price": selected_markets[0]["price"], "unit": "per quintal", "nearest_markets": selected_markets,
         "weekly_trend": "Official historical trend not loaded", "monthly_trend": "Official historical trend not loaded",
-        "price_trend_30d": [], "source": "AGMARKNET / data.gov.in official daily prices"
+        "price_trend_30d": [], "source": "AGMARKNET / data.gov.in official daily prices",
+        "location_filter": location or "No saved location",
     }

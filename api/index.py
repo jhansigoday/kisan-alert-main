@@ -184,14 +184,15 @@ def serve_audio_reply(filename):
 @app.route("/api/market-price", methods=["GET"])
 def market_price():
     crop = request.args.get("crop", "").strip()
+    location = request.args.get("location", "").strip()
     if not crop:
         return jsonify({"error": "Missing 'crop' query parameter"}), 400
     try:
         lat = float(request.args.get("lat"))
         lon = float(request.args.get("lon"))
-        return jsonify(get_market_price(crop, lat, lon))
+        return jsonify(get_market_price(crop, lat, lon, location))
     except (TypeError, ValueError):
-        return jsonify(get_market_price(crop))
+        return jsonify(get_market_price(crop, location=location))
 
 
 @app.route("/api/analytics", methods=["GET"])
