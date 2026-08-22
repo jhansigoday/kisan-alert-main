@@ -1058,16 +1058,18 @@ function renderCachedMandiOrUnavailable(cacheKey, message) {
 
 function renderMandiPrices(data, cachedAt = null, history = []) {
   const markets = Array.isArray(data.nearest_markets) ? data.nearest_markets : [];
+  const isHistorical = data.data_mode === "historical" || Boolean(cachedAt);
   const freshness = cachedAt
     ? `Live update delayed. Showing last verified official data from ${new Date(cachedAt).toLocaleString()}.`
-    : "Latest official daily prices.";
+    : isHistorical ? "Latest Available Data — historical official market records." : "Live Government Data — latest official daily prices.";
   const body = document.getElementById("dash-prices-body");
   if (body) {
     body.innerHTML = "";
     markets.forEach(m => {
       const tr = document.createElement("tr");
       const area = [m.district, m.state].filter(Boolean).join(", ");
-      tr.innerHTML = `<td>${translateMandiTerm(data.crop)}</td><td>₹${Number(m.price).toLocaleString()} / ${currentLang === "te" ? "క్వింటాల్" : "Quintal"}</td><td>${cachedAt ? "Last verified" : "Official daily price"}</td><td>${translateMandiTerm(m.market)}${area ? ` (${area})` : ""}</td>`;
+      const price = Number(m.price ?? m.modal_price);
+      tr.innerHTML = `<td>${translateMandiTerm(data.crop)}</td><td>₹${price.toLocaleString()} / ${currentLang === "te" ? "క్వింటాల్" : "Quintal"}</td><td>${isHistorical ? "Latest available" : "Official daily price"}</td><td>${translateMandiTerm(m.market)}${area ? ` (${area})` : ""}</td>`;
       body.appendChild(tr);
     });
   }
@@ -1077,12 +1079,16 @@ function renderMandiPrices(data, cachedAt = null, history = []) {
     markets.forEach(m => {
       const tr = document.createElement("tr");
       const area = [m.district, m.state].filter(Boolean).join(", ");
-      tr.innerHTML = `<td>${translateMandiTerm(m.market)}${area ? `<br><small>${area}</small>` : ""}</td><td>₹${Number(m.price).toLocaleString()} / Quintal</td><td>${m.reported_date || "Not supplied"}</td>`;
+      const modal = Number(m.price ?? m.modal_price);
+      const minimum = Number(m.min_price);
+      const maximum = Number(m.max_price);
+      tr.innerHTML = `<td>${translateMandiTerm(m.market)}${area ? `<br><small>${area}</small>` : ""}</td><td>${m.commodity || data.crop}</td><td>₹${modal.toLocaleString()} / Quintal</td><td>${Number.isFinite(minimum) ? `₹${minimum.toLocaleString()} / Quintal` : "—"}</td><td>${Number.isFinite(maximum) ? `₹${maximum.toLocaleString()} / Quintal` : "—"}</td><td>${m.reported_date || "Not supplied"}</td>`;
       marketBody.appendChild(tr);
     });
   }
   const source = document.getElementById("marketDataSource");
   if (source) source.textContent = `${freshness} ${data.source || "AGMARKNET official data"}`;
+  setMandiStatus(isHistorical ? "historical" : "live");
   const retryButton = document.getElementById("retryMandiPricesBtn");
   if (retryButton) retryButton.style.display = "none";
   const notice = document.getElementById("marketChartNotice");
@@ -1112,12 +1118,31 @@ function showMandiUnavailable(message) {
   }
   const source = document.getElementById("marketDataSource");
   if (source) source.textContent = safeMessage;
+  setMandiStatus("unavailable");
   const retryButton = document.getElementById("retryMandiPricesBtn");
   if (retryButton) retryButton.style.display = "inline-flex";
   const body = document.getElementById("dash-prices-body");
   if (body) body.innerHTML = `<tr><td colspan="4">${safeMessage}</td></tr>`;
   const marketBody = document.getElementById("market-prices-body");
-  if (marketBody) marketBody.innerHTML = `<tr><td colspan="3">${safeMessage}</td></tr>`;
+  if (marketBody) marketBody.innerHTML = `<tr><td colspan="6">${safeMessage}</td></tr>`;
+}
+
+function setMandiStatus(status) {
+  const badge = document.getElementById("marketDataStatus");
+  if (!badge) return;
+  if (status === "live") {
+    badge.textContent = "🟢 Live Government Data";
+    badge.style.background = "#dcfce7";
+    badge.style.color = "#166534";
+  } else if (status === "historical") {
+    badge.textContent = "🟠 Latest Available Data";
+    badge.style.background = "#fef3c7";
+    badge.style.color = "#92400e";
+  } else {
+    badge.textContent = "🔴 Mandi Data Temporarily Unavailable";
+    badge.style.background = "#fee2e2";
+    badge.style.color = "#991b1b";
+  }
 }
 
 function getSafeMandiMessage(message) {

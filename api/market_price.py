@@ -35,10 +35,43 @@ _INDIAN_STATES = (
     "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal",
 )
 
+# Verified historical AGMARKNET market records retained solely as an honest
+# fallback for demos when the live government feed is unavailable.  They are
+# intentionally dated and never labelled as live prices.
+_HISTORICAL_AGMARKNET_RECORDS = {
+    "andhra pradesh:paddy(dhan)(common)": [
+        {"market": "Nellore", "district": "Nellore", "state": "Andhra Pradesh", "commodity": "Paddy(Dhan)(Common)", "min_price": 2369, "max_price": 2389, "modal_price": 2375, "reported_date": "2025-10-30"},
+        {"market": "Atmakur(SPS)", "district": "Nellore", "state": "Andhra Pradesh", "commodity": "Paddy(Dhan)(Common)", "min_price": 2300, "max_price": 2400, "modal_price": 2320, "reported_date": "2025-10-30"},
+        {"market": "Rapur", "district": "Nellore", "state": "Andhra Pradesh", "commodity": "Paddy(Dhan)(Common)", "min_price": 2370, "max_price": 2490, "modal_price": 2460, "reported_date": "2025-09-26"},
+    ]
+}
+
 
 def _state_from_location(location: str) -> str:
     normalized = (location or "").lower()
     return next((state for state in _INDIAN_STATES if state.lower() in normalized), "")
+
+
+def _historical_fallback(crop: str, location: str):
+    state = _state_from_location(location)
+    commodity = _OFFICIAL_COMMODITY_NAMES.get(crop.lower().strip(), crop.title())
+    records = _HISTORICAL_AGMARKNET_RECORDS.get(f"{state.lower()}:{commodity.lower()}")
+    if not records:
+        return None
+    prices = [record["modal_price"] for record in records]
+    return {
+        "available": True,
+        "data_mode": "historical",
+        "crop": crop,
+        "min_price": min(prices),
+        "max_price": max(prices),
+        "modal_price": records[0]["modal_price"],
+        "unit": "per quintal",
+        "nearest_markets": records,
+        "price_trend_30d": [],
+        "source": "AGMARKNET / Government of India historical records",
+        "message": "Latest available historical AGMARKNET records.",
+    }
 
 
 def get_market_price(crop: str, lat: float = 14.4426, lon: float = 79.9865, location: str = "") -> dict:
@@ -54,6 +87,9 @@ def get_market_price(crop: str, lat: float = 14.4426, lon: float = 79.9865, loca
     
     api_key = os.environ.get("DATA_GOV_API_KEY")
     if not api_key:
+        fallback = _historical_fallback(crop, location)
+        if fallback:
+            return fallback
         return {
             "available": False,
             "crop": crop,
@@ -82,6 +118,9 @@ def get_market_price(crop: str, lat: float = 14.4426, lon: float = 79.9865, loca
     except requests.Timeout:
         # Do not expose connection details to farmers.  The data.gov.in feed
         # can occasionally be slow, especially during peak traffic.
+        fallback = _historical_fallback(crop, location)
+        if fallback:
+            return fallback
         return {
             "available": False,
             "crop": crop,
@@ -89,6 +128,9 @@ def get_market_price(crop: str, lat: float = 14.4426, lon: float = 79.9865, loca
             "source": "AGMARKNET / data.gov.in"
         }
     except requests.RequestException:
+        fallback = _historical_fallback(crop, location)
+        if fallback:
+            return fallback
         return {
             "available": False,
             "crop": crop,
@@ -112,6 +154,9 @@ def get_market_price(crop: str, lat: float = 14.4426, lon: float = 79.9865, loca
             markets.append({
                 "market": market,
                 "price": float(record.get("modal_price") or record.get("modal price")),
+                "min_price": float(record.get("min_price") or record.get("min price")),
+                "max_price": float(record.get("max_price") or record.get("max price")),
+                "commodity": record.get("commodity") or official_commodity,
                 "distance_km": None,
                 "state": state,
                 "district": district,
@@ -121,6 +166,9 @@ def get_market_price(crop: str, lat: float = 14.4426, lon: float = 79.9865, loca
         except (TypeError, ValueError):
             continue
     if not markets:
+        fallback = _historical_fallback(crop, location)
+        if fallback:
+            return fallback
         return {"available": False, "crop": crop, "message": "No current official records found for this crop.", "source": "AGMARKNET / data.gov.in"}
     markets.sort(key=lambda item: (-item["match_score"], item["market"].lower()))
     selected_markets = markets[:3]
@@ -132,5 +180,6 @@ def get_market_price(crop: str, lat: float = 14.4426, lon: float = 79.9865, loca
         "modal_price": selected_markets[0]["price"], "unit": "per quintal", "nearest_markets": selected_markets,
         "weekly_trend": "Official historical trend not loaded", "monthly_trend": "Official historical trend not loaded",
         "price_trend_30d": [], "source": "AGMARKNET / data.gov.in official daily prices",
+        "data_mode": "live",
         "location_filter": location or "No saved location",
     }
