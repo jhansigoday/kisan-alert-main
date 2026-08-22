@@ -710,15 +710,39 @@ def get_local_fallback_response(message, profile=None, lang="en"):
             return localized("For red soil with medium water, groundnut, maize, and pigeon pea are safer choices. Rotate with a pulse crop to protect soil fertility.", "మధ్యస్థ నీరు ఉన్న ఎర్ర నేలకు వేరుశనగ, మొక్కజొన్న, కందులు సురక్షిత ఎంపికలు. నేల సారాన్ని కాపాడటానికి పప్పుధాన్యంతో పంట మార్పిడి చేయండి.")
         if any(term in soil for term in ("black", "regur", "cotton")):
             if limited_water:
-                return "Black soil with limited water suits sorghum, pigeon pea, and hardy cotton varieties. Keep wide drainage channels because black soil holds water after rain."
-            return "Black soil with reliable water suits cotton, soybean, and maize. Do not grow cotton repeatedly in the same plot; include a pulse crop in the next season."
+                return localized("Black soil with limited water suits sorghum, pigeon pea, and hardy cotton varieties. Keep wide drainage channels because black soil holds water after rain.", "తక్కువ నీరు ఉన్న నల్ల నేలకు జొన్న, కందులు, తట్టుకునే పత్తి రకాలు అనుకూలం. వర్షం తర్వాత నల్ల నేలలో నీరు నిలుస్తుంది కాబట్టి వెడల్పైన డ్రైనేజీ కాలువలు ఉంచండి.")
+            return localized("Black soil with reliable water suits cotton, soybean, and maize. Do not grow cotton repeatedly in the same plot; include a pulse crop in the next season.", "నమ్మకమైన నీరు ఉన్న నల్ల నేలకు పత్తి, సోయాబీన్, మొక్కజొన్న అనుకూలం. ఒకే పొలంలో పత్తిని వరుసగా వేయవద్దు; తరువాతి సీజన్‌లో పప్పుధాన్యాన్ని చేర్చండి.")
         if any(term in soil for term in ("sandy", "coastal")):
-            return "Sandy soil drains quickly, so choose groundnut, watermelon, or vegetables with drip irrigation. Add compost and mulch to hold moisture."
+            return localized("Sandy soil drains quickly, so choose groundnut, watermelon, or vegetables with drip irrigation. Add compost and mulch to hold moisture.", "ఇసుక నేలలో నీరు త్వరగా దిగిపోతుంది; డ్రిప్‌తో వేరుశనగ, పుచ్చకాయ లేదా కూరగాయలు ఎంచుకోండి. తేమ నిలవడానికి కంపోస్ట్, మల్చింగ్ వేయండి.")
         if plentiful_water:
-            return "With reliable water, paddy, maize, and suitable vegetables can work on your soil. Confirm drainage before choosing paddy, especially during heavy-rain weeks."
+            return localized("With reliable water, paddy, maize, and suitable vegetables can work on your soil. Confirm drainage before choosing paddy, especially during heavy-rain weeks.", "నమ్మకమైన నీరు ఉంటే వరి, మొక్కజొన్న, అనుకూల కూరగాయలు వేయవచ్చు. ముఖ్యంగా భారీ వర్షాల సమయంలో వరి ఎంచుకునే ముందు డ్రైనేజీని నిర్ధారించుకోండి.")
         if limited_water:
-            return "With limited water, prefer millets, pulses, and groundnut over water-intensive crops. Drip irrigation and mulching will reduce risk."
-        return "For medium water availability, maize, pulses, and groundnut are balanced options. A local soil test and current mandi prices should decide the final choice."
+            return localized("With limited water, prefer millets, pulses, and groundnut over water-intensive crops. Drip irrigation and mulching will reduce risk.", "తక్కువ నీటిలో ఎక్కువ నీరు అవసరమైన పంటల కంటే చిరుధాన్యాలు, పప్పుధాన్యాలు, వేరుశనగ ఎంచుకోండి. డ్రిప్, మల్చింగ్ ప్రమాదాన్ని తగ్గిస్తాయి.")
+        return localized("For medium water availability, maize, pulses, and groundnut are balanced options. A local soil test and current mandi prices should decide the final choice.", "మధ్యస్థ నీటికి మొక్కజొన్న, పప్పుధాన్యాలు, వేరుశనగ సమతుల్య ఎంపికలు. స్థానిక నేల పరీక్ష, ప్రస్తుత మండి ధరలు చూసి తుది పంటను ఎంచుకోండి.")
+
+    is_rice_question = "rice" in msg or "paddy" in msg or "వరి" in msg
+    if any(term in msg for term in ("fertilizer", "fertiliser", "urea", "ఎరువు", "ఎరువులు", "యూరియా")):
+        if is_rice_question:
+            return localized(
+                "For paddy, apply fertiliser in split doses: a basal dose at transplanting, then nitrogen around 20–25 and 40–45 days after transplanting. Use the exact dose from a soil test or your local agriculture officer.",
+                "వరి పంటకు ఎరువులను విడతలుగా వేయండి: నాటే సమయంలో బేసల్ డోస్, తరువాత నాటిన 20–25 రోజులకు మరియు 40–45 రోజులకు నత్రజని వేయండి. ఖచ్చితమైన మోతాదుకు నేల పరీక్ష లేదా స్థానిక వ్యవసాయ అధికారి సలహా తీసుకోండి."
+            )
+        return localized(
+            "Apply fertiliser according to your soil-test result and crop stage; avoid applying it immediately before heavy rain. Tell me the crop and its age for a more specific schedule.",
+            "నేల పరీక్ష ఫలితం మరియు పంట దశను బట్టి ఎరువులు వేయండి; భారీ వర్షానికి ముందు వేయవద్దు. పంట పేరు, వయస్సు చెబితే మరింత ఖచ్చితమైన షెడ్యూల్ ఇస్తాను."
+        )
+
+    if any(term in msg for term in ("yellow", "leaf", "leaves", "పసుపు", "ఆకు", "ఆకులు")):
+        return localized(
+            "Yellow leaves can be caused by nitrogen or zinc deficiency, waterlogging, or pests. Check the underside of leaves and soil moisture before applying fertiliser or pesticide.",
+            "పసుపు ఆకులు నత్రజని లేదా జింక్ లోపం, నీరు నిలవడం లేదా తెగుళ్ల వల్ల రావచ్చు. ఎరువు లేదా మందు వేయే ముందు ఆకుల అడుగు భాగం, నేల తేమను పరిశీలించండి."
+        )
+
+    if any(term in msg for term in ("pest", "insect", "worm", "pesticide", "పురుగు", "తెగులు", "మందు")):
+        return localized(
+            "Identify the pest before spraying. Start with neem oil where suitable, avoid spraying before rain, and follow the label dose for any approved pesticide.",
+            "మందు పిచికారీకి ముందు తెగులును గుర్తించండి. సాధ్యమైతే వేపనూనెతో ప్రారంభించండి, వర్షానికి ముందు పిచికారీ చేయవద్దు, అనుమతించిన మందు లేబుల్‌లోని మోతాదునే పాటించండి."
+        )
     
     # Question 1: Planting time / when to plant rice
     if "rice" in msg and ("when" in msg or "plant" in msg or "sow" in msg):
