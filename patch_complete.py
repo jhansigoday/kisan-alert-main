@@ -1,66 +1,18 @@
 import os
+import glob
 
-# 1. Overwrite api/farmer_profile.py completely to disable server database
-filepath = 'api/farmer_profile.py'
-with open(filepath, 'w', encoding='utf-8') as f:
-    f.write("""# Clean mock stub for client-side architecture
-def get_profile(phone):
-    return None
-
-def create_or_update_profile(*args, **kwargs):
-    return {}
-
-def delete_profile(phone):
-    return True
-""")
-print('api/farmer_profile.py database code removed!')
-
-# 2. Patch api/index.py to bypass database calls
-filepath = 'api/index.py'
-if os.path.exists(filepath):
-    with open(filepath, 'r', encoding='utf-8') as f:
-        code = f.read()
-
-    # Stub the farmer-profile POST endpoint to just echo back the profile data (no disk write!)
-    start_idx = code.find('@app.route("/api/farmer-profile", methods=["POST"])')
-    if start_idx != -1:
-        next_route_idx = code.find('@app.route', start_idx + 50)
-        if next_route_idx != -1:
-            stub_func = """@app.route("/api/farmer-profile", methods=["POST"])
-def farmer_profile_create():
-    data = request.json or {}
-    return jsonify(data), 200\n\n"""
-            code = code[:start_idx] + stub_func + code[next_route_idx:]
-
-    # Make chat query read profile directly from the frontend request body
-    old_profile_retrieval = """    profile = {}
-    if phone:
-        p = get_profile(phone)
-        if p:
-            profile = p"""
-            
-    new_profile_retrieval = """    profile = {}
-    if phone:
-        profile = data.get("profile", {})"""
-        
-    code = code.replace(old_profile_retrieval, new_profile_retrieval)
-
-    with open(filepath, 'w', encoding='utf-8') as f:
-        f.write(code)
-    print('api/index.py database code removed!')
-
-# 3. Patch script.js to support client-side database
+# 1. Update script.js with all client-side upgrades
 filepath = 'script.js'
 if os.path.exists(filepath):
     with open(filepath, 'r', encoding='utf-8') as f:
         code = f.read()
 
-    # Save profile locally on registration success
-    old_reg_success = """      if (res.ok) {
+    # Apply registration saving
+    old_reg = """      if (res.ok) {
         const data = await res.json();
         registeredFarmer = data;
         localStorage.setItem("krushakseva_phone", registeredFarmer.phone);"""
-    new_reg_success = """      if (res.ok) {
+    new_reg = """      if (res.ok) {
         const data = await res.json();
         registeredFarmer = data;
         localStorage.setItem("krushakseva_phone", registeredFarmer.phone);
@@ -68,14 +20,14 @@ if os.path.exists(filepath):
         const allProfiles = JSON.parse(localStorage.getItem("krushakseva_all_profiles") || "{}");
         allProfiles[registeredFarmer.phone] = registeredFarmer;
         localStorage.setItem("krushakseva_all_profiles", JSON.stringify(allProfiles));"""
-    code = code.replace(old_reg_success, new_reg_success)
+    code = code.replace(old_reg, new_reg)
 
-    # Check local storage database first on login
-    old_login_submit = """    try {
+    # Apply login local storage check
+    old_login = """    try {
       const res = await fetch(`${BACKEND_URL}/api/auth/login-no-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },"""
-    new_login_submit = """    // Check client-side database first
+    new_login = """    // Check client-side database first
     const allProfiles = JSON.parse(localStorage.getItem("krushakseva_all_profiles") || "{}");
     const cleanPhone = phone.replace(/\D/g, "").slice(-10);
     let localProfile = null;
@@ -102,14 +54,14 @@ if os.path.exists(filepath):
       const res = await fetch(`${BACKEND_URL}/api/auth/login-no-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },"""
-    code = code.replace(old_login_submit, new_login_submit)
+    code = code.replace(old_login, new_login)
 
-    # Restore session from local cache on page load
-    old_page_load = """window.addEventListener("DOMContentLoaded", async () => {
+    # Apply page load session restore
+    old_load = """window.addEventListener("DOMContentLoaded", async () => {
   const savedPhone = localStorage.getItem("krushakseva_phone");
   if (savedPhone) {
     try {"""
-    new_page_load = """window.addEventListener("DOMContentLoaded", async () => {
+    new_load = """window.addEventListener("DOMContentLoaded", async () => {
   const savedPhone = localStorage.getItem("krushakseva_phone");
   const savedProfile = localStorage.getItem("krushakseva_profile");
   if (savedPhone) {
@@ -123,9 +75,23 @@ if os.path.exists(filepath):
       return;
     }
     try {"""
-    code = code.replace(old_page_load, new_page_load)
+    code = code.replace(old_load, new_load)
 
-    # Clean up local cache on sign out
+    # Apply chatbot profile injection
+    old_chat = """      body: JSON.stringify({
+        message,
+        phone: localStorage.getItem("krushakseva_phone"),
+        history: chatHistory.slice(-10) // Send last 10 messages for context
+      })"""
+    new_chat = """      body: JSON.stringify({
+        message,
+        phone: localStorage.getItem("krushakseva_phone"),
+        profile: registeredFarmer,
+        history: chatHistory.slice(-10) // Send last 10 messages for context
+      })"""
+    code = code.replace(old_chat, new_chat)
+
+    # Apply signout clearing
     old_signout = """    localStorage.removeItem("krushakseva_phone");"""
     new_signout = """    localStorage.removeItem("krushakseva_phone");
     localStorage.removeItem("krushakseva_profile");"""
@@ -133,6 +99,17 @@ if os.path.exists(filepath):
 
     with open(filepath, 'w', encoding='utf-8') as f:
         f.write(code)
-    print('script.js updated to use client-side database!')
+    print('script.js upgraded successfully!')
 
-print('Architectural pivot completed successfully!')
+# 2. Find all Python files in the api directory and replace the invalid model IDs
+py_files = glob.glob('api/**/*.py', recursive=True)
+for file in py_files:
+    with open(file, 'r', encoding='utf-8') as f:
+        content = f.read()
+    if 'qwen/qwen3.6-27b' in content:
+        content = content.replace('qwen/qwen3.6-27b', 'llama-3.3-70b-versatile')
+        with open(file, 'w', encoding='utf-8') as f:
+            f.write(content)
+        print(f'Patched model ID in {file}')
+
+print('Complete patch applied successfully!')

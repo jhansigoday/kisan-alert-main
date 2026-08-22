@@ -74,7 +74,7 @@ def get_market_price(crop: str, lat: float = 14.4426, lon: float = 79.9865) -> d
         if groq_key:
             client = Groq(api_key=groq_key)
             res = client.chat.completions.create(
-                model="qwen/qwen3.6-27b",
+                model="llama-3.3-70b-versatile",
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}

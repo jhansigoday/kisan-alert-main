@@ -113,7 +113,7 @@ def handle_sos_disaster_selection(session_id: str, digit: str, host_url: str) ->
     try:
         if _client:
             res = _client.chat.completions.create(
-                model="qwen/qwen3.6-27b",
+                model="llama-3.3-70b-versatile",
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": "Generate emergency response instructions."}
