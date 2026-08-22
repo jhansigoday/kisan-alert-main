@@ -631,6 +631,68 @@ def get_local_fallback_response(message, profile=None):
     soil = profile.get("soil_type", "black").lower()
     crop = profile.get("crop_type", "Rice")
     irrigation = profile.get("irrigation_method", "borewell").lower()
+    water_availability = profile.get("water_availability", "medium").lower()
+
+    def live_weather_answer():
+        """Answer weather questions from the farmer's saved coordinates, free of charge."""
+        try:
+            lat = float(profile.get("latitude"))
+            lon = float(profile.get("longitude"))
+            weather_data = get_weather_alert(lat, lon)
+            if weather_data.get("error"):
+                raise RuntimeError(weather_data["error"])
+
+            forecast = weather_data.get("forecast", [])
+            if not forecast:
+                raise RuntimeError("No forecast returned")
+
+            if "tomorrow" in msg and len(forecast) > 1:
+                day = forecast[1]
+                probability = day.get("rain_prob", 0)
+                rainfall = day.get("rain_mm", 0)
+                if probability >= 60 or rainfall >= 5:
+                    return f"Tomorrow has a {probability}% chance of rain, with about {rainfall} mm forecast. Avoid spraying pesticides if rain arrives."
+                return f"Tomorrow has only a {probability}% chance of rain, with about {rainfall} mm forecast. Irrigate only if your field needs it."
+
+            total_rain = round(sum(day.get("rain_mm", 0) for day in forecast[:7]), 1)
+            wet_days = sum(1 for day in forecast[:7] if day.get("rain_prob", 0) >= 50)
+            current = weather_data.get("weather", {})
+            return (
+                f"For your farm, it is currently {current.get('condition', 'unknown')} at "
+                f"{current.get('temp_c', 'unknown')}°C. The next 7 days show about {total_rain} mm "
+                f"of rain across {wet_days} likely rainy day(s); plan irrigation around those days."
+            )
+        except (TypeError, ValueError, RuntimeError):
+            return "I could not reach the live weather service for your saved location. Please try again shortly."
+
+    def profile_crop_advice():
+        """Useful no-key crop advice when the optional AI service is unavailable."""
+        plentiful_water = any(term in water_availability for term in ("high", "abundant", "good")) or any(
+            term in irrigation for term in ("river", "canal", "tank")
+        )
+        limited_water = any(term in water_availability for term in ("low", "limited", "scarce"))
+
+        if any(term in soil for term in ("mountain", "hill", "hilly", "slope")):
+            if plentiful_water:
+                return "For hilly land with a river source, turmeric, ginger, and beans are better fits than cotton. Use contour beds and drainage; choose crops after checking local market demand."
+            return "For hilly land with limited water, choose millets, pigeon pea, or horse gram. Use contour bunds and mulching to retain moisture."
+        if "red" in soil:
+            if limited_water:
+                return "Red soil with limited water is better suited to groundnut, foxtail millet, or pigeon pea. Avoid water-intensive paddy unless reliable irrigation is available."
+            if plentiful_water:
+                return "With red soil and reliable water, groundnut, maize, and chilli are practical options. Use drip irrigation for chilli and avoid waterlogging."
+            return "For red soil with medium water, groundnut, maize, and pigeon pea are safer choices. Rotate with a pulse crop to protect soil fertility."
+        if any(term in soil for term in ("black", "regur", "cotton")):
+            if limited_water:
+                return "Black soil with limited water suits sorghum, pigeon pea, and hardy cotton varieties. Keep wide drainage channels because black soil holds water after rain."
+            return "Black soil with reliable water suits cotton, soybean, and maize. Do not grow cotton repeatedly in the same plot; include a pulse crop in the next season."
+        if any(term in soil for term in ("sandy", "coastal")):
+            return "Sandy soil drains quickly, so choose groundnut, watermelon, or vegetables with drip irrigation. Add compost and mulch to hold moisture."
+        if plentiful_water:
+            return "With reliable water, paddy, maize, and suitable vegetables can work on your soil. Confirm drainage before choosing paddy, especially during heavy-rain weeks."
+        if limited_water:
+            return "With limited water, prefer millets, pulses, and groundnut over water-intensive crops. Drip irrigation and mulching will reduce risk."
+        return "For medium water availability, maize, pulses, and groundnut are balanced options. A local soil test and current mandi prices should decide the final choice."
     
     # Question 1: Planting time / when to plant rice
     if "rice" in msg and ("when" in msg or "plant" in msg or "sow" in msg):
@@ -657,13 +719,13 @@ def get_local_fallback_response(message, profile=None):
             return "Bajra is a hardy millet crop with low water requirement. Given the current market demand and low input costs, growing bajra is generally profitable and has low risk of loss."
         return "Bajra (pearl millet) is highly suitable for dry regions. It is profitable and has low input costs. Would you like to know about its sowing time or water needs?"
 
-    # Weather/Rain questions (Flow 2)
+    # Weather/Rain questions use live Open-Meteo data for the saved farm location.
     if "rain" in msg or "weather" in msg or "forecast" in msg:
-        return "The current weather is Sunny, 29C, Humidity: 65%. The forecast suggests moderate rain probabilities later this week."
+        return live_weather_answer()
 
     # Question 4: Crop recommendation / profit (Flow 1)
-    if "crop" in msg and ("grow" in msg or "profit" in msg or "better" in msg or "recommend" in msg or "labham" in msg or "best" in msg or "suitable" in msg):
-        return f"Based on your {soil} soil and {irrigation}, growing cotton, chilli, or groundnut offers high profit margins. Crop rotation is advised."
+    if ("crop" in msg or "land" in msg or "soil" in msg) and ("grow" in msg or "profit" in msg or "better" in msg or "recommend" in msg or "labham" in msg or "best" in msg or "suitable" in msg or "suit" in msg):
+        return profile_crop_advice()
 
     # Greetings fallbacks
     words = msg.split()
@@ -693,8 +755,22 @@ def chat_query():
     if phone:
         profile["phone"] = phone
 
-    # Use local static estimated values to avoid calling slow external APIs in the chatbot loop
-    weather_summary = "Sunny, 29C, Humidity: 65%"
+    # Use live, free Open-Meteo data when available.  The local fallback also
+    # calls this service for weather questions, so it never invents a forecast.
+    weather_summary = "Live weather unavailable for this request."
+    try:
+        lat = float(profile.get("latitude"))
+        lon = float(profile.get("longitude"))
+        weather_data = get_weather_alert(lat, lon)
+        if not weather_data.get("error"):
+            current_weather = weather_data.get("weather", {})
+            weather_summary = (
+                f"{current_weather.get('condition', 'Unknown')}, "
+                f"{current_weather.get('temp_c', 'unknown')}°C, "
+                f"humidity {current_weather.get('humidity', 'unknown')}%."
+            )
+    except (TypeError, ValueError):
+        pass
     mandi_context = f"Crop Modal Price: ₹2,600 per quintal. Nearest Mandi: {profile.get('location', 'Nellore')} Mandi."
 
     system_prompt = (
