@@ -621,7 +621,15 @@ def field_health():
     except (TypeError, ValueError):
         return jsonify({"error": "Missing or invalid 'lat'/'lon' query parameters"}), 400
     field_id = request.args.get("field_id", "field_1")
-    return jsonify(get_field_health_report(lat, lon, field_id))
+    profile = {
+        "crop_type": request.args.get("crop_type", ""),
+        "soil_type": request.args.get("soil_type", ""),
+        "soil_ph": request.args.get("soil_ph", ""),
+        "water_availability": request.args.get("water_availability", ""),
+        "irrigation_method": request.args.get("irrigation_method", ""),
+        "land_size_acres": request.args.get("land_size_acres", ""),
+    }
+    return jsonify(get_field_health_report(lat, lon, field_id, profile))
 
 
 def get_local_fallback_response(message, profile=None, lang="en"):

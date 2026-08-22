@@ -718,14 +718,15 @@ function updateDashboardWithProfile(profile) {
     
   document.getElementById("dash-crop-name").textContent = translateMandiTerm(profile.crop_type || "Rice");
   
-  // Set Growth Stage & Estimated Yield values in correct language
+  // Do not present an invented crop stage or yield before a sowing date and
+  // field observations have been recorded.
   const stageElem = document.getElementById("dash-crop-stage");
   if (stageElem) {
-    stageElem.textContent = isTe ? "శాకీయ పెరుగుదల దశ" : "Vegetative";
+    stageElem.textContent = isTe ? "విత్తన తేదీ నమోదు కాలేదు" : "Sowing date not recorded";
   }
   const yieldElem = document.getElementById("dash-crop-yield");
   if (yieldElem) {
-    yieldElem.textContent = isTe ? "85% (చాలా బాగుంది)" : "85% (Excellent)";
+    yieldElem.textContent = isTe ? "ప్రమాద అంచనా లోడ్ అవుతోంది…" : "Loading risk assessment…";
   }
   
   let lat = profile.latitude || 14.4426;
@@ -739,6 +740,7 @@ function updateDashboardWithProfile(profile) {
   
   // Fetch real coordinates weather metrics
   fetchWeatherForCoordinates(lat, lon);
+  loadFarmRiskAssessment(profile, lat, lon);
   
   // Fetch soil and weather parameters crop suitability recommendations
   loadCropRecommendations(lat, lon, profile.soil_type, profile.water_availability, profile.irrigation_method, profile.soil_ph);
@@ -748,6 +750,39 @@ function updateDashboardWithProfile(profile) {
   
   // Toggle analytics view
   toggleAnalyticsState();
+}
+
+async function loadFarmRiskAssessment(profile, lat, lon) {
+  const params = new URLSearchParams({
+    lat, lon,
+    crop_type: profile.crop_type || "",
+    soil_type: profile.soil_type || "",
+    soil_ph: profile.soil_ph || "",
+    water_availability: profile.water_availability || "",
+    irrigation_method: profile.irrigation_method || "",
+    land_size_acres: profile.land_size_acres || ""
+  });
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/field-health?${params}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Risk assessment unavailable");
+
+    const score = Math.round(data.risk_score);
+    const scoreElem = document.getElementById("healthScoreValue");
+    const msgElem = document.getElementById("healthScoreMsg");
+    const fillElem = document.querySelector(".status-gauge-bar .gauge-fill");
+    const yieldElem = document.getElementById("dash-crop-yield");
+    if (scoreElem) scoreElem.textContent = score;
+    if (msgElem) msgElem.textContent = currentLang === "te" ? "వాతావరణం మరియు ప్రొఫైల్ ఆధారిత ప్రమాద స్కోరు" : "Weather and profile risk score";
+    if (fillElem) {
+      fillElem.style.width = `${score}%`;
+      fillElem.className = `gauge-fill ${score >= 80 ? "green-fill" : score >= 60 ? "yellow-fill" : "red-fill"}`;
+    }
+    if (yieldElem) yieldElem.textContent = `${score}% — ${data.health_status}`;
+  } catch (err) {
+    const msgElem = document.getElementById("healthScoreMsg");
+    if (msgElem) msgElem.textContent = currentLang === "te" ? "ప్రత్యక్ష ప్రమాద అంచనా అందుబాటులో లేదు" : "Live risk assessment unavailable";
+  }
 }
 
 // ---------- API LIVE FETCH WEATHER SERVICES ----------
@@ -969,9 +1004,15 @@ async function loadMandiMarketData(crop = "Rice", lat = 14.4426, lon = 79.9865) 
   try {
     const res = await fetch(`${BACKEND_URL}/api/market-price?crop=${crop}&lat=${lat}&lon=${lon}`);
     const data = await res.json();
+    const body = document.getElementById("dash-prices-body");
+    if (!res.ok || !data.available) {
+      if (body) {
+        body.innerHTML = `<tr><td colspan="4">${data.message || "Live mandi prices are currently unavailable."}</td></tr>`;
+      }
+      return;
+    }
     if (res.ok && data.available) {
       // Update Mandi prices table with location aware 3 closest mandis
-      const body = document.getElementById("dash-prices-body");
       if (body) {
         body.innerHTML = "";
         data.nearest_markets.forEach(m => {
@@ -985,7 +1026,7 @@ async function loadMandiMarketData(crop = "Rice", lat = 14.4426, lon = 79.9865) 
             <td>${cropDisplay}</td>
             <td>${priceDisplay}</td>
             <td class="trend-up"><i class="fa-solid fa-arrow-trend-up"></i> ${trendDisplay}</td>
-            <td>${marketDisplay} (${m.distance_km.toFixed(1)} km)</td>
+            <td>${marketDisplay}${Number.isFinite(m.distance_km) ? ` (${m.distance_km.toFixed(1)} km)` : ""}</td>
           `;
           body.appendChild(tr);
         });
@@ -1034,7 +1075,7 @@ async function loadMandiMarketData(crop = "Rice", lat = 14.4426, lon = 79.9865) 
       }
 
       // Render historical 30-day Chart
-      if (data.price_trend_30d) {
+      if (Array.isArray(data.price_trend_30d) && data.price_trend_30d.length) {
         updateMarketTrendChart(data.crop, data.price_trend_30d);
       }
     }
@@ -1624,24 +1665,19 @@ function renderAnalyticsCharts() {
 function toggleAnalyticsState() {
   const fallbackBox = document.getElementById("analyticsFallbackBox");
   const chartsBox = document.getElementById("analyticsChartsBox");
-  
-  if (!registeredFarmer) {
-    if (fallbackBox) fallbackBox.style.display = "flex";
-    if (chartsBox) chartsBox.style.display = "none";
-  } else {
-    if (fallbackBox) fallbackBox.style.display = "none";
-    if (chartsBox) chartsBox.style.display = "grid";
-    
-    const acres = registeredFarmer.land_size_acres || 1;
-    const profitEst = Math.round(43000 * acres);
-    document.getElementById("analytics-total-profit").textContent = `₹${profitEst.toLocaleString()} (Est.)`;
-    
-    const method = (registeredFarmer.irrigation_method || "").toLowerCase();
-    const efficiency = method.includes("drip") || method.includes("sprinkler") ? "+45% efficiency" : "+15% efficiency";
-    document.getElementById("analytics-water-savings").textContent = efficiency;
-    
-    renderAnalyticsCharts();
+
+  // Historical profit/yield charts need real dated farm records.  Do not
+  // fabricate a history from the farmer's registration details.
+  if (fallbackBox) {
+    fallbackBox.style.display = "flex";
+    const heading = fallbackBox.querySelector("h3");
+    const description = fallbackBox.querySelector("p");
+    if (heading) heading.textContent = registeredFarmer ? "Farm history not recorded yet" : "Analytics unavailable";
+    if (description) description.textContent = registeredFarmer
+      ? "Live weather and the farm-risk score are available on the dashboard. Record sowing dates, inputs, yields, and sales to unlock genuine historical analytics."
+      : "Register your farm to see live weather and a personalised farm-risk score.";
   }
+  if (chartsBox) chartsBox.style.display = "none";
 }
 
 // ---------- SOS HELP WIDGET TRIGGER ----------

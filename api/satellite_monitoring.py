@@ -1,50 +1,66 @@
-"""
-satellite_monitoring.py — crop health monitoring via satellite/UAV imagery
-SIMULATED — no free satellite imagery API was available to wire up in this
-timeframe. Structure mirrors a real NDVI-based health score pipeline so a
-real provider (Sentinel Hub, Planet, etc.) can be swapped in later with
-minimal changes.
+"""Farm-risk assessment based on real weather and farmer-provided data.
+
+This intentionally does not claim to be satellite/NDVI monitoring. A genuine
+NDVI score needs field boundaries and a satellite provider account.
 """
 
-import random
-from datetime import datetime, timedelta
 
+def get_field_health_report(latitude: float, longitude: float, field_id: str = "field_1", profile=None) -> dict:
+    """Return a transparent, profile-aware farm risk score using live weather."""
+    profile = profile or {}
+    from weather_alert import get_weather_alert
 
-def get_field_health_report(latitude: float, longitude: float, field_id: str = "field_1") -> dict:
-    """
-    Returns a simulated NDVI-style vegetation health report.
-    Real version would call Sentinel Hub / Planet Labs API here.
-    """
-    seed = int((latitude * 1000 + longitude * 1000)) % 1000
-    rng = random.Random(seed)
+    score = 75
+    factors = []
+    try:
+        weather = get_weather_alert(latitude, longitude)
+        if weather.get("error"):
+            raise RuntimeError(weather["error"])
+        current = weather.get("weather", {})
+        forecast = weather.get("forecast", [])
+        tomorrow = forecast[1] if len(forecast) > 1 else {}
+        if current.get("temp_c", 0) >= 38:
+            score -= 15
+            factors.append("High temperature increases crop water stress.")
+        if tomorrow.get("rain_mm", 0) >= 20:
+            score -= 10
+            factors.append("Heavy rain may cause waterlogging or wash off sprays.")
+        if weather.get("dry_spell_warning"):
+            score -= 12
+            factors.append("A dry spell is forecast; review irrigation scheduling.")
+    except Exception:
+        factors.append("Live weather was unavailable, so weather risk could not be scored.")
 
-    ndvi = round(rng.uniform(0.3, 0.85), 2)  # NDVI range: -1 to 1, healthy vegetation ~0.6-0.9
+    try:
+        ph = float(profile.get("soil_ph", 0))
+        if ph and not 5.5 <= ph <= 7.5:
+            score -= 8
+            factors.append(f"Soil pH {ph:g} may limit nutrient availability for some crops.")
+    except (TypeError, ValueError):
+        pass
 
-    if ndvi >= 0.7:
-        health_status = "healthy"
-        alert = None
-    elif ndvi >= 0.5:
-        health_status = "moderate stress"
-        alert = "Some areas of the field show reduced vigor — consider a ground check."
+    water = str(profile.get("water_availability", "")).lower()
+    irrigation = str(profile.get("irrigation_method", "")).lower()
+    if any(value in water for value in ("low", "limited", "scarce")):
+        score -= 8
+        factors.append("Limited water availability raises moisture-stress risk.")
+    elif any(value in irrigation for value in ("drip", "sprinkler")):
+        score += 4
+        factors.append("Efficient irrigation reduces water-use risk.")
+
+    score = max(0, min(100, score))
+    if score >= 80:
+        status = "Low current risk"
+    elif score >= 60:
+        status = "Moderate risk — monitor field"
     else:
-        health_status = "high stress"
-        alert = "⚠️ Significant vegetation stress detected. Recommend immediate field inspection."
-
-    history = []
-    base_date = datetime.now()
-    for i in range(4, -1, -1):
-        d = base_date - timedelta(days=i * 7)
-        history.append({
-            "date": d.strftime("%Y-%m-%d"),
-            "ndvi": round(ndvi + rng.uniform(-0.1, 0.1), 2),
-        })
+        status = "High risk — inspect field promptly"
 
     return {
         "field_id": field_id,
         "location": {"latitude": latitude, "longitude": longitude},
-        "ndvi_current": ndvi,
-        "health_status": health_status,
-        "alert": alert,
-        "ndvi_history_5weeks": history,
-        "source": "SIMULATED DATA — for demo only, not a live satellite feed",
+        "risk_score": score,
+        "health_status": status,
+        "factors": factors or ["No major weather or profile risks detected today."],
+        "source": "Profile + live Open-Meteo weather risk assessment (not satellite/NDVI)",
     }
