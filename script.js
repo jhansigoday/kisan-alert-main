@@ -1001,108 +1001,99 @@ if (compareCropsBtn) {
 }
 
 async function loadMandiMarketData(crop = "Rice", lat = 14.4426, lon = 79.9865, location = "") {
+  const cacheKey = getMandiCacheKey(crop, location);
   try {
     const query = new URLSearchParams({ crop, lat, lon, location });
     const res = await fetch(`${BACKEND_URL}/api/market-price?${query}`);
     const data = await res.json();
-    const body = document.getElementById("dash-prices-body");
     if (!res.ok || !data.available) {
       const message = getSafeMandiMessage(data.message);
-      if (body) {
-        body.innerHTML = `<tr><td colspan="4">${message}</td></tr>`;
-      }
-      const marketBody = document.getElementById("market-prices-body");
-      if (marketBody) marketBody.innerHTML = `<tr><td colspan="3">${message}</td></tr>`;
-      showMandiUnavailable(message);
+      renderCachedMandiOrUnavailable(cacheKey, message);
       return;
     }
-    if (res.ok && data.available) {
-      // Update Mandi prices table with location aware 3 closest mandis
-      if (body) {
-        body.innerHTML = "";
-        data.nearest_markets.forEach(m => {
-          const tr = document.createElement("tr");
-          const cropDisplay = translateMandiTerm(data.crop);
-          const priceDisplay = currentLang === "te" ? `₹${m.price.toLocaleString()} / క్వింటాల్` : `₹${m.price.toLocaleString()} / Quintal`;
-          const trendDisplay = translateMandiTerm(data.weekly_trend);
-          const marketDisplay = translateMandiTerm(m.market);
-          
-          tr.innerHTML = `
-            <td>${cropDisplay}</td>
-            <td>${priceDisplay}</td>
-            <td class="trend-up"><i class="fa-solid fa-arrow-trend-up"></i> ${trendDisplay}</td>
-            <td>${marketDisplay}${m.district || m.state ? ` (${[m.district, m.state].filter(Boolean).join(", ")})` : ""}</td>
-          `;
-          body.appendChild(tr);
-        });
-      }
-      const marketBody = document.getElementById("market-prices-body");
-      if (marketBody) {
-        marketBody.innerHTML = "";
-        data.nearest_markets.forEach(m => {
-          const tr = document.createElement("tr");
-          const area = [m.district, m.state].filter(Boolean).join(", ");
-          tr.innerHTML = `<td>${translateMandiTerm(m.market)}${area ? `<br><small>${area}</small>` : ""}</td><td>₹${Number(m.price).toLocaleString()} / Quintal</td><td>${m.reported_date || "Not supplied"}</td>`;
-          marketBody.appendChild(tr);
-        });
-      }
-      const source = document.getElementById("marketDataSource");
-      if (source) source.textContent = `${data.source}. Ranked using saved location: ${data.location_filter || "not available"}.`;
-
-      // Update Market Insights list
-      const insightsBox = document.querySelector(".price-insights-card");
-      if (insightsBox) {
-        const title = currentLang === "te" ? "మండి మార్కెట్ విశ్లేషణ" : "Mandi Market Insights";
-        const labelBest = currentLang === "te" ? "అమ్మడానికి ఉత్తమ మండి" : "Best Mandi to Sell";
-        const labelLowest = currentLang === "te" ? "అతి తక్కువ ధర గల మండి" : "Lowest Paying Mandi";
-        const labelDemand = currentLang === "te" ? "మార్కెట్ డిమాండ్ & ట్రెండ్" : "Market Demand & Trend";
-        
-        const bestMandi = translateMandiTerm(data.highest_paying_market);
-        const lowestMandi = translateMandiTerm(data.lowest_paying_market);
-        const weeklyT = translateMandiTerm(data.weekly_trend);
-        const monthlyT = translateMandiTerm(data.monthly_trend);
-        const trendText = currentLang === "te"
-          ? `వారానికి: ${weeklyT}. నెలవారీ: ${monthlyT}`
-          : `Weekly: ${weeklyT}. Monthly: ${monthlyT}`;
-          
-        insightsBox.innerHTML = `
-          <h3>${title}</h3>
-          <div class="insight-row">
-            <div class="icon"><i class="fa-solid fa-circle-check"></i></div>
-            <div class="info">
-              <strong>${labelBest}</strong>
-              <span>${bestMandi}</span>
-            </div>
-          </div>
-          <div class="insight-row">
-            <div class="icon"><i class="fa-solid fa-arrow-trend-up"></i></div>
-            <div class="info">
-              <strong>${labelLowest}</strong>
-              <span>${lowestMandi}</span>
-            </div>
-          </div>
-          <div class="insight-row">
-            <div class="icon"><i class="fa-solid fa-chart-line"></i></div>
-            <div class="info">
-              <strong>${labelDemand}</strong>
-              <span>${trendText}</span>
-            </div>
-          </div>
-        `;
-      }
-
-      // Render historical 30-day Chart
-      if (Array.isArray(data.price_trend_30d) && data.price_trend_30d.length) {
-        const notice = document.getElementById("marketChartNotice");
-        if (notice) notice.style.display = "none";
-        updateMarketTrendChart(data.crop, data.price_trend_30d);
-      } else {
-        showMandiUnavailable("Official daily prices are available, but 30-day history has not been loaded yet.");
-      }
-    }
+    const cacheRecord = saveMandiCache(cacheKey, data);
+    renderMandiPrices(data, null, cacheRecord.history);
   } catch (err) {
     console.log("Could not load mandi prices:", err);
-    showMandiUnavailable("Unable to reach the official mandi price service right now.");
+    renderCachedMandiOrUnavailable(cacheKey, "Official mandi prices are temporarily unavailable. Please try again shortly.");
+  }
+}
+
+function getMandiCacheKey(crop, location) {
+  return `krushakseva_mandi_cache_${String(crop).toLowerCase().trim()}_${String(location).toLowerCase().trim()}`;
+}
+
+function saveMandiCache(cacheKey, data) {
+  try {
+    const now = new Date();
+    const previous = JSON.parse(localStorage.getItem(cacheKey) || "null") || {};
+    const history = Array.isArray(previous.history) ? previous.history : [];
+    const day = now.toISOString().slice(0, 10);
+    const price = Number(data.modal_price);
+    if (Number.isFinite(price) && !history.some(item => item.date === day)) {
+      history.push({ date: day, price });
+    }
+    const record = { data, verifiedAt: now.toISOString(), history: history.slice(-30) };
+    localStorage.setItem(cacheKey, JSON.stringify(record));
+    return record;
+  } catch (err) {
+    console.log("Could not cache official mandi prices:", err);
+    return { history: [] };
+  }
+}
+
+function renderCachedMandiOrUnavailable(cacheKey, message) {
+  try {
+    const cached = JSON.parse(localStorage.getItem(cacheKey) || "null");
+    const cacheAge = cached && Date.now() - new Date(cached.verifiedAt).getTime();
+    if (cached && cached.data && cacheAge >= 0 && cacheAge <= 7 * 24 * 60 * 60 * 1000) {
+      renderMandiPrices(cached.data, cached.verifiedAt, cached.history || []);
+      return;
+    }
+  } catch (err) {
+    console.log("Could not read cached mandi prices:", err);
+  }
+  showMandiUnavailable(message);
+}
+
+function renderMandiPrices(data, cachedAt = null, history = []) {
+  const markets = Array.isArray(data.nearest_markets) ? data.nearest_markets : [];
+  const freshness = cachedAt
+    ? `Live update delayed. Showing last verified official data from ${new Date(cachedAt).toLocaleString()}.`
+    : "Latest official daily prices.";
+  const body = document.getElementById("dash-prices-body");
+  if (body) {
+    body.innerHTML = "";
+    markets.forEach(m => {
+      const tr = document.createElement("tr");
+      const area = [m.district, m.state].filter(Boolean).join(", ");
+      tr.innerHTML = `<td>${translateMandiTerm(data.crop)}</td><td>₹${Number(m.price).toLocaleString()} / ${currentLang === "te" ? "క్వింటాల్" : "Quintal"}</td><td>${cachedAt ? "Last verified" : "Official daily price"}</td><td>${translateMandiTerm(m.market)}${area ? ` (${area})` : ""}</td>`;
+      body.appendChild(tr);
+    });
+  }
+  const marketBody = document.getElementById("market-prices-body");
+  if (marketBody) {
+    marketBody.innerHTML = "";
+    markets.forEach(m => {
+      const tr = document.createElement("tr");
+      const area = [m.district, m.state].filter(Boolean).join(", ");
+      tr.innerHTML = `<td>${translateMandiTerm(m.market)}${area ? `<br><small>${area}</small>` : ""}</td><td>₹${Number(m.price).toLocaleString()} / Quintal</td><td>${m.reported_date || "Not supplied"}</td>`;
+      marketBody.appendChild(tr);
+    });
+  }
+  const source = document.getElementById("marketDataSource");
+  if (source) source.textContent = `${freshness} ${data.source || "AGMARKNET official data"}`;
+  const notice = document.getElementById("marketChartNotice");
+  if (history.length >= 2) {
+    if (notice) notice.style.display = "none";
+    updateMarketTrendChart(data.crop, history.map(item => item.price), history.map(item => item.date));
+  } else if (notice) {
+    notice.textContent = "30-day history will build automatically from verified daily official price snapshots.";
+    notice.style.display = "block";
+  }
+  const insightsBox = document.querySelector(".price-insights-card");
+  if (insightsBox) {
+    insightsBox.innerHTML = `<h3>${currentLang === "te" ? "మండి మార్కెట్ విశ్లేషణ" : "Mandi Market Insights"}</h3><div class="insight-row"><div class="icon"><i class="fa-solid fa-circle-check"></i></div><div class="info"><strong>${cachedAt ? "Last verified official prices" : "Official daily prices loaded"}</strong><span>${freshness}</span></div></div>`;
   }
 }
 
@@ -1119,6 +1110,10 @@ function showMandiUnavailable(message) {
   }
   const source = document.getElementById("marketDataSource");
   if (source) source.textContent = safeMessage;
+  const body = document.getElementById("dash-prices-body");
+  if (body) body.innerHTML = `<tr><td colspan="4">${safeMessage}</td></tr>`;
+  const marketBody = document.getElementById("market-prices-body");
+  if (marketBody) marketBody.innerHTML = `<tr><td colspan="3">${safeMessage}</td></tr>`;
 }
 
 function getSafeMandiMessage(message) {
@@ -1624,19 +1619,19 @@ async function sendMessageChat() {
 }
 
 // ---------- CHART.JS RENDER LOGIC ----------
-function updateMarketTrendChart(cropName, trendArray) {
+function updateMarketTrendChart(cropName, trendArray, labels = null) {
   const ctx = document.getElementById("marketTrendChart").getContext("2d");
   
   if (marketTrendChartInstance) {
     marketTrendChartInstance.destroy();
   }
 
-  const labels = Array.from({length: 30}, (_, i) => `Day ${i+1}`);
+  const chartLabels = labels || Array.from({length: 30}, (_, i) => `Day ${i+1}`);
 
   marketTrendChartInstance = new Chart(ctx, {
     type: 'line',
     data: {
-      labels: labels,
+      labels: chartLabels,
       datasets: [{
         label: `${cropName} Mandi Rate Trend (₹ / Quintal)`,
         data: trendArray,
