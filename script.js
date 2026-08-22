@@ -1083,6 +1083,8 @@ function renderMandiPrices(data, cachedAt = null, history = []) {
   }
   const source = document.getElementById("marketDataSource");
   if (source) source.textContent = `${freshness} ${data.source || "AGMARKNET official data"}`;
+  const retryButton = document.getElementById("retryMandiPricesBtn");
+  if (retryButton) retryButton.style.display = "none";
   const notice = document.getElementById("marketChartNotice");
   if (history.length >= 2) {
     if (notice) notice.style.display = "none";
@@ -1110,6 +1112,8 @@ function showMandiUnavailable(message) {
   }
   const source = document.getElementById("marketDataSource");
   if (source) source.textContent = safeMessage;
+  const retryButton = document.getElementById("retryMandiPricesBtn");
+  if (retryButton) retryButton.style.display = "inline-flex";
   const body = document.getElementById("dash-prices-body");
   if (body) body.innerHTML = `<tr><td colspan="4">${safeMessage}</td></tr>`;
   const marketBody = document.getElementById("market-prices-body");
@@ -1120,6 +1124,24 @@ function getSafeMandiMessage(message) {
   return message && !/(timeout|connectionpool|host=|traceback|exception|read timed out)/i.test(message)
     ? message
     : "Official mandi prices are temporarily unavailable. Please try again shortly.";
+}
+
+const retryMandiPricesBtn = document.getElementById("retryMandiPricesBtn");
+if (retryMandiPricesBtn) {
+  retryMandiPricesBtn.addEventListener("click", () => {
+    if (!registeredFarmer) return;
+    retryMandiPricesBtn.disabled = true;
+    retryMandiPricesBtn.textContent = "Refreshing official prices…";
+    loadMandiMarketData(
+      registeredFarmer.crop_type || "Rice",
+      registeredFarmer.latitude || detectedLat || 14.4426,
+      registeredFarmer.longitude || detectedLon || 79.9865,
+      registeredFarmer.location || ""
+    ).finally(() => {
+      retryMandiPricesBtn.disabled = false;
+      retryMandiPricesBtn.innerHTML = '<i class="fa-solid fa-rotate"></i> Retry official prices';
+    });
+  });
 }
 
 // ---------- AI PROFIT CALCULATOR STATE ----------

@@ -41,9 +41,11 @@ def get_market_price(crop: str, lat: float = 14.4426, lon: float = 79.9865, loca
         response = requests.get(api_url, params={
             "api-key": api_key,
             "format": "json",
-            "limit": 500,
+            # A small result set is enough for the dashboard and prevents the
+            # official service timing out on a large nationwide response.
+            "limit": 25,
             "filters[commodity]": crop_clean.title(),
-        }, timeout=12)
+        }, timeout=6)
         response.raise_for_status()
         records = response.json().get("records", [])
     except requests.Timeout:
