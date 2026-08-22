@@ -1007,12 +1007,13 @@ async function loadMandiMarketData(crop = "Rice", lat = 14.4426, lon = 79.9865, 
     const data = await res.json();
     const body = document.getElementById("dash-prices-body");
     if (!res.ok || !data.available) {
+      const message = getSafeMandiMessage(data.message);
       if (body) {
-        body.innerHTML = `<tr><td colspan="4">${data.message || "Live mandi prices are currently unavailable."}</td></tr>`;
+        body.innerHTML = `<tr><td colspan="4">${message}</td></tr>`;
       }
       const marketBody = document.getElementById("market-prices-body");
-      if (marketBody) marketBody.innerHTML = `<tr><td colspan="3">${data.message || "Live mandi prices are currently unavailable."}</td></tr>`;
-      showMandiUnavailable(data.message || "Live mandi prices are currently unavailable.");
+      if (marketBody) marketBody.innerHTML = `<tr><td colspan="3">${message}</td></tr>`;
+      showMandiUnavailable(message);
       return;
     }
     if (res.ok && data.available) {
@@ -1106,9 +1107,7 @@ async function loadMandiMarketData(crop = "Rice", lat = 14.4426, lon = 79.9865, 
 }
 
 function showMandiUnavailable(message) {
-  const safeMessage = message && !/(timeout|connectionpool|host=|traceback|exception)/i.test(message)
-    ? message
-    : "Official mandi prices are temporarily unavailable. Please try again shortly.";
+  const safeMessage = getSafeMandiMessage(message);
   const notice = document.getElementById("marketChartNotice");
   if (notice) {
     notice.textContent = safeMessage;
@@ -1120,6 +1119,12 @@ function showMandiUnavailable(message) {
   }
   const source = document.getElementById("marketDataSource");
   if (source) source.textContent = safeMessage;
+}
+
+function getSafeMandiMessage(message) {
+  return message && !/(timeout|connectionpool|host=|traceback|exception|read timed out)/i.test(message)
+    ? message
+    : "Official mandi prices are temporarily unavailable. Please try again shortly.";
 }
 
 // ---------- AI PROFIT CALCULATOR STATE ----------
