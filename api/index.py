@@ -3,6 +3,7 @@ index.py — Flask app, route definitions (configured for Vercel)
 """
 
 import os
+import json
 
 def normalize_phone(phone):
     phone = "".join(filter(str.isdigit, str(phone)))
@@ -18,7 +19,6 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from flask import Flask, request, jsonify, send_from_directory
 from ivr_flow import start_call, handle_language_selection, handle_language_selection_twilio, handle_dtmf_input, handle_answer_twilio, get_session, end_session
 from flask_cors import CORS
-from dotenv import load_dotenv
 import requests
 from weather_alert import get_weather_alert
 from farmer_profile import create_or_update_profile, get_profile
@@ -31,7 +31,13 @@ from extension_office import find_nearest_office
 from advisory import generate_advisory
 from tts import synthesize_speech
 from market_price import get_market_price
-load_dotenv()
+# Vercel supplies environment variables directly.  Loading a local .env is
+# optional so the server still starts when python-dotenv is not installed.
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 from sms_gateway import send_sms
 from twilio.twiml.voice_response import VoiceResponse
 
@@ -445,7 +451,14 @@ def sos_web_step():
 
 @app.route("/api/farmer-profile", methods=["POST"])
 def farmer_profile_create():
-    data = request.json or {}
+    # Farmer profiles are deliberately owned by the browser.  Echoing the
+    # submitted profile lets the existing registration UI complete without
+    # writing to Vercel's read-only filesystem.
+    data = request.get_json(silent=True) or {}
+    phone = normalize_phone(data.get("phone", ""))
+    if not phone:
+        return jsonify({"error": "Missing 'phone' field"}), 400
+    data["phone"] = phone
     return jsonify(data), 200
 
 @app.route("/api/farmer-profile/<phone>", methods=["GET"])
@@ -672,9 +685,13 @@ def chat_query():
     if not message:
         return jsonify({"error": "Missing 'message' field"}), 400
 
-    profile = {}
+    # Profiles live in browser localStorage and are sent with each chat
+    # request.  Never attempt to look one up from server-side storage.
+    profile = data.get("profile") or {}
+    if not isinstance(profile, dict):
+        profile = {}
     if phone:
-        profile = data.get("profile", {})
+        profile["phone"] = phone
 
     # Use local static estimated values to avoid calling slow external APIs in the chatbot loop
     weather_summary = "Sunny, 29C, Humidity: 65%"

@@ -8,6 +8,24 @@ let currentLang = "en";
 let isDarkMode = false;
 let registeredFarmer = null;
 let chatHistory = [];
+
+function normalizePhone(phone) {
+  const digits = String(phone || "").replace(/\D/g, "");
+  return digits.slice(-10);
+}
+
+function saveLocalProfile(profile) {
+  const normalizedPhone = normalizePhone(profile && profile.phone);
+  if (!normalizedPhone) return;
+
+  const storedProfile = { ...profile, phone: normalizedPhone };
+  const allProfiles = JSON.parse(localStorage.getItem("krushakseva_all_profiles") || "{}");
+  allProfiles[normalizedPhone] = storedProfile;
+  localStorage.setItem("krushakseva_all_profiles", JSON.stringify(allProfiles));
+  localStorage.setItem("krushakseva_phone", normalizedPhone);
+  localStorage.setItem("krushakseva_profile", JSON.stringify(storedProfile));
+  registeredFarmer = storedProfile;
+}
 let detectedLat = null;
 let detectedLon = null;
 
@@ -607,37 +625,27 @@ document.getElementById("toggle-to-login").addEventListener("click", (e) => {
 
 document.getElementById("loginNoOtpBtn").addEventListener("click", async () => {
   const phone = document.getElementById("auth-phone-input").value.trim();
-  if (!phone) {
+  const cleanPhone = normalizePhone(phone);
+  if (cleanPhone.length !== 10) {
     alert("Please enter a valid mobile number.");
     return;
   }
-  
-  const payload = {
-    phone: phone
-  };
-  
-  try {
-    const res = await fetch(`${BACKEND_URL}/api/auth/login-no-otp`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-    
-    if (res.ok) {
-      const data = await res.json();
-      document.getElementById("auth-portal-box").style.display = "none";
-      document.getElementById("farmerRegistrationForm").style.display = "none";
-      registeredFarmer = data.profile;
-      localStorage.setItem("krushakseva_phone", data.profile.phone);
-      updateDashboardWithProfile(data.profile);
-      switchTab("dashboard");
-    } else {
-      const data = await res.json();
-      alert(data.error || "Account not found. Please Sign Up first.");
-    }
-  } catch (err) {
-    alert("Connection to login service failed: " + err.message);
+
+  const allProfiles = JSON.parse(localStorage.getItem("krushakseva_all_profiles") || "{}");
+  const localProfile = Object.values(allProfiles).find(
+    profile => normalizePhone(profile && profile.phone) === cleanPhone
+  );
+  if (!localProfile) {
+    alert("Account not found on this browser. Please Sign Up first.");
+    return;
   }
+
+  saveLocalProfile(localProfile);
+  document.getElementById("auth-portal-box").style.display = "none";
+  document.getElementById("farmerRegistrationForm").style.display = "none";
+  updateDashboardWithProfile(registeredFarmer);
+  switchTab("dashboard");
+  alert(`Welcome back, ${registeredFarmer.name || "Farmer"}!`);
 });
 
 
@@ -679,9 +687,8 @@ registrationForm.addEventListener("submit", async (e) => {
     
     if (res.ok) {
       const profile = await res.json();
-      registeredFarmer = profile;
-      localStorage.setItem("krushakseva_phone", profile.phone);
-      updateDashboardWithProfile(profile);
+      saveLocalProfile(profile);
+      updateDashboardWithProfile(registeredFarmer);
       document.getElementById("auth-portal-box").style.display = "none";
       document.getElementById("farmerRegistrationForm").style.display = "none";
       switchTab("dashboard");
@@ -1487,6 +1494,7 @@ async function sendMessageChat() {
         message: text,
         history: chatHistory.slice(0, -1),
         phone: registeredFarmer ? registeredFarmer.phone : "",
+        profile: registeredFarmer || {},
         lang: currentLang
       }),
       signal: controller.signal
@@ -1735,8 +1743,6 @@ document.getElementById("signOutBtn").addEventListener("click", () => {
   if (confirm(confirmMsg)) {
     localStorage.removeItem("krushakseva_phone");
     localStorage.removeItem("krushakseva_profile");
-    localStorage.removeItem("krushakseva_profile");
-    localStorage.removeItem("krushakseva_profile");
     registeredFarmer = null;
     resetChecklist();
     
@@ -1852,18 +1858,18 @@ window.addEventListener("DOMContentLoaded", async () => {
     });
   }
   
-  // Attempt to load existing user profile from localStorage
+  // Restore the active session from localStorage.  Profiles are intentionally
+  // not fetched from the server because Vercel has no persistent filesystem.
   try {
     const savedPhone = localStorage.getItem("krushakseva_phone");
-    if (savedPhone) {
-      const res = await fetch(`${BACKEND_URL}/api/farmer-profile/${savedPhone}`);
-      if (res.ok) {
-        const profile = await res.json();
-        if (profile && profile.phone) {
-          registeredFarmer = profile;
-          document.getElementById("auth-portal-box").style.display = "none";
-          updateDashboardWithProfile(profile);
-        }
+    const savedProfile = localStorage.getItem("krushakseva_profile");
+    if (savedPhone && savedProfile) {
+      const profile = JSON.parse(savedProfile);
+      if (normalizePhone(profile.phone) === normalizePhone(savedPhone)) {
+        saveLocalProfile(profile);
+        document.getElementById("auth-portal-box").style.display = "none";
+        updateDashboardWithProfile(registeredFarmer);
+        switchTab("dashboard");
       }
     }
   } catch (err) {
