@@ -3,3 +3,4 @@ flask-cors
 groq==0.4.2
 requests==2.31.0
 twilio
+gTTS==2.5.4

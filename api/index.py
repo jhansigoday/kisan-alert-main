@@ -407,6 +407,7 @@ def sos_web_start():
         "session_sid": session_id,
         "text": welcome_text,
         "audio_url": audio_url,
+        "language": "en",
         "is_finished": False
     })
 
@@ -1000,6 +1001,15 @@ def ivr_answer_received():
 
 
 # Web-based Call Simulator Endpoints
+def _safe_ivr_audio(text, language):
+    """Keep the IVR transcript usable even if the TTS provider is unavailable."""
+    try:
+        return synthesize_speech(text, language)
+    except Exception as error:
+        print("IVR TTS generation failed:", error)
+        return None
+
+
 @app.route("/api/ivr/web/start", methods=["POST"])
 def ivr_web_start():
     try:
@@ -1009,7 +1019,7 @@ def ivr_web_start():
     session_id = data.get("session_id") or data.get("session_sid") or uuid.uuid4().hex
     
     welcome_text = "Welcome to KrishakaSeva. For English, press 1. For Telugu, press 2."
-    audio_url = synthesize_speech(welcome_text, "en")
+    audio_url = _safe_ivr_audio(welcome_text, "en")
     
     return jsonify({
         "session_sid": session_id,
@@ -1052,24 +1062,26 @@ def ivr_web_step():
             
         welcome_text = handle_language_selection(session_id, digit, phone=phone, lat=lat, lon=lon)
         session = get_session(session_id)
-        audio_url = synthesize_speech(welcome_text, session.get("language", "en"))
+        audio_url = _safe_ivr_audio(welcome_text, session.get("language", "en"))
         return jsonify({
             "session_sid": session_id,
             "session_id": session_id,
             "text": welcome_text,
             "audio_url": audio_url,
+            "language": session.get("language", "en"),
             "profile": session.get("answers", {}),
             "is_finished": False
         })
         
     if digit:
         response_text, is_finished = handle_dtmf_input(session_id, digit)
-        audio_url = synthesize_speech(response_text, session.get("language", "en"))
+        audio_url = _safe_ivr_audio(response_text, session.get("language", "en"))
         return jsonify({
             "session_sid": session_id,
             "session_id": session_id,
             "text": response_text,
             "audio_url": audio_url,
+            "language": session.get("language", "en"),
             "profile": session.get("answers", {}),
             "is_finished": is_finished
         })

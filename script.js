@@ -1403,6 +1403,54 @@ const hangCallBtn = document.getElementById("hangCallBtn");
 const dialerKeypad = document.getElementById("dialerKeypad");
 const simTranscriptBox = document.getElementById("simTranscriptBox");
 const simulatorAudioPlayer = document.getElementById("simulatorAudioPlayer");
+const repeatIVRReplyBtn = document.getElementById("repeatIVRReplyBtn");
+let latestIVRResponse = null;
+
+function speakIVRResponse(response, onFinished = null) {
+  const text = String(response.text || "").trim();
+  const language = response.language === "te" ? "te" : "en";
+  let finished = false;
+  const complete = () => {
+    if (finished) return;
+    finished = true;
+    if (onFinished) onFinished();
+    else if (ivrActive) document.getElementById("phone-call-status").textContent = "Select a keypad option to continue";
+  };
+  const speakInBrowser = () => {
+    if (!text || !("speechSynthesis" in window)) {
+      complete();
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = language === "te" ? "te-IN" : "en-IN";
+    utterance.rate = 0.92;
+    const matchingVoice = window.speechSynthesis.getVoices().find(voice => voice.lang.toLowerCase().startsWith(language === "te" ? "te" : "en-in"));
+    if (matchingVoice) utterance.voice = matchingVoice;
+    utterance.onend = complete;
+    utterance.onerror = complete;
+    window.speechSynthesis.speak(utterance);
+  };
+
+  latestIVRResponse = { ...response, language };
+  if (repeatIVRReplyBtn) repeatIVRReplyBtn.style.display = "inline-flex";
+  document.getElementById("phone-call-status").textContent = "KrishakaSeva Assistant Speaking";
+  simulatorAudioPlayer.pause();
+  simulatorAudioPlayer.onended = complete;
+  simulatorAudioPlayer.onerror = speakInBrowser;
+  if (response.audio_url) {
+    simulatorAudioPlayer.src = `${BACKEND_URL}${response.audio_url}`;
+    simulatorAudioPlayer.play().catch(speakInBrowser);
+  } else {
+    speakInBrowser();
+  }
+}
+
+if (repeatIVRReplyBtn) {
+  repeatIVRReplyBtn.addEventListener("click", () => {
+    if (latestIVRResponse) speakIVRResponse(latestIVRResponse);
+  });
+}
 
 dialCallBtn.addEventListener("click", async () => {
   ivrActive = true;
@@ -1438,14 +1486,8 @@ dialCallBtn.addEventListener("click", async () => {
     const data = await response.json();
     ivrSessionId = data.session_sid;
     
-    document.getElementById("phone-call-status").textContent = "KrishakaSeva Assistant Speaking";
-    
-    if (data.audio_url) {
-      simulatorAudioPlayer.src = `${BACKEND_URL}${data.audio_url}`;
-      simulatorAudioPlayer.play();
-    }
-    
     appendSimTranscript("ai", data.text);
+    speakIVRResponse(data);
   } catch (err) {
     appendSimTranscript("system", "Error connecting helpline call.");
   }
@@ -1465,6 +1507,10 @@ function hangUpHelpline() {
   dialerKeypad.style.display = "none";
   simulatorAudioPlayer.pause();
   simulatorAudioPlayer.src = "";
+  simulatorAudioPlayer.onended = null;
+  simulatorAudioPlayer.onerror = null;
+  if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+  if (repeatIVRReplyBtn) repeatIVRReplyBtn.style.display = "none";
   appendSimTranscript("system", "Call Ended.");
   simulatorMode = "survey";
 }
@@ -1503,33 +1549,20 @@ document.querySelectorAll(".keypad-key").forEach(key => {
         updateChecklist(data.profile);
       }
       
-      if (data.audio_url) {
-        simulatorAudioPlayer.src = `${BACKEND_URL}${data.audio_url}`;
-        simulatorAudioPlayer.play();
-      }
-      
       appendSimTranscript("ai", data.text);
       
       if (data.is_finished) {
-        if (data.audio_url) {
-          simulatorAudioPlayer.onended = () => {
-            setTimeout(() => {
-              hangUpHelpline();
-              appendSimTranscript("system", "Call finished! Farmer details saved to database.");
-              if (data.profile) {
-                updateDashboardWithProfile(data.profile);
-              }
-            }, 2000);
-          };
-        } else {
+        speakIVRResponse(data, () => {
           setTimeout(() => {
             hangUpHelpline();
             appendSimTranscript("system", "Call finished! Farmer details saved to database.");
             if (data.profile) {
               updateDashboardWithProfile(data.profile);
             }
-          }, 8000);
-        }
+          }, 1200);
+        });
+      } else {
+        speakIVRResponse(data);
       }
     } catch (err) {
       appendSimTranscript("system", "Transmission error during DTMF digit processing.");
