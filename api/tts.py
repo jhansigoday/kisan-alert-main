@@ -6,6 +6,8 @@ Supports writing to /tmp when executing inside Vercel's read-only environment.
 
 import os
 import uuid
+import base64
+from io import BytesIO
 from gtts import gTTS
 
 # If running on Vercel, write to /tmp/static/audio_replies, otherwise local static folder
@@ -35,3 +37,16 @@ def synthesize_speech(text: str, language: str = "en") -> str:
     tts.save(filepath)
 
     return f"/static/audio_replies/{filename}"
+
+
+def synthesize_speech_data_url(text: str, language: str = "en") -> str:
+    """Return an MP3 data URL for a browser IVR reply in the same request.
+
+    This avoids relying on a temporary serverless file being available when the
+    simulator browser asks for it a moment later.
+    """
+    lang_code = _LANG_MAP.get(language, "en")
+    buffer = BytesIO()
+    gTTS(text=text, lang=lang_code).write_to_fp(buffer)
+    encoded = base64.b64encode(buffer.getvalue()).decode("ascii")
+    return f"data:audio/mpeg;base64,{encoded}"

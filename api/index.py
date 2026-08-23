@@ -29,7 +29,7 @@ from extension_office import find_nearest_office
 # Deferring asr import to prevent cold start latency
 # Deferring image_diagnosis import to prevent cold start latency
 from advisory import generate_advisory
-from tts import synthesize_speech
+from tts import synthesize_speech, synthesize_speech_data_url
 from market_price import get_market_price
 # Vercel supplies environment variables directly.  Loading a local .env is
 # optional so the server still starts when python-dotenv is not installed.
@@ -152,7 +152,13 @@ def photo_query():
                 pass
 
         spoken_explanation = report.get("spoken_explanation", advisory_text)
-        audio_reply_url = synthesize_speech(spoken_explanation, language=lang)
+        try:
+            audio_reply_url = synthesize_speech(spoken_explanation, language=lang)
+        except Exception as error:
+            # A diagnosis must still be shown if the optional audio provider
+            # is unavailable.
+            print("Crop Doctor TTS generation failed:", error)
+            audio_reply_url = None
 
         return jsonify({
             "disease_label": disease_label,
@@ -1008,7 +1014,7 @@ def ivr_answer_received():
 def _safe_ivr_audio(text, language):
     """Keep the IVR transcript usable even if the TTS provider is unavailable."""
     try:
-        return synthesize_speech(text, language)
+        return synthesize_speech_data_url(text, language)
     except Exception as error:
         print("IVR TTS generation failed:", error)
         return None
@@ -1030,6 +1036,7 @@ def ivr_web_start():
         "session_id": session_id,
         "text": welcome_text,
         "audio_url": audio_url,
+        "language": "en",
         "profile": {},
         "is_finished": False
     })

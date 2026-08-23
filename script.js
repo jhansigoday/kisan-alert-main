@@ -1304,10 +1304,6 @@ document.getElementById("getDiagnosisBtn").addEventListener("click", async () =>
     const lblVoice = isTe ? "వాయిస్ వివరణ (ప్లే ఆడియో)" : "Spoken Explanation (Play Audio)";
     const lblEscalate = isTe ? "సహాయం అవసరమా?" : "Need Assistance?";
     const valEscalate = isTe ? "సమీప రైతు సేవా కేంద్రాన్ని (RSK) సంప్రదించండి" : "Contact nearest Rythu Seva Kendra (RSK) or Soil Lab";
-    const confidencePercent = Number(data.confidence) * 100;
-    const confidenceText = Number.isFinite(confidencePercent)
-      ? `${Number.isInteger(confidencePercent) ? confidencePercent : confidencePercent.toFixed(1)}% ${lblConfidence}`
-      : "";
 
     formData.append("lang", currentLang);
     formData.append("phone", registeredFarmer ? registeredFarmer.phone : "");
@@ -1329,6 +1325,10 @@ document.getElementById("getDiagnosisBtn").addEventListener("click", async () =>
       resultBox.innerHTML = `<div class="report-section-details color-red">Error: ${data.error || "Failed to get advice."}</div>`;
       return;
     }
+    const confidencePercent = Number(data && data.confidence) * 100;
+    const confidenceText = Number.isFinite(confidencePercent)
+      ? `${Number.isInteger(confidencePercent) ? confidencePercent : confidencePercent.toFixed(1)}% ${lblConfidence}`
+      : "";
     
     resultBox.innerHTML = `
       <div class="diagnosis-report" style="background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 16px; margin-top: 16px; box-sizing: border-box;">
@@ -1450,7 +1450,9 @@ function speakIVRResponse(response, onFinished = null) {
   simulatorAudioPlayer.onended = complete;
   simulatorAudioPlayer.onerror = speakInBrowser;
   if (response.audio_url) {
-    simulatorAudioPlayer.src = `${BACKEND_URL}${response.audio_url}`;
+    simulatorAudioPlayer.src = response.audio_url.startsWith("data:")
+      ? response.audio_url
+      : `${BACKEND_URL}${response.audio_url}`;
     simulatorAudioPlayer.play().catch(speakInBrowser);
   } else {
     speakInBrowser();
