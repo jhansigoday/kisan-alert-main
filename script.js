@@ -1318,7 +1318,14 @@ document.getElementById("getDiagnosisBtn").addEventListener("click", async () =>
       response = await fetch(`${BACKEND_URL}/api/voice-query`, { method: "POST", body: formData });
     }
     
-    data = await response.json();
+    const responseType = response.headers.get("content-type") || "";
+    if (responseType.includes("application/json")) {
+      data = await response.json();
+    } else {
+      // A deployment gateway can return an HTML error page. Do not attempt to
+      // parse it as JSON or expose a browser syntax error to the farmer.
+      data = { error: "Crop Doctor is temporarily unavailable. Please try again in a moment." };
+    }
     loading.style.display = "none";
     
     if (!response.ok) {
