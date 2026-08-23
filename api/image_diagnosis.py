@@ -205,6 +205,7 @@ def diagnose_leaf(image_path: str, top_k: int = 3, original_filename: str = "") 
             "⚠️ Crop Doctor needs its Hugging Face inference token configured. Please add HF_API_KEY or HF_TOKEN in Vercel and redeploy.",
         )
     if hf_token:
+        print(f"Hugging Face token loaded: {hf_token[:7]}...")
         headers["Authorization"] = f"Bearer {hf_token}"
     try:
         with open(image_path, "rb") as image_file:
