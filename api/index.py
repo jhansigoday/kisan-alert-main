@@ -114,13 +114,14 @@ def photo_query():
     try:
         from image_diagnosis import diagnose_leaf
         diagnosis = diagnose_leaf(image_path, original_filename=request.files["image"].filename)
-        disease_label = diagnosis["disease_label"]
-        confidence = diagnosis["confidence"]
+        diagnosis_state = diagnosis.get("state", "unavailable")
+        disease_label = diagnosis.get("disease_label")
+        confidence = diagnosis.get("confidence")
         
         lang = request.form.get("lang", "en").strip()
 
-        crop_name = diagnosis.get("crop_name") or (disease_label.split("___")[0].split("_")[0].lower() if disease_label else "")
-        price_info = get_market_price(crop_name)
+        crop_name = diagnosis.get("crop_name") or ""
+        price_info = get_market_price(crop_name) if crop_name else {"available": False}
 
         if audio_path:
             from asr import transcribe_audio
@@ -128,20 +129,37 @@ def photo_query():
             transcript = asr_result["transcript"]
             language = asr_result["language"]
 
-        from advisory import generate_crop_doctor_report
-        report = generate_crop_doctor_report(
-            disease_label=disease_label,
-            confidence=confidence,
-            lang=lang,
-            farmer_profile=farmer_profile
-        )
+        if diagnosis_state in {"high", "moderate"}:
+            from advisory import generate_crop_doctor_report
+            report = generate_crop_doctor_report(
+                disease_label=disease_label,
+                confidence=confidence,
+                lang=lang,
+                farmer_profile=farmer_profile,
+                crop_name=crop_name,
+                diagnosis_state=diagnosis_state,
+            )
+        else:
+            caution = diagnosis.get("message") or "⚠️ Unable to reliably diagnose this image. Please upload a clear image of the affected plant leaf."
+            report = {
+                "crop_name": "",
+                "disease_name": "Unable to reliably diagnose this image",
+                "symptoms": caution,
+                "causes": "A disease-specific cause cannot be confirmed from this image.",
+                "treatment": "Upload a clear close-up of the affected leaf and consult a local agricultural expert if symptoms are spreading.",
+                "organic_solution": "No disease-specific treatment is recommended until the diagnosis is confirmed.",
+                "chemical_solution": "No chemical recommendation is provided for an uncertain diagnosis.",
+                "preventive_measures": "Clean tools between plants and monitor nearby leaves for changes.",
+                "ai_recommendations": caution,
+                "spoken_explanation": caution,
+            }
         
         # Merge properties into result dictionary
         advisory_text = report.get("ai_recommendations", "")
         disease_label = report.get("disease_name", disease_label)
         crop_name = report.get("crop_name", diagnosis.get("crop_name", crop_name))
 
-        needs_escalation = confidence < 0.6
+        needs_escalation = diagnosis_state not in {"high", "moderate"} or (confidence is not None and confidence < 0.6)
         nearest_office = None
         if needs_escalation and farmer_profile.get("location"):
             try:
@@ -164,6 +182,9 @@ def photo_query():
             "disease_label": disease_label,
             "crop_name": crop_name,
             "confidence": confidence,
+            "diagnosis_state": diagnosis_state,
+            "diagnosis_message": diagnosis.get("message", ""),
+            "confidence_level": diagnosis.get("confidence_level", "unavailable"),
             "transcript": transcript,
             "advisory_text": advisory_text,
             "spoken_explanation": spoken_explanation,

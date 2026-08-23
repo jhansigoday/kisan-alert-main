@@ -1325,20 +1325,33 @@ document.getElementById("getDiagnosisBtn").addEventListener("click", async () =>
       resultBox.innerHTML = `<div class="report-section-details color-red">Error: ${data.error || "Failed to get advice."}</div>`;
       return;
     }
-    const confidencePercent = Number(data && data.confidence) * 100;
+    const diagnosisState = data.diagnosis_state || "unavailable";
+    const isUncertainDiagnosis = !["high", "moderate"].includes(diagnosisState);
+    const diagnosisHeading = diagnosisState === "moderate"
+      ? (isTe ? "సాధ్యమైన తెగులు" : "Possible Disease")
+      : isUncertainDiagnosis
+        ? (isTe ? "నమ్మకంగా నిర్ధారించలేకపోయాము" : "Unable to reliably diagnose this image")
+        : lblDisease;
+    const confidencePercent = data && data.confidence !== null && data.confidence !== undefined
+      ? Number(data.confidence) * 100
+      : NaN;
     const confidenceText = Number.isFinite(confidencePercent)
       ? `${Number.isInteger(confidencePercent) ? confidencePercent : confidencePercent.toFixed(1)}% ${lblConfidence}`
-      : "";
+      : (isTe ? "ఖచ్చితత్వం అందుబాటులో లేదు" : "Confidence unavailable");
+    const diagnosisMessage = data.diagnosis_message || (diagnosisState === "moderate"
+      ? (isTe ? "నిర్ధారణ కోసం మరింత స్పష్టమైన ఫోటోను అప్‌లోడ్ చేయండి." : "Please upload a clearer image for confirmation.")
+      : "");
     
     resultBox.innerHTML = `
       <div class="diagnosis-report" style="background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 16px; margin-top: 16px; box-sizing: border-box;">
         <div class="report-header-badge" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-color); padding-bottom: 12px; flex-wrap: wrap; gap: 8px;">
           <div style="display:flex; flex-direction:column; gap:4px;">
-            <strong style="font-size: 16px; color: var(--primary);"><i class="fa-solid fa-leaf"></i> ${lblDisease}: ${data.disease_label || "Unknown"}</strong>
-            <span style="font-size:13px; color:var(--text-muted); font-weight:600;">${lblCrop}: ${data.crop_name || "—"}</span>
+            <strong style="font-size: 16px; color: var(--primary);"><i class="fa-solid fa-leaf"></i> ${isUncertainDiagnosis ? diagnosisHeading : `${diagnosisHeading}: ${data.disease_label || "—"}`}</strong>
+            ${data.crop_name ? `<span style="font-size:13px; color:var(--text-muted); font-weight:600;">${lblCrop}: ${data.crop_name}</span>` : ""}
           </div>
           <span style="background: var(--primary-glow); color: var(--primary); padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700;">${confidenceText}</span>
         </div>
+        ${diagnosisMessage ? `<div style="background:${isUncertainDiagnosis ? "rgba(245, 158, 11, 0.12)" : "var(--primary-glow)"}; color:var(--text-main); padding:10px 12px; border-radius:8px; font-size:13px; line-height:1.45;">${diagnosisMessage}</div>` : ""}
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
           <div class="report-section-details" style="background: var(--bg-card); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">

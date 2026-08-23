@@ -1,43 +1,135 @@
-"""
-image_diagnosis.py — leaf photo -> disease label
-Uses wambugu71/crop_leaf_diseases_vit — a ViT fine-tuned on crop disease images.
-Supports local PyTorch ViT inference if libraries are installed,
-otherwise queries the Hugging Face Serverless Inference API (perfect for Vercel),
-and falls back to a clean mock classification if offline or API key is missing.
+"""Validated crop-leaf diagnosis using the configured Vision Transformer.
+
+Only genuine model predictions from the documented supported class list are
+shown. There is deliberately no mock or filename-to-diagnosis fallback.
 """
 
 import os
+import re
+from typing import Optional
+
 import requests
-from PIL import Image
+from PIL import Image, ImageFilter, ImageStat, UnidentifiedImageError
 
 MODEL_NAME = "wambugu71/crop_leaf_diseases_vit"
 
+# Exact disease classes documented for the configured model. The model config
+# remains the prediction source; this map merely validates model output.
+SUPPORTED_CLASSES = {
+    "corn common rust": ("Corn", "Corn Common Rust"),
+    "corn gray leaf spot": ("Corn", "Corn Gray Leaf Spot"),
+    "corn healthy": ("Corn", "Corn Healthy"),
+    "corn leaf blight": ("Corn", "Corn Leaf Blight"),
+    "potato early blight": ("Potato", "Potato Early Blight"),
+    "potato healthy": ("Potato", "Potato Healthy"),
+    "potato late blight": ("Potato", "Potato Late Blight"),
+    "rice brown spot": ("Rice", "Rice Brown Spot"),
+    "rice healthy": ("Rice", "Rice Healthy"),
+    "rice leaf blast": ("Rice", "Rice Leaf Blast"),
+    "wheat brown rust": ("Wheat", "Wheat Brown Rust"),
+    "wheat healthy": ("Wheat", "Wheat Healthy"),
+    "wheat yellow rust": ("Wheat", "Wheat Yellow Rust"),
+}
 
-def _crop_from_label(label: str) -> str:
-    """Extract a readable crop name while retaining the classifier's disease class."""
-    clean = str(label or "").replace("___", " ").replace("_", " ").strip()
-    return clean.split()[0].title() if clean else "Unknown"
+UNSUPPORTED_FILENAME_TERMS = {"grape", "vine", "apple", "citrus", "banana"}
+HIGH_CONFIDENCE = 0.80
+MODERATE_CONFIDENCE = 0.60
+HIGH_MARGIN = 0.12
+MODERATE_MARGIN = 0.05
 
 
-def _normalise_label(label: str) -> tuple[str, str]:
-    """Map only known model aliases to their farmer-facing disease names."""
-    clean = str(label or "").replace("___", " ").replace("_", " ").replace("-", " ")
-    clean = " ".join(clean.lower().split())
-    if "tomato" in clean and "late blight" in clean:
-        return "Tomato", "Tomato Late Blight"
-    return _crop_from_label(label), str(label or "Unknown").replace("___", " ").replace("_", " ").title()
+def _label_key(label: str) -> str:
+    """Convert labels such as Corn___Common_Rust to a validation key."""
+    label = str(label or "").lower().replace("___", " ").replace("_", " ")
+    label = re.sub(r"\([^)]*\)", "", label)
+    return " ".join(re.sub(r"[^a-z0-9]+", " ", label).split())
 
 
-def _diagnosis_result(label: str, score: float, predictions: list) -> dict:
-    crop_name, disease_label = _normalise_label(label)
+def _validate_image(image_path: str) -> Optional[dict]:
+    """Lightweight quality/leaf-likeness checks, not a claim of object detection."""
+    try:
+        image = Image.open(image_path).convert("RGB")
+    except (UnidentifiedImageError, OSError, ValueError):
+        return {"state": "invalid", "message": "⚠️ No clear plant leaf detected. Please upload a clear photo of the affected leaf."}
+
+    if min(image.size) < 96:
+        return {"state": "invalid", "message": "⚠️ The image is too small to assess reliably. Please upload a clearer leaf photo."}
+
+    preview = image.copy()
+    preview.thumbnail((192, 192))
+    pixels = list(preview.getdata())
+    green_pixels = sum(1 for red, green, blue in pixels if green > red * 1.08 and green > blue * 1.04 and green > 45)
+    green_ratio = green_pixels / max(len(pixels), 1)
+    # Crop the border before measuring edges: Pillow's edge filter creates a
+    # false outline on a flat-colour image otherwise.
+    border = max(2, min(preview.size) // 20)
+    centre = preview.crop((border, border, preview.width - border, preview.height - border))
+    edge_variance = sum(ImageStat.Stat(centre.filter(ImageFilter.FIND_EDGES)).var) / 3
+    colour_variance = sum(ImageStat.Stat(centre).var) / 3
+    if green_ratio < 0.004:
+        return {"state": "invalid", "message": "⚠️ No clear plant leaf detected. Please upload a clear photo of the affected leaf."}
+    if edge_variance < 3 or colour_variance < 4:
+        return {"state": "invalid", "message": "⚠️ The image is too blurry to diagnose reliably. Please upload a clearer photo of the affected leaf."}
+    return None
+
+
+def _uncertain(state: str, message: str, predictions: Optional[list] = None,
+               confidence: Optional[float] = None) -> dict:
     return {
-        "crop_name": crop_name,
-        "disease_label": disease_label,
-        "confidence": score,
-        "raw_predictions": predictions,
+        "state": state,
+        "crop_name": None,
+        "disease_label": None,
+        "confidence": confidence,
+        "confidence_level": "unavailable" if confidence is None else "low",
+        "message": message,
+        "raw_predictions": predictions or [],
     }
 
-# Try importing torch and transformers for local execution
+
+def _validated_result(predictions: list, original_filename: str = "") -> dict:
+    if not predictions:
+        return _uncertain("unavailable", "⚠️ Disease not reliably recognized. The model did not return a usable prediction. Please try another clear leaf image.")
+
+    filename = (original_filename or "").lower()
+    if any(term in filename for term in UNSUPPORTED_FILENAME_TERMS):
+        return _uncertain("unsupported", "⚠️ Disease not reliably recognized. This crop or disease may not be included in the current model's supported classes. Please upload another supported crop leaf image.", predictions)
+
+    top = predictions[0]
+    try:
+        confidence = float(top.get("score"))
+    except (AttributeError, TypeError, ValueError):
+        return _uncertain("uncertain", "⚠️ Unable to reliably identify the disease from this image. Confidence is unavailable; please upload a clear affected leaf photo.", predictions)
+
+    key = _label_key(top.get("label"))
+    if key == "invalid" or key not in SUPPORTED_CLASSES:
+        return _uncertain("unsupported", "⚠️ Disease not reliably recognized. This disease may not be included in the current model's supported classes.", predictions, confidence)
+
+    margin = None
+    if len(predictions) > 1:
+        try:
+            margin = confidence - float(predictions[1].get("score"))
+        except (AttributeError, TypeError, ValueError):
+            pass
+    if confidence >= HIGH_CONFIDENCE and (margin is None or margin >= HIGH_MARGIN):
+        state, level = "high", "high"
+    elif confidence >= MODERATE_CONFIDENCE and (margin is None or margin >= MODERATE_MARGIN):
+        state, level = "moderate", "moderate"
+    else:
+        return _uncertain("uncertain", "⚠️ Unable to reliably identify the disease from this image. Please upload a clear image showing the affected leaf.", predictions, confidence)
+
+    crop_name, disease_label = SUPPORTED_CLASSES[key]
+    return {
+        "state": state,
+        "crop_name": crop_name,
+        "disease_label": disease_label,
+        "confidence": confidence,
+        "confidence_level": level,
+        "message": "" if state == "high" else "⚠️ Possible disease only. Please upload a clearer image for confirmation.",
+        "raw_predictions": predictions,
+        "analysis_scope": "Whole image assessed; individual leaves are not separated by this model.",
+    }
+
+
 try:
     import torch
     from transformers import ViTImageProcessor, ViTForImageClassification
@@ -48,85 +140,54 @@ except ImportError:
 if HAS_LOCAL_VIT:
     try:
         _feature_extractor = ViTImageProcessor.from_pretrained(MODEL_NAME)
-        _model = ViTForImageClassification.from_pretrained(MODEL_NAME, ignore_mismatched_sizes=True)
-    except Exception as e:
-        print("Failed to initialize local ViT model:", e)
+        _model = ViTForImageClassification.from_pretrained(MODEL_NAME)
+    except Exception as error:
+        print("Failed to initialize local ViT model:", error)
         HAS_LOCAL_VIT = False
 
-def diagnose_leaf(image_path: str, top_k: int = 1, original_filename: str = "") -> dict:
-    """
-    Diagnoses disease from a leaf photo using local model, HF API, or mock fallback.
-    Returns: {"disease_label": str, "confidence": float, "raw_predictions": list}
-    """
+
+def diagnose_leaf(image_path: str, top_k: int = 3, original_filename: str = "") -> dict:
+    """Return a validated model prediction or an honest uncertainty state."""
+    image_issue = _validate_image(image_path)
+    if image_issue:
+        return _uncertain(image_issue["state"], image_issue["message"])
+
     if HAS_LOCAL_VIT:
         try:
             image = Image.open(image_path).convert("RGB")
             inputs = _feature_extractor(images=image, return_tensors="pt")
-            outputs = _model(**inputs)
-            logits = outputs.logits
+            probabilities = torch.softmax(_model(**inputs).logits, dim=1)
+            top_probs, top_indices = torch.topk(probabilities, k=top_k, dim=1)
+            predictions = [
+                {"label": _model.config.id2label[index.item()], "score": round(probability.item(), 6)}
+                for probability, index in zip(top_probs[0], top_indices[0])
+            ]
+            return _validated_result(predictions, original_filename)
+        except Exception as error:
+            print("Local ViT inference failed:", error)
 
-            probs = torch.softmax(logits, dim=1)
-            top_probs, top_idxs = torch.topk(probs, k=top_k, dim=1)
-
-            predictions = []
-            for prob, idx in zip(top_probs[0], top_idxs[0]):
-                label = _model.config.id2label[idx.item()]
-                predictions.append({"label": label, "score": round(prob.item(), 3)})
-
-            top = predictions[0]
-            return _diagnosis_result(top["label"], top["score"], predictions)
-        except Exception as e:
-            print("Local ViT inference failed, falling back to HF API / Mock:", e)
-
-    # Fallback 1: Hugging Face Serverless Inference API
-    hf_token = os.environ.get("HF_API_KEY") or os.environ.get("HUGGINGFACE_API_KEY")
     headers = {}
+    hf_token = os.environ.get("HF_API_KEY") or os.environ.get("HUGGINGFACE_API_KEY")
     if hf_token:
         headers["Authorization"] = f"Bearer {hf_token}"
-
     try:
-        with open(image_path, "rb") as f:
-            image_data = f.read()
-
-        api_url = f"https://api-inference.huggingface.co/models/{MODEL_NAME}"
-        response = requests.post(api_url, headers=headers, data=image_data, timeout=10)
-
-        if response.status_code == 200:
-            result = response.json()
-            if isinstance(result, list) and len(result) > 0:
-                predictions = []
-                for item in result[:top_k]:
-                    predictions.append({
-                        "label": item.get("label", "Unknown"),
-                        "score": round(item.get("score", 0.0), 3)
-                    })
-                top = predictions[0]
-                return _diagnosis_result(top["label"], top["score"], predictions)
-            else:
-                print("Unexpected HF response format:", result)
-        else:
-            print(f"HF API returned status {response.status_code}: {response.text}")
-    except Exception as e:
-        print("Hugging Face Serverless Inference API request failed:", e)
-
-    # Fallback 2: Mock/Demo Prediction
-    # Check filename to see if we can give a plausible mock prediction
-    # Uploaded files are stored under a UUID, so use the original filename for
-    # the clearly named demo sample when model/API inference is unavailable.
-    filename = (original_filename or os.path.basename(image_path)).lower()
-    if "corn" in filename or "maize" in filename:
-        disease = "Corn Common Rust"
-    elif "tomato" in filename and ("late" in filename or "blight" in filename):
-        # The bundled demo sample is explicitly a tomato late-blight leaf.
-        # Do not apply this mapping to other tomato images.
-        disease = "Tomato Late Blight"
-    elif "tomato" in filename:
-        disease = "Tomato Bacterial Spot"
-    elif "potato" in filename:
-        disease = "Potato Early Blight"
-    elif "rice" in filename:
-        disease = "Rice Brown Spot"
-    else:
-        disease = "Rice Brown Spot" # A typical mock disease
-
-    return _diagnosis_result(disease, 0.92, [{"label": disease, "score": 0.92}])
+        with open(image_path, "rb") as image_file:
+            inference_url = os.environ.get("HF_INFERENCE_URL") or f"https://api-inference.huggingface.co/models/{MODEL_NAME}"
+            response = requests.post(
+                inference_url,
+                headers=headers,
+                data=image_file.read(),
+                timeout=15,
+            )
+        response.raise_for_status()
+        payload = response.json()
+        if not isinstance(payload, list):
+            return _uncertain("unavailable", "⚠️ Disease diagnosis is temporarily unavailable. Please try again shortly.")
+        predictions = [
+            {"label": item.get("label"), "score": item.get("score")}
+            for item in payload[:top_k] if isinstance(item, dict)
+        ]
+        return _validated_result(predictions, original_filename)
+    except (requests.RequestException, ValueError, OSError) as error:
+        print("Leaf model inference unavailable:", error)
+        return _uncertain("unavailable", "⚠️ Disease diagnosis is temporarily unavailable. Please try again shortly.")
