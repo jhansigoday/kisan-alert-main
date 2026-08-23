@@ -10,13 +10,18 @@ import base64
 from io import BytesIO
 from gtts import gTTS
 
-# If running on Vercel, write to /tmp/static/audio_replies, otherwise local static folder
-if os.environ.get("VERCEL"):
-    OUTPUT_DIR = "/tmp/static/audio_replies"
-else:
+# If running on Vercel (or read-only filesystem), write to /tmp/static/audio_replies
+try:
     OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "static", "audio_replies")
-
-os.makedirs(OUTPUT_DIR, exist_ok=True)
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    # test write permission
+    test_file = os.path.join(OUTPUT_DIR, ".write_test")
+    with open(test_file, "w") as f:
+        f.write("test")
+    os.remove(test_file)
+except OSError:
+    OUTPUT_DIR = "/tmp/static/audio_replies"
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # Map Whisper's detected language codes to gTTS-supported codes.
 _LANG_MAP = {

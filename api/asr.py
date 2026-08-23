@@ -34,8 +34,17 @@ except ImportError:
 # Initialize local Whisper once as fallback if available
 _local_whisper_model = None
 
-TEMP_DIR = "/tmp/temp_audio" if os.environ.get("VERCEL") else os.path.join(os.path.dirname(__file__), "temp_audio")
-os.makedirs(TEMP_DIR, exist_ok=True)
+try:
+    TEMP_DIR = os.path.join(os.path.dirname(__file__), "temp_audio")
+    os.makedirs(TEMP_DIR, exist_ok=True)
+    # test write permission
+    test_file = os.path.join(TEMP_DIR, ".write_test")
+    with open(test_file, "w") as f:
+        f.write("test")
+    os.remove(test_file)
+except OSError:
+    TEMP_DIR = "/tmp/temp_audio"
+    os.makedirs(TEMP_DIR, exist_ok=True)
 
 # Initialize Groq client
 _groq_key = os.environ.get("GROQ_API_KEY", "")

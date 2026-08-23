@@ -4,14 +4,14 @@ index.py — Flask app, route definitions (configured for Vercel)
 
 import os
 import json
+import sys
+import uuid
 
 def normalize_phone(phone):
     phone = "".join(filter(str.isdigit, str(phone)))
     if len(phone) > 10 and phone.startswith("91"):
         phone = phone[-10:]
     return phone
-import sys
-import uuid
 
 # Inject the api/ directory path into sys.path to resolve serverless imports
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -52,10 +52,18 @@ def get_public_host_url():
         return "https://sagging-rewind-happiness.ngrok-free.dev"
     return request.host_url
 
-# Configure UPLOAD_DIR to use /tmp on Vercel
-UPLOAD_DIR = "/tmp/uploads" if os.environ.get("VERCEL") else os.path.join(os.path.dirname(__file__), "uploads")
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-
+# Configure UPLOAD_DIR (with fallback to /tmp if filesystem is read-only)
+try:
+    UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "uploads")
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    # test write permission
+    test_file = os.path.join(UPLOAD_DIR, ".write_test")
+    with open(test_file, "w") as f:
+        f.write("test")
+    os.remove(test_file)
+except OSError:
+    UPLOAD_DIR = "/tmp/uploads"
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 def _save_upload(file_obj, subdir="") -> str:
     ext = os.path.splitext(file_obj.filename)[1]
@@ -103,7 +111,15 @@ def photo_query():
 
     image_path = _save_upload(request.files["image"], subdir="images")
     phone = request.form.get("phone", "")
-    farmer_profile = get_profile(phone) if phone else {}
+    profile_json = request.form.get("profile")
+    farmer_profile = {}
+    if profile_json:
+        try:
+            farmer_profile = json.loads(profile_json) or {}
+        except Exception:
+            pass
+    if not farmer_profile and phone:
+        farmer_profile = get_profile(phone) or {}
 
     transcript = None
     language = "en"
@@ -200,11 +216,14 @@ def photo_query():
             "preventive_measures": report.get("preventive_measures", "")
         })
     except Exception as error:
+        import traceback
+        error_details = traceback.format_exc()
         # Avoid Vercel's HTML error page so the frontend always receives a
         # usable JSON response, while retaining details in deployment logs.
-        print("Crop Doctor request failed:", repr(error))
+        print("Crop Doctor request failed:", error_details)
         return jsonify({
-            "error": "Crop Doctor is temporarily unavailable. Please try again in a moment."
+            "error": f"Crop Doctor is temporarily unavailable. Error: {repr(error)}",
+            "traceback": error_details
         }), 503
     finally:
         if os.path.exists(image_path):
