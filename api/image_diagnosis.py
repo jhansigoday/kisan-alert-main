@@ -11,27 +11,52 @@ from typing import Optional
 import requests
 from PIL import Image, ImageFilter, ImageStat, UnidentifiedImageError
 
-MODEL_NAME = "wambugu71/crop_leaf_diseases_vit"
+MODEL_NAME = "linkanjarad/mobilenet_v2_1.0_224-plant-disease-identification"
 
 # Exact disease classes documented for the configured model. The model config
 # remains the prediction source; this map merely validates model output.
 SUPPORTED_CLASSES = {
+    "apple apple scab": ("Apple", "Apple Scab"),
+    "apple black rot": ("Apple", "Apple Black Rot"),
+    "apple cedar apple rust": ("Apple", "Apple Cedar Apple Rust"),
+    "apple healthy": ("Apple", "Apple Healthy"),
+    "blueberry healthy": ("Blueberry", "Blueberry Healthy"),
+    "cherry powdery mildew": ("Cherry", "Cherry Powdery Mildew"),
+    "cherry healthy": ("Cherry", "Cherry Healthy"),
+    "corn cercospora leaf spot gray leaf spot": ("Corn", "Corn Gray Leaf Spot"),
     "corn common rust": ("Corn", "Corn Common Rust"),
-    "corn gray leaf spot": ("Corn", "Corn Gray Leaf Spot"),
+    "corn northern leaf blight": ("Corn", "Corn Northern Leaf Blight"),
     "corn healthy": ("Corn", "Corn Healthy"),
-    "corn leaf blight": ("Corn", "Corn Leaf Blight"),
+    "grape black rot": ("Grape", "Grape Black Rot"),
+    "grape esca black measles": ("Grape", "Grape Esca (Black Measles)"),
+    "grape leaf blight isariopsis leaf spot": ("Grape", "Grape Leaf Blight"),
+    "grape healthy": ("Grape", "Grape Healthy"),
+    "orange haunglongbing citrus greening": ("Orange", "Citrus Greening"),
+    "peach bacterial spot": ("Peach", "Peach Bacterial Spot"),
+    "peach healthy": ("Peach", "Peach Healthy"),
+    "pepper bell bacterial spot": ("Bell Pepper", "Bell Pepper Bacterial Spot"),
+    "pepper bell healthy": ("Bell Pepper", "Bell Pepper Healthy"),
     "potato early blight": ("Potato", "Potato Early Blight"),
     "potato healthy": ("Potato", "Potato Healthy"),
     "potato late blight": ("Potato", "Potato Late Blight"),
-    "rice brown spot": ("Rice", "Rice Brown Spot"),
-    "rice healthy": ("Rice", "Rice Healthy"),
-    "rice leaf blast": ("Rice", "Rice Leaf Blast"),
-    "wheat brown rust": ("Wheat", "Wheat Brown Rust"),
-    "wheat healthy": ("Wheat", "Wheat Healthy"),
-    "wheat yellow rust": ("Wheat", "Wheat Yellow Rust"),
+    "raspberry healthy": ("Raspberry", "Raspberry Healthy"),
+    "soybean healthy": ("Soybean", "Soybean Healthy"),
+    "squash powdery mildew": ("Squash", "Squash Powdery Mildew"),
+    "strawberry leaf scorch": ("Strawberry", "Strawberry Leaf Scorch"),
+    "strawberry healthy": ("Strawberry", "Strawberry Healthy"),
+    "tomato bacterial spot": ("Tomato", "Tomato Bacterial Spot"),
+    "tomato early blight": ("Tomato", "Tomato Early Blight"),
+    "tomato late blight": ("Tomato", "Tomato Late Blight"),
+    "tomato leaf mold": ("Tomato", "Tomato Leaf Mold"),
+    "tomato septoria leaf spot": ("Tomato", "Tomato Septoria Leaf Spot"),
+    "tomato spider mites two spotted spider mite": ("Tomato", "Tomato Spider Mites"),
+    "tomato target spot": ("Tomato", "Tomato Target Spot"),
+    "tomato tomato yellow leaf curl virus": ("Tomato", "Tomato Yellow Leaf Curl Virus"),
+    "tomato tomato mosaic virus": ("Tomato", "Tomato Mosaic Virus"),
+    "tomato healthy": ("Tomato", "Tomato Healthy"),
 }
 
-UNSUPPORTED_FILENAME_TERMS = {"grape", "vine", "apple", "citrus", "banana"}
+UNSUPPORTED_FILENAME_TERMS = {"downy mildew"}
 HIGH_CONFIDENCE = 0.80
 MODERATE_CONFIDENCE = 0.60
 HIGH_MARGIN = 0.12
@@ -90,7 +115,7 @@ def _validated_result(predictions: list, original_filename: str = "") -> dict:
     if not predictions:
         return _uncertain("unavailable", "⚠️ Disease not reliably recognized. The model did not return a usable prediction. Please try another clear leaf image.")
 
-    filename = (original_filename or "").lower()
+    filename = " ".join(re.sub(r"[^a-z0-9]+", " ", original_filename or "").lower().split())
     if any(term in filename for term in UNSUPPORTED_FILENAME_TERMS):
         return _uncertain("unsupported", "⚠️ Disease not reliably recognized. This crop or disease may not be included in the current model's supported classes. Please upload another supported crop leaf image.", predictions)
 
