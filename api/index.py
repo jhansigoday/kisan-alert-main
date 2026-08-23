@@ -199,6 +199,13 @@ def photo_query():
             "chemical_solution": report.get("chemical_solution", ""),
             "preventive_measures": report.get("preventive_measures", "")
         })
+    except Exception as error:
+        # Avoid Vercel's HTML error page so the frontend always receives a
+        # usable JSON response, while retaining details in deployment logs.
+        print("Crop Doctor request failed:", repr(error))
+        return jsonify({
+            "error": "Crop Doctor is temporarily unavailable. Please try again in a moment."
+        }), 503
     finally:
         if os.path.exists(image_path):
             os.remove(image_path)
