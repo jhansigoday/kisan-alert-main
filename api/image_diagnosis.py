@@ -192,7 +192,18 @@ def diagnose_leaf(image_path: str, top_k: int = 3, original_filename: str = "") 
             print("Local ViT inference failed:", error)
 
     headers = {}
-    hf_token = os.environ.get("HF_API_KEY") or os.environ.get("HUGGINGFACE_API_KEY")
+    # Accept Hugging Face's standard variable name as well as the app's
+    # original name, so Vercel configuration cannot silently disable inference.
+    hf_token = (
+        os.environ.get("HF_API_KEY")
+        or os.environ.get("HF_TOKEN")
+        or os.environ.get("HUGGINGFACE_API_KEY")
+    )
+    if not hf_token:
+        return _uncertain(
+            "unavailable",
+            "⚠️ Crop Doctor needs its Hugging Face inference token configured. Please add HF_API_KEY or HF_TOKEN in Vercel and redeploy.",
+        )
     if hf_token:
         headers["Authorization"] = f"Bearer {hf_token}"
     try:
@@ -213,6 +224,16 @@ def diagnose_leaf(image_path: str, top_k: int = 3, original_filename: str = "") 
             for item in payload[:top_k] if isinstance(item, dict)
         ]
         return _validated_result(predictions, original_filename)
+    except requests.HTTPError as error:
+        status = error.response.status_code if error.response is not None else None
+        print("Leaf model inference returned HTTP status:", status)
+        if status in {401, 403}:
+            message = "⚠️ Crop Doctor could not authorize its Hugging Face token. Create a token with Inference Providers permission, update HF_API_KEY or HF_TOKEN in Vercel, then redeploy."
+        elif status == 429:
+            message = "⚠️ Crop Doctor has reached the model service request limit. Please try again shortly."
+        else:
+            message = "⚠️ Disease diagnosis is temporarily unavailable. Please try again shortly."
+        return _uncertain("unavailable", message)
     except (requests.RequestException, ValueError, OSError) as error:
         print("Leaf model inference unavailable:", error)
         return _uncertain("unavailable", "⚠️ Disease diagnosis is temporarily unavailable. Please try again shortly.")
