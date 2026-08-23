@@ -209,7 +209,7 @@ def diagnose_leaf(image_path: str, top_k: int = 3, original_filename: str = "") 
         headers["Authorization"] = f"Bearer {hf_token}"
     try:
         with open(image_path, "rb") as image_file:
-            inference_url = os.environ.get("HF_INFERENCE_URL") or f"https://router.huggingface.co/hf-inference/models/{MODEL_NAME}"
+            inference_url = os.environ.get("HF_INFERENCE_URL") or f"https://api-inference.huggingface.co/models/{MODEL_NAME}"
             response = requests.post(
                 inference_url,
                 headers=headers,
