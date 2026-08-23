@@ -1307,6 +1307,17 @@ document.getElementById("getDiagnosisBtn").addEventListener("click", async () =>
 
     formData.append("lang", currentLang);
     formData.append("phone", registeredFarmer ? registeredFarmer.phone : "");
+    if (registeredFarmer) {
+      formData.append("profile", JSON.stringify(registeredFarmer));
+      if (registeredFarmer.latitude) {
+        formData.append("lat", registeredFarmer.latitude);
+        formData.append("lon", registeredFarmer.longitude);
+      }
+    } else if (detectedLat) {
+      formData.append("lat", detectedLat);
+      formData.append("lon", detectedLon);
+    }
+
     if (imageFile) {
       formData.append("image", imageFile);
       if (audioBlob) {

@@ -4,14 +4,14 @@ index.py — Flask app, route definitions (configured for Vercel)
 
 import os
 import json
+import sys
+import uuid
 
 def normalize_phone(phone):
     phone = "".join(filter(str.isdigit, str(phone)))
     if len(phone) > 10 and phone.startswith("91"):
         phone = phone[-10:]
     return phone
-import sys
-import uuid
 
 # Inject the api/ directory path into sys.path to resolve serverless imports
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -55,7 +55,6 @@ def get_public_host_url():
 # Configure UPLOAD_DIR to use /tmp on Vercel
 UPLOAD_DIR = "/tmp/uploads" if os.environ.get("VERCEL") else os.path.join(os.path.dirname(__file__), "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
-
 
 def _save_upload(file_obj, subdir="") -> str:
     ext = os.path.splitext(file_obj.filename)[1]
@@ -103,7 +102,15 @@ def photo_query():
 
     image_path = _save_upload(request.files["image"], subdir="images")
     phone = request.form.get("phone", "")
-    farmer_profile = get_profile(phone) if phone else {}
+    profile_json = request.form.get("profile")
+    farmer_profile = {}
+    if profile_json:
+        try:
+            farmer_profile = json.loads(profile_json) or {}
+        except Exception:
+            pass
+    if not farmer_profile and phone:
+        farmer_profile = get_profile(phone) or {}
 
     transcript = None
     language = "en"

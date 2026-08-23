@@ -1,19 +1,23 @@
-# Environment variables
-backend/.env
+# Environment Variables / Credentials
 .env
 
-# Python cache
+# Python Caches & Bytecode
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+.pytest_cache/
 
-# Virtual environment
-venv/
-.venv/
+# Telemetry and Agent Artifacts
+.gemini/
+antigravity/
 
-# Uploaded/generated files
-backend/static/audio_replies/
-backend/temp_audio/
-backend/uploads/
+# Temporary Audio/Diagnosis Uploads
+api/uploads/
+api/temp_audio/
+api/static/audio_replies/*.mp3
+/tmp/
 
-# Logs
-*.log
+# OS-specific files
+Thumbs.db
+desktop.ini
+.DS_Store
