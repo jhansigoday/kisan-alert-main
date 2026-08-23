@@ -113,13 +113,13 @@ def photo_query():
 
     try:
         from image_diagnosis import diagnose_leaf
-        diagnosis = diagnose_leaf(image_path)
+        diagnosis = diagnose_leaf(image_path, original_filename=request.files["image"].filename)
         disease_label = diagnosis["disease_label"]
         confidence = diagnosis["confidence"]
         
         lang = request.form.get("lang", "en").strip()
 
-        crop_name = disease_label.split("___")[0].split("_")[0].lower() if disease_label else ""
+        crop_name = diagnosis.get("crop_name") or (disease_label.split("___")[0].split("_")[0].lower() if disease_label else "")
         price_info = get_market_price(crop_name)
 
         if audio_path:
@@ -139,6 +139,7 @@ def photo_query():
         # Merge properties into result dictionary
         advisory_text = report.get("ai_recommendations", "")
         disease_label = report.get("disease_name", disease_label)
+        crop_name = report.get("crop_name", diagnosis.get("crop_name", crop_name))
 
         needs_escalation = confidence < 0.6
         nearest_office = None
@@ -150,13 +151,16 @@ def photo_query():
             except (TypeError, ValueError):
                 pass
 
-        audio_reply_url = synthesize_speech(advisory_text, language=lang)
+        spoken_explanation = report.get("spoken_explanation", advisory_text)
+        audio_reply_url = synthesize_speech(spoken_explanation, language=lang)
 
         return jsonify({
             "disease_label": disease_label,
+            "crop_name": crop_name,
             "confidence": confidence,
             "transcript": transcript,
             "advisory_text": advisory_text,
+            "spoken_explanation": spoken_explanation,
             "audio_reply_url": audio_reply_url,
             "needs_escalation": needs_escalation,
             "market_price": price_info,

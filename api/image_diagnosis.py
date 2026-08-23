@@ -12,6 +12,31 @@ from PIL import Image
 
 MODEL_NAME = "wambugu71/crop_leaf_diseases_vit"
 
+
+def _crop_from_label(label: str) -> str:
+    """Extract a readable crop name while retaining the classifier's disease class."""
+    clean = str(label or "").replace("___", " ").replace("_", " ").strip()
+    return clean.split()[0].title() if clean else "Unknown"
+
+
+def _normalise_label(label: str) -> tuple[str, str]:
+    """Map only known model aliases to their farmer-facing disease names."""
+    clean = str(label or "").replace("___", " ").replace("_", " ").replace("-", " ")
+    clean = " ".join(clean.lower().split())
+    if "tomato" in clean and "late blight" in clean:
+        return "Tomato", "Tomato Late Blight"
+    return _crop_from_label(label), str(label or "Unknown").replace("___", " ").replace("_", " ").title()
+
+
+def _diagnosis_result(label: str, score: float, predictions: list) -> dict:
+    crop_name, disease_label = _normalise_label(label)
+    return {
+        "crop_name": crop_name,
+        "disease_label": disease_label,
+        "confidence": score,
+        "raw_predictions": predictions,
+    }
+
 # Try importing torch and transformers for local execution
 try:
     import torch
@@ -28,7 +53,7 @@ if HAS_LOCAL_VIT:
         print("Failed to initialize local ViT model:", e)
         HAS_LOCAL_VIT = False
 
-def diagnose_leaf(image_path: str, top_k: int = 1) -> dict:
+def diagnose_leaf(image_path: str, top_k: int = 1, original_filename: str = "") -> dict:
     """
     Diagnoses disease from a leaf photo using local model, HF API, or mock fallback.
     Returns: {"disease_label": str, "confidence": float, "raw_predictions": list}
@@ -49,11 +74,7 @@ def diagnose_leaf(image_path: str, top_k: int = 1) -> dict:
                 predictions.append({"label": label, "score": round(prob.item(), 3)})
 
             top = predictions[0]
-            return {
-                "disease_label": top["label"],
-                "confidence": top["score"],
-                "raw_predictions": predictions,
-            }
+            return _diagnosis_result(top["label"], top["score"], predictions)
         except Exception as e:
             print("Local ViT inference failed, falling back to HF API / Mock:", e)
 
@@ -80,11 +101,7 @@ def diagnose_leaf(image_path: str, top_k: int = 1) -> dict:
                         "score": round(item.get("score", 0.0), 3)
                     })
                 top = predictions[0]
-                return {
-                    "disease_label": top["label"],
-                    "confidence": top["score"],
-                    "raw_predictions": predictions,
-                }
+                return _diagnosis_result(top["label"], top["score"], predictions)
             else:
                 print("Unexpected HF response format:", result)
         else:
@@ -94,9 +111,15 @@ def diagnose_leaf(image_path: str, top_k: int = 1) -> dict:
 
     # Fallback 2: Mock/Demo Prediction
     # Check filename to see if we can give a plausible mock prediction
-    filename = os.path.basename(image_path).lower()
+    # Uploaded files are stored under a UUID, so use the original filename for
+    # the clearly named demo sample when model/API inference is unavailable.
+    filename = (original_filename or os.path.basename(image_path)).lower()
     if "corn" in filename or "maize" in filename:
         disease = "Corn Common Rust"
+    elif "tomato" in filename and ("late" in filename or "blight" in filename):
+        # The bundled demo sample is explicitly a tomato late-blight leaf.
+        # Do not apply this mapping to other tomato images.
+        disease = "Tomato Late Blight"
     elif "tomato" in filename:
         disease = "Tomato Bacterial Spot"
     elif "potato" in filename:
@@ -106,8 +129,4 @@ def diagnose_leaf(image_path: str, top_k: int = 1) -> dict:
     else:
         disease = "Rice Brown Spot" # A typical mock disease
 
-    return {
-        "disease_label": disease,
-        "confidence": 0.92,
-        "raw_predictions": [{"label": disease, "score": 0.92}],
-    }
+    return _diagnosis_result(disease, 0.92, [{"label": disease, "score": 0.92}])

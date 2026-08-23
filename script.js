@@ -1292,6 +1292,7 @@ document.getElementById("getDiagnosisBtn").addEventListener("click", async () =>
     const formData = new FormData();
     const isTe = currentLang === "te";
     const lblDisease = isTe ? "కనుగొనబడిన తెగులు" : "Detected Disease";
+    const lblCrop = isTe ? "గుర్తించిన పంట" : "Detected Crop";
     const lblConfidence = isTe ? "ఖచ్చితత్వం" : "Confidence";
     const lblSymptoms = isTe ? "లక్షణాలు" : "Symptoms";
     const lblCauses = isTe ? "కారణాలు" : "Causes";
@@ -1303,6 +1304,10 @@ document.getElementById("getDiagnosisBtn").addEventListener("click", async () =>
     const lblVoice = isTe ? "వాయిస్ వివరణ (ప్లే ఆడియో)" : "Spoken Explanation (Play Audio)";
     const lblEscalate = isTe ? "సహాయం అవసరమా?" : "Need Assistance?";
     const valEscalate = isTe ? "సమీప రైతు సేవా కేంద్రాన్ని (RSK) సంప్రదించండి" : "Contact nearest Rythu Seva Kendra (RSK) or Soil Lab";
+    const confidencePercent = Number(data.confidence) * 100;
+    const confidenceText = Number.isFinite(confidencePercent)
+      ? `${Number.isInteger(confidencePercent) ? confidencePercent : confidencePercent.toFixed(1)}% ${lblConfidence}`
+      : "";
 
     formData.append("lang", currentLang);
     formData.append("phone", registeredFarmer ? registeredFarmer.phone : "");
@@ -1328,8 +1333,11 @@ document.getElementById("getDiagnosisBtn").addEventListener("click", async () =>
     resultBox.innerHTML = `
       <div class="diagnosis-report" style="background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 16px; margin-top: 16px; box-sizing: border-box;">
         <div class="report-header-badge" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-color); padding-bottom: 12px; flex-wrap: wrap; gap: 8px;">
-          <strong style="font-size: 16px; color: var(--primary);"><i class="fa-solid fa-leaf"></i> ${lblDisease}: ${data.disease_label || "Unknown"}</strong>
-          <span style="background: var(--primary-glow); color: var(--primary); padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700;">${data.confidence ? (data.confidence * 100).toFixed(1) + "% " + lblConfidence : ""}</span>
+          <div style="display:flex; flex-direction:column; gap:4px;">
+            <strong style="font-size: 16px; color: var(--primary);"><i class="fa-solid fa-leaf"></i> ${lblDisease}: ${data.disease_label || "Unknown"}</strong>
+            <span style="font-size:13px; color:var(--text-muted); font-weight:600;">${lblCrop}: ${data.crop_name || "—"}</span>
+          </div>
+          <span style="background: var(--primary-glow); color: var(--primary); padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700;">${confidenceText}</span>
         </div>
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
@@ -1416,7 +1424,10 @@ function speakIVRResponse(response, onFinished = null) {
     if (onFinished) onFinished();
     else if (ivrActive) document.getElementById("phone-call-status").textContent = "Select a keypad option to continue";
   };
+  let browserFallbackStarted = false;
   const speakInBrowser = () => {
+    if (browserFallbackStarted) return;
+    browserFallbackStarted = true;
     if (!text || !("speechSynthesis" in window)) {
       complete();
       return;
