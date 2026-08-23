@@ -145,7 +145,9 @@ def photo_query():
             transcript = asr_result["transcript"]
             language = asr_result["language"]
 
-        if diagnosis_state in {"high", "moderate"}:
+        if "report" in diagnosis:
+            report = diagnosis["report"]
+        elif diagnosis_state in {"high", "moderate"}:
             from advisory import generate_crop_doctor_report
             report = generate_crop_doctor_report(
                 disease_label=disease_label,
@@ -1144,27 +1146,6 @@ def ivr_web_step():
             "is_finished": is_finished
         })
         
-@app.route("/api/test-hf")
-def test_hf():
-    import os, requests
-    model = "linkanjarad/mobilenet_v2_1.0_224-plant-disease-identification"
-    url = f"https://api-inference.huggingface.co/models/{model}"
-    token = os.environ.get("HF_API_KEY") or os.environ.get("HF_TOKEN")
-    if not token:
-        return "No Hugging Face token found in environment variables", 400
-    
-    headers = {"Authorization": f"Bearer {token}"}
-    try:
-        # Send a tiny blank query just to verify status code and response details
-        response = requests.post(url, headers=headers, json={"inputs": ""})
-        return jsonify({
-            "status_code": response.status_code,
-            "headers": dict(response.headers),
-            "response": response.json() if response.headers.get("content-type", "").startswith("application/json") else response.text
-        })
-    except Exception as e:
-        return jsonify({"error": str(e)})
-
 # Host Frontend Static Files directly from Flask
 @app.route("/")
 def serve_frontend_index():

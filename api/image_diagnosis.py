@@ -191,6 +191,95 @@ def diagnose_leaf(image_path: str, top_k: int = 3, original_filename: str = "") 
         except Exception as error:
             print("Local ViT inference failed:", error)
 
+    # Check if Groq Vision is available (for higher accuracy and no HF token requirement)
+    groq_key = os.environ.get("GROQ_API_KEY", "")
+    if groq_key:
+        try:
+            import base64
+            from groq import Groq
+            client = Groq(api_key=groq_key)
+            
+            with open(image_path, "rb") as image_file:
+                encoded_image = base64.b64encode(image_file.read()).decode("utf-8")
+                
+            prompt = """Analyze the provided plant leaf image. 
+Identify the crop name and the specific disease. 
+If the image is not a plant leaf, or is too blurry to diagnose, return:
+{
+  "diagnosis_state": "invalid",
+  "disease_label": "Unable to reliably diagnose this image",
+  "crop_name": "",
+  "confidence": 0.0,
+  "symptoms": "No clear plant leaf detected.",
+  "causes": "Please upload a clearer image of a single crop leaf.",
+  "treatment": "Upload a clear close-up.",
+  "organic_solution": "N/A",
+  "chemical_solution": "N/A",
+  "preventive_measures": "N/A",
+  "advisory_text": "Please upload a clearer photo."
+}
+
+Otherwise, identify the crop name, disease label, and return a JSON object with this exact schema:
+{
+  "diagnosis_state": "high",
+  "disease_label": "Disease Name",
+  "crop_name": "Crop Name",
+  "confidence": 0.95,
+  "symptoms": "Detailed list of visible symptoms on this leaf...",
+  "causes": "Detailed scientific cause of this disease...",
+  "treatment": "Immediate actions to treat the infected crop...",
+  "organic_solution": "Eco-friendly/organic remedies for this disease...",
+  "chemical_solution": "Recommended chemical treatments if severe...",
+  "preventive_measures": "Actions to prevent future occurrences...",
+  "advisory_text": "Personalized AI farming advisory report..."
+}
+Do not return any markdown formatting or text outside the JSON. Return only a raw JSON string."""
+
+            response = client.chat.completions.create(
+                model="llama-3.2-11b-vision-preview",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": prompt},
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/jpeg;base64,{encoded_image}"
+                                }
+                            }
+                        ]
+                    }
+                ],
+                temperature=0.1,
+                response_format={"type": "json_object"}
+            )
+            
+            import json
+            report_data = json.loads(response.choices[0].message.content.strip())
+            
+            state = report_data.get("diagnosis_state", "high")
+            return {
+                "state": state,
+                "disease_label": report_data.get("disease_label", "Unknown Disease"),
+                "crop_name": report_data.get("crop_name", ""),
+                "confidence": report_data.get("confidence", 0.9),
+                "report": {
+                    "crop_name": report_data.get("crop_name", ""),
+                    "disease_name": report_data.get("disease_label", "Unknown Disease"),
+                    "symptoms": report_data.get("symptoms", ""),
+                    "causes": report_data.get("causes", ""),
+                    "treatment": report_data.get("treatment", ""),
+                    "organic_solution": report_data.get("organic_solution", ""),
+                    "chemical_solution": report_data.get("chemical_solution", ""),
+                    "preventive_measures": report_data.get("preventive_measures", ""),
+                    "ai_recommendations": report_data.get("advisory_text", ""),
+                    "spoken_explanation": report_data.get("advisory_text", "")
+                }
+            }
+        except Exception as groq_error:
+            print("Groq Vision classification failed, falling back to Hugging Face:", groq_error)
+
     headers = {}
     # Accept Hugging Face's standard variable name as well as the app's
     # original name, so Vercel configuration cannot silently disable inference.
