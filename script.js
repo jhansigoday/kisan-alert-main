@@ -648,7 +648,7 @@ document.getElementById("detectGpsBtn").addEventListener("click", () => {
       const geoResult = await reverseGeocode(detectedLat, detectedLon);
       
       if (geoResult) {
-        detectedLocationName = geoResult.village || geoResult.district || geoResult.state;
+        detectedLocationName = geoResult.district || geoResult.village || geoResult.state;
         if (geoResult.state) document.getElementById("reg-state").value = geoResult.state;
         if (geoResult.district) document.getElementById("reg-district").value = geoResult.district;
         if (geoResult.mandal) document.getElementById("reg-mandal").value = geoResult.mandal;
@@ -663,7 +663,7 @@ document.getElementById("detectGpsBtn").addEventListener("click", () => {
         registeredFarmer.latitude = detectedLat;
         registeredFarmer.longitude = detectedLon;
         if (geoResult) {
-          registeredFarmer.location = `${geoResult.village || ""}, ${geoResult.district || ""}, ${geoResult.state || ""}`;
+          registeredFarmer.location = `${geoResult.district || ""}, ${geoResult.state || ""}`;
         }
         updateDashboardWithProfile(registeredFarmer);
       }
@@ -4332,7 +4332,7 @@ async function detectAnalyticsLocation() {
       
       let locName = "Nellore, Andhra Pradesh";
       if (geoResult) {
-        const place = geoResult.village || geoResult.district || "Nellore";
+        const place = geoResult.district || geoResult.village || "Nellore";
         locName = `${place}, ${geoResult.state}`;
       }
       
@@ -4578,7 +4578,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       detectedLon = position.coords.longitude;
       const geoResult = await reverseGeocode(detectedLat, detectedLon);
       if (geoResult) {
-        detectedLocationName = geoResult.village || geoResult.district || geoResult.state;
+        detectedLocationName = geoResult.district || geoResult.village || geoResult.state;
         document.getElementById("reg-state").value = geoResult.state;
         document.getElementById("reg-district").value = geoResult.district;
         document.getElementById("reg-mandal").value = geoResult.mandal;
@@ -4590,7 +4590,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         registeredFarmer.latitude = detectedLat;
         registeredFarmer.longitude = detectedLon;
         if (geoResult) {
-          registeredFarmer.location = `${geoResult.village}, ${geoResult.district}, ${geoResult.state}`;
+          registeredFarmer.location = `${geoResult.district}, ${geoResult.state}`;
         }
         updateDashboardWithProfile(registeredFarmer);
       } else {
