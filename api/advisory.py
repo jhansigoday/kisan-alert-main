@@ -156,7 +156,7 @@ def generate_crop_doctor_report(disease_label: str, confidence: float, lang: str
         )
 
     system_prompt = (
-        "You are an expert crop pathologist AI advisor. "
+        "You must respond in JSON format. Return a JSON object. You are an expert crop pathologist AI advisor. "
         "The vision model has already validated the crop and disease below. Do not change, rename, or diagnose a different crop or disease. "
         "You MUST return a valid JSON object containing exactly these keys:\n"
         "{\n"
@@ -187,8 +187,9 @@ def generate_crop_doctor_report(disease_label: str, confidence: float, lang: str
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
                 ],
-                max_tokens=800,
-                temperature=0.3
+                max_tokens=3000,
+                temperature=0.3,
+                response_format={"type": "json_object"}
             )
             content = res.choices[0].message.content.strip()
             import re

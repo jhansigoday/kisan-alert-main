@@ -202,7 +202,7 @@ def diagnose_leaf(image_path: str, top_k: int = 3, original_filename: str = "") 
             with open(image_path, "rb") as image_file:
                 encoded_image = base64.b64encode(image_file.read()).decode("utf-8")
                 
-            prompt = """Analyze the provided plant leaf image. 
+            prompt = """You must respond in JSON format. Return a JSON object. Analyze the provided plant leaf image. 
 Identify the crop name and the specific disease. 
 If the image is not a plant leaf, or is too blurry to diagnose, return:
 {
@@ -251,7 +251,9 @@ Do not return any markdown formatting or text outside the JSON. Return only a ra
                         ]
                     }
                 ],
-                temperature=0.1
+                temperature=0.1,
+                max_tokens=3000,
+                response_format={"type": "json_object"}
             )
             
             import json, re
