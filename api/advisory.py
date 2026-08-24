@@ -69,13 +69,19 @@ def generate_advisory(transcript: str = "", disease_label: str = "", disease_con
     lang_name = "Telugu" if lang == "te" else "English"
 
     system_prompt = (
-        "You are an agricultural advisor for Indian farmers. "
-        f"Give a short, practical recommendation ONLY in {lang_name} using plain, simple language a farmer "
-        "with no technical background can follow. Mention only remedies that are "
-        "affordable and locally available. Use the farmer's profile context (crop, "
-        "soil, irrigation) to make the recommendation specific to their situation "
-        "rather than generic. If the information given is insufficient to give a "
-        "confident answer, say so honestly rather than guessing."
+        "You are a crop pathology AI advisor. "
+        "Return ONLY the final farmer-facing advisory. "
+        "NEVER output: thinking process, chain of thought, analysis, reasoning steps, constraints, deliberation, or internal notes. "
+        "Do not explain how you reached the answer. "
+        "The response must be written directly to the farmer in simple language. "
+        "You MUST structure the response exactly like this:\n\n"
+        "DIAGNOSIS:\n"
+        "LIKELY CAUSE:\n"
+        "SYMPTOMS:\n"
+        "WHAT TO DO:\n"
+        "PREVENTION:\n"
+        "WHEN TO SEEK HELP:\n\n"
+        f"Write all text field values ONLY in {lang_name}."
     )
 
     user_prompt = (
@@ -83,7 +89,7 @@ def generate_advisory(transcript: str = "", disease_label: str = "", disease_con
         f"Detected leaf condition (if photo provided): {disease_label or 'Not provided'}\n"
         f"{profile_context}\n"
         f"Relevant knowledge base excerpts:\n{chunks_text}\n\n"
-        "Give a short, practical recommendation."
+        "Generate the structured advisory now."
     )
 
     if not _client:
@@ -111,6 +117,9 @@ def generate_advisory(transcript: str = "", disease_label: str = "", disease_con
     )
 
     advisory_text = response.choices[0].message.content.strip()
+    import re
+    advisory_text = re.sub(r"(?i)here's a thinking process:.*?(?=\b(diagnosis|symptoms|likely cause|what to do|prevention|when to seek help)\b|$)", "", advisory_text, flags=re.DOTALL)
+    advisory_text = re.sub(r"<think>.*?</think>", "", advisory_text, flags=re.DOTALL).strip()
 
     if needs_escalation:
         if lang == "te":
