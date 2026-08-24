@@ -4877,6 +4877,7 @@ window.requestGpsForCenters = function() {
         alert(currentLang === "te" 
           ? "స్థాన అనుమతి నిరాకరించబడింది లేదా అందుబాటులో లేదు. దయచేసి బ్రౌజర్ సెట్టింగ్స్ లో లొకేషన్ అనుమతిని ప్రారంభించండి." 
           : "Location permission denied or unavailable. Please enable location access in your browser settings.");
+        nearbyCentersCache = []; // show retry/enable layout
         renderExtensionServices();
       },
       { timeout: 10000, enableHighAccuracy: true }
@@ -4889,6 +4890,13 @@ window.requestGpsForCenters = function() {
 async function fetchNearbyCenters(lat, lon) {
   if (isFetchingCenters) return;
   isFetchingCenters = true;
+  
+  // Set up AbortController for a 6-second timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => {
+    console.warn("Overpass API request timed out after 6 seconds. Aborting...");
+    controller.abort();
+  }, 6000);
   
   try {
     const radius = 25000; // 25 km
@@ -4905,7 +4913,9 @@ async function fetchNearbyCenters(lat, lon) {
       out body;
     `;
     const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
-    const res = await fetch(url);
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    
     if (!res.ok) throw new Error("Overpass API error");
     const data = await res.json();
     
@@ -4943,8 +4953,9 @@ async function fetchNearbyCenters(lat, lon) {
     lastQueriedCoords = `${lat},${lon}`;
   } catch (error) {
     console.error("Error loading nearby centers:", error);
-    nearbyCentersCache = []; // fallback trigger
+    nearbyCentersCache = []; // fallback trigger for "No Nearby Centers Found" UI
   } finally {
+    clearTimeout(timeoutId);
     isFetchingCenters = false;
     renderExtensionServices();
   }
@@ -5065,18 +5076,24 @@ function renderExtensionServices() {
         </div>
         <div style="max-width: 280px; margin: 0 auto;">
           <h4 style="margin: 0 0 6px 0; font-size: 14px; font-weight: 600; color: var(--text-main);">
-            ${isTe ? "కేంద్రాలు కనుగొనబడలేదు" : "No Centers Found"}
+            ${isTe ? "ప్రభుత్వ కేంద్రాలు కనుగొనబడలేదు" : "No Nearby Government Centers Found"}
           </h4>
           <p style="margin: 0 0 12px 0; font-size: 12px; color: var(--text-muted); line-height: 1.4;">
             ${isTe 
-              ? "మీ స్థానానికి 25 కిలోమీటర్ల పరిధిలో ప్రభుత్వ వ్యవసాయ సేవా కేంద్రాలేవీ కనుగొనబడలేదు." 
-              : "No government agricultural service centers found within a 25km radius of your location."}
+              ? "మీ పరిసర ప్రాంతంలో ఎటువంటి ప్రభుత్వ వ్యవసాయ కేంద్రాలు కనుగొనబడలేదు." 
+              : "No nearby government agricultural service centers found within a 25km radius."}
           </p>
         </div>
-        <button onclick="window.requestGpsForCenters()" class="btn primary-btn" style="font-size: 12px; padding: 8px 16px; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-          <i class="fa-solid fa-location-dot"></i>
-          <span>${isTe ? "మళ్లీ ప్రయత్నించండి" : "Try Again"}</span>
-        </button>
+        <div style="display: flex; gap: 8px;">
+          <button onclick="window.requestGpsForCenters()" class="btn primary-btn" style="font-size: 12px; padding: 8px 16px; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-arrows-rotate"></i>
+            <span>${isTe ? "మళ్లీ ప్రయత్నించండి" : "Retry"}</span>
+          </button>
+          <button onclick="window.requestGpsForCenters()" class="btn secondary-btn" style="font-size: 12px; padding: 8px 16px; font-weight: 600; border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-location-dot"></i>
+            <span>${isTe ? "స్థానాన్ని అనుమతించండి" : "Enable Location"}</span>
+          </button>
+        </div>
       </div>
     `;
     return;

@@ -765,33 +765,25 @@ def get_local_fallback_response(message, profile=None, lang="en"):
             )
 
     def profile_crop_advice():
-        """Useful no-key crop advice when the optional AI service is unavailable."""
-        plentiful_water = any(term in water_availability for term in ("high", "abundant", "good")) or any(
-            term in irrigation for term in ("river", "canal", "tank")
-        )
-        limited_water = any(term in water_availability for term in ("low", "limited", "scarce"))
-
-        if any(term in soil for term in ("mountain", "hill", "hilly", "slope")):
-            if plentiful_water:
-                return localized("For hilly land with a river source, turmeric, ginger, and beans are better fits than cotton. Use contour beds and drainage; choose crops after checking local market demand.", "కొండ నేల మరియు నది నీటి వనరుతో పసుపు, అల్లం, బీన్స్ పత్తి కంటే మెరుగైనవి. కాంటూర్ బెడ్లు, డ్రైనేజీ వాడండి; స్థానిక మార్కెట్ ధరలు చూసి తుది పంటను ఎంచుకోండి.")
-            return localized("For hilly land with limited water, choose millets, pigeon pea, or horse gram. Use contour bunds and mulching to retain moisture.", "తక్కువ నీరు ఉన్న కొండ నేలకు చిరుధాన్యాలు, కందులు లేదా ఉలవలు ఎంచుకోండి. తేమ నిలుపుకోవడానికి కాంటూర్ కట్టలు, మల్చింగ్ వాడండి.")
-        if "red" in soil:
-            if limited_water:
-                return localized("Red soil with limited water is better suited to groundnut, foxtail millet, or pigeon pea. Avoid water-intensive paddy unless reliable irrigation is available.", "తక్కువ నీరు ఉన్న ఎర్ర నేలకు వేరుశనగ, కొర్రలు లేదా కందులు అనుకూలం. నమ్మకమైన నీటి వనరు లేకపోతే వరిని నివారించండి.")
-            if plentiful_water:
-                return localized("With red soil and reliable water, groundnut, maize, and chilli are practical options. Use drip irrigation for chilli and avoid waterlogging.", "ఎర్ర నేల, నమ్మకమైన నీటితో వేరుశనగ, మొక్కజొన్న, మిరప మంచి ఎంపికలు. మిరపకు డ్రిప్ వాడండి; నీరు నిలవనివ్వవద్దు.")
-            return localized("For red soil with medium water, groundnut, maize, and pigeon pea are safer choices. Rotate with a pulse crop to protect soil fertility.", "మధ్యస్థ నీరు ఉన్న ఎర్ర నేలకు వేరుశనగ, మొక్కజొన్న, కందులు సురక్షిత ఎంపికలు. నేల సారాన్ని కాపాడటానికి పప్పుధాన్యంతో పంట మార్పిడి చేయండి.")
-        if any(term in soil for term in ("black", "regur", "cotton")):
-            if limited_water:
-                return localized("Black soil with limited water suits sorghum, pigeon pea, and hardy cotton varieties. Keep wide drainage channels because black soil holds water after rain.", "తక్కువ నీరు ఉన్న నల్ల నేలకు జొన్న, కందులు, తట్టుకునే పత్తి రకాలు అనుకూలం. వర్షం తర్వాత నల్ల నేలలో నీరు నిలుస్తుంది కాబట్టి వెడల్పైన డ్రైనేజీ కాలువలు ఉంచండి.")
-            return localized("Black soil with reliable water suits cotton, soybean, and maize. Do not grow cotton repeatedly in the same plot; include a pulse crop in the next season.", "నమ్మకమైన నీరు ఉన్న నల్ల నేలకు పత్తి, సోయాబీన్, మొక్కజొన్న అనుకూలం. ఒకే పొలంలో పత్తిని వరుసగా వేయవద్దు; తరువాతి సీజన్‌లో పప్పుధాన్యాన్ని చేర్చండి.")
-        if any(term in soil for term in ("sandy", "coastal")):
-            return localized("Sandy soil drains quickly, so choose groundnut, watermelon, or vegetables with drip irrigation. Add compost and mulch to hold moisture.", "ఇసుక నేలలో నీరు త్వరగా దిగిపోతుంది; డ్రిప్‌తో వేరుశనగ, పుచ్చకాయ లేదా కూరగాయలు ఎంచుకోండి. తేమ నిలవడానికి కంపోస్ట్, మల్చింగ్ వేయండి.")
-        if plentiful_water:
-            return localized("With reliable water, paddy, maize, and suitable vegetables can work on your soil. Confirm drainage before choosing paddy, especially during heavy-rain weeks.", "నమ్మకమైన నీరు ఉంటే వరి, మొక్కజొన్న, అనుకూల కూరగాయలు వేయవచ్చు. ముఖ్యంగా భారీ వర్షాల సమయంలో వరి ఎంచుకునే ముందు డ్రైనేజీని నిర్ధారించుకోండి.")
-        if limited_water:
-            return localized("With limited water, prefer millets, pulses, and groundnut over water-intensive crops. Drip irrigation and mulching will reduce risk.", "తక్కువ నీటిలో ఎక్కువ నీరు అవసరమైన పంటల కంటే చిరుధాన్యాలు, పప్పుధాన్యాలు, వేరుశనగ ఎంచుకోండి. డ్రిప్, మల్చింగ్ ప్రమాదాన్ని తగ్గిస్తాయి.")
-        return localized("For medium water availability, maize, pulses, and groundnut are balanced options. A local soil test and current mandi prices should decide the final choice.", "మధ్యస్థ నీటికి మొక్కజొన్న, పప్పుధాన్యాలు, వేరుశనగ సమతుల్య ఎంపికలు. స్థానిక నేల పరీక్ష, ప్రస్తుత మండి ధరలు చూసి తుది పంటను ఎంచుకోండి.")
+        ph = profile.get("soil_ph", "6.5")
+        soil_display = soil or "alluvial"
+        water_display = water_availability or "medium"
+        loc = profile.get("location", "Andhra Pradesh")
+        
+        if "black" in soil_display:
+            rec_en = f"Sorghum or cotton is a strong fit for your land because your black soil (pH {ph}), {water_display} water availability, and local {loc} climate are suitable for it. Groundnut is another good option if you want a lower-water crop."
+            rec_te = f"మీ నల్ల రేగడి నేల (pH {ph}), {water_display} నీటి లభ్యత మరియు స్థానిక {loc} వాతావరణం పత్తి లేదా జొన్న పంటలకు అనుకూలంగా ఉంటాయి కాబట్టి అవి మీ భూమికి బాగా సరిపోతాయి. తక్కువ నీరు అవసరమయ్యే వేరుశనగ మరొక మంచి ఎంపిక."
+        elif "red" in soil_display:
+            rec_en = f"Groundnut or maize is a strong fit for your land because your red soil (pH {ph}), {water_display} water availability, and local {loc} climate are suitable for it. Foxtail millet is another good option if you want a lower-water crop."
+            rec_te = f"మీ ఎర్ర నేల (pH {ph}), {water_display} నీటి లభ్యత మరియు స్థానిక {loc} వాతావరణం వేరుశనగ లేదా మొక్కజొన్న పంటలకు అనుకూలంగా ఉంటాయి కాబట్టి అవి మీ భూమికి బాగా సరిపోతాయి. తక్కువ నీరు అవసరమయ్యే కొర్రలు మరొక మంచి ఎంపిక."
+        elif "sandy" in soil_display or "coastal" in soil_display:
+            rec_en = f"Groundnut or watermelon is a strong fit for your land because your sandy soil (pH {ph}), {water_display} water availability, and local {loc} climate are suitable for it. Vegetables with drip irrigation are another good option."
+            rec_te = f"మీ ఇసుక నేల (pH {ph}), {water_display} నీటి లభ్యత మరియు స్థానిక {loc} వాతావరణం వేరుశనగ లేదా పుచ్చకాయ పంటలకు అనుకూలంగా ఉంటాయి కాబట్టి అవి మీ భూమికి బాగా సరిపోతాయి. డ్రిప్ పద్ధతిలో కూరగాయల సాగు మరొక మంచి ఎంపిక."
+        else:
+            rec_en = f"Maize is a strong fit for your land because your {soil_display} soil (pH {ph}), {water_display} water availability, and local {loc} climate are suitable for it. Groundnut is another good option if you want a lower-water crop."
+            rec_te = f"మీ {soil_display} నేల (pH {ph}), {water_display} నీటి లభ్యత మరియు స్థానిక {loc} వాతావరణం మొక్కజొన్న పంటకు అనుకూలంగా ఉంటాయి కాబట్టి ఇది మీ భూమికి బాగా సరిపోతుంది. తక్కువ నీరు అవసరమయ్యే వేరుశనగ మరొక మంచి ఎంపిక."
+            
+        return localized(rec_en, rec_te)
 
     is_rice_question = "rice" in msg or "paddy" in msg or "వరి" in msg
     if any(term in msg for term in ("fertilizer", "fertiliser", "urea", "ఎరువు", "ఎరువులు", "యూరియా")):
@@ -942,9 +934,19 @@ def chat_query():
                 timeout=7.0
             )
             reply = res.choices[0].message.content.strip()
+            
+            # Robust filter to strip any <think> tags or chain-of-thought blocks
             import re
+            # 1. Remove anything wrapped in <think> tags
             reply = re.sub(r"<think>.*?</think>", "", reply, flags=re.DOTALL)
-            reply = re.sub(r"(?i)^(thinking process|thought process|here's a thinking process):?.*?(?=\b[A-Za-z0-9]|$)", "", reply, flags=re.DOTALL)
+            reply = re.sub(r"&lt;think&gt;.*?&lt;/think&gt;", "", reply, flags=re.DOTALL)
+            
+            # 2. Clean out any leading thinking descriptors
+            reply = re.sub(r"(?i)^(thinking process|thought process|here's a thinking process|reasoning|analysis|thought):?.*?(?=\b[A-Za-z0-9]|$)", "", reply, flags=re.DOTALL)
+            
+            # 3. Clean any inner thinking tags or leftovers
+            reply = re.sub(r"<think>|&lt;think&gt;|</think>|&lt;/think&gt;", "", reply)
+            
             reply = reply.strip()
             if not reply:
                 raise Exception("Empty response returned from model")
@@ -953,6 +955,13 @@ def chat_query():
     except Exception as e:
         print("Chatbot query failed, using local English fallback:", e)
         reply = get_local_fallback_response(message, profile, requested_language)
+
+    # Final double check to ensure no raw thinking leaks to the user
+    import re
+    reply = re.sub(r"<think>.*?</think>", "", reply, flags=re.DOTALL)
+    reply = re.sub(r"&lt;think&gt;.*?&lt;/think&gt;", "", reply, flags=re.DOTALL)
+    reply = re.sub(r"<think>|&lt;think&gt;|</think>|&lt;/think&gt;", "", reply)
+    reply = reply.strip()
 
     return jsonify({"reply": reply})
 
