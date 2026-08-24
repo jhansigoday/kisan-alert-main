@@ -486,8 +486,11 @@ document.querySelectorAll(".nav-link").forEach(link => {
     e.preventDefault();
     const targetTab = link.dataset.tab;
     if (!registeredFarmer && targetTab !== "landing" && targetTab !== "ivr") {
-      alert("Please login or register using the secure OTP portal first.");
-      document.getElementById("register-section").scrollIntoView({ behavior: "smooth" });
+      switchTab("landing");
+      const regSec = document.getElementById("register-section");
+      if (regSec) regSec.scrollIntoView({ behavior: "smooth" });
+      const phoneInput = document.getElementById("auth-phone-input");
+      if (phoneInput) phoneInput.focus();
       return;
     }
     switchTab(targetTab);
