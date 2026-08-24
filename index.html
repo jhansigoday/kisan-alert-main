@@ -433,8 +433,33 @@
               <label style="display: flex; align-items: center; gap: 8px; font-weight:600; cursor: pointer; color: var(--text-main);"><input type="checkbox" name="crop_compare_pref" value="Cotton"> <span data-translate-key="crop_cotton">Cotton</span></label>
               <label style="display: flex; align-items: center; gap: 8px; font-weight:600; cursor: pointer; color: var(--text-main);"><input type="checkbox" name="crop_compare_pref" value="Tomato"> <span data-translate-key="crop_tomato">Tomato</span></label>
               <label style="display: flex; align-items: center; gap: 8px; font-weight:600; cursor: pointer; color: var(--text-main);"><input type="checkbox" name="crop_compare_pref" value="Wheat"> <span data-translate-key="crop_wheat">Wheat</span></label>
+              <label style="display: flex; align-items: center; gap: 8px; font-weight:600; cursor: pointer; color: var(--text-main);"><input type="checkbox" name="crop_compare_pref" value="Chilli"> <span data-translate-key="crop_chilli">Chilli</span></label>
+              <label style="display: flex; align-items: center; gap: 8px; font-weight:600; cursor: pointer; color: var(--text-main);"><input type="checkbox" name="crop_compare_pref" value="Chickpea"> <span data-translate-key="crop_chickpea">Chickpea</span></label>
+              <label style="display: flex; align-items: center; gap: 8px; font-weight:600; cursor: pointer; color: var(--text-main);"><input type="checkbox" name="crop_compare_pref" value="Mustard"> <span data-translate-key="crop_mustard">Mustard</span></label>
+              <label style="display: flex; align-items: center; gap: 8px; font-weight:600; cursor: pointer; color: var(--text-main);"><input type="checkbox" name="crop_compare_pref" value="Potato"> <span data-translate-key="crop_potato">Potato</span></label>
             </div>
             <button id="compareCropsBtn" class="btn primary-btn" style="align-self: flex-start;"><i class="fa-solid fa-wand-magic-sparkles"></i> <span data-translate-key="btn_compare_crops">Compare Selected Crops</span></button>
+          </div>
+          
+          <!-- Data Status and Input Verification Panel -->
+          <div style="margin-top: 16px; padding: 16px; border-radius: 12px; background: var(--bg-card); border: 1px solid var(--border-color);">
+            <h4 style="margin: 0 0 10px 0; font-size: 14px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; justify-content: space-between;">
+              <span><i class="fa-solid fa-database"></i> Environmental Data Sources & Inputs</span>
+              <span id="advisor-data-status-badge" style="font-size: 11px; padding: 3px 8px; border-radius: 99px; background: #f1f5f9; color: #475569;">⚪ Checking...</span>
+            </h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; font-size: 12px; color: var(--text-main);">
+              <div>📍 <strong>Location:</strong> <span id="used-location">Not provided</span></div>
+              <div>🌱 <strong>Soil Type:</strong> <span id="used-soil">Not provided</span></div>
+              <div>🧪 <strong>Soil pH:</strong> <span id="used-ph">Not provided</span></div>
+              <div>💧 <strong>Water Source:</strong> <span id="used-water">Not provided</span></div>
+              <div>📅 <strong>Active Season:</strong> <span id="used-season">Not provided</span></div>
+              <div>🌧️ <strong>Rainfall Index:</strong> <span id="used-rainfall">Not provided</span></div>
+              <div>🌡️ <strong>Avg Temperature:</strong> <span id="used-temp">Not provided</span></div>
+              <div>📈 <strong>Mandi Pricing:</strong> <span id="used-mandi">Not provided</span></div>
+            </div>
+            <div style="margin-top: 10px; font-size: 11px; color: var(--text-muted); text-align: right;">
+              Last Updated: <span id="used-last-updated">-</span> | Sources: OpenWeatherAPI, Govt Mandi Portal, Farmer Profile
+            </div>
           </div>
         </div>
         
@@ -456,17 +481,19 @@
                 <thead>
                   <tr style="background-color: var(--bg-primary);">
                     <th data-translate-key="th_comp_crop">Crop</th>
-                    <th data-translate-key="th_comp_score">Suitability Score</th>
+                    <th data-translate-key="th_comp_score">Overall Suitability</th>
                     <th data-translate-key="th_comp_soil">Soil Compatibility</th>
                     <th data-translate-key="th_comp_water">Water Requirement</th>
                     <th data-translate-key="th_comp_climate">Climate Suitability</th>
                     <th data-translate-key="th_comp_invest">Est. Investment</th>
-                    <th data-translate-key="th_comp_yield">Est. Yield</th>
+                    <th data-translate-key="th_comp_yield">Expected Yield</th>
                     <th data-translate-key="th_comp_revenue">Expected Revenue</th>
                     <th data-translate-key="th_comp_profit">Expected Profit</th>
+                    <th>Profit Margin</th>
                     <th data-translate-key="th_comp_risk">Disease Risk</th>
                     <th data-translate-key="th_comp_demand">Market Demand</th>
-                    <th data-translate-key="th_comp_price">Nearby Mandi Price</th>
+                    <th data-translate-key="th_comp_price">Mandi Price</th>
+                    <th>Confidence</th>
                   </tr>
                 </thead>
               <tbody id="cropComparisonTableBody">

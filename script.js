@@ -828,6 +828,486 @@ function updateDashboardWithProfile(profile) {
   renderExtensionServices();
 }
 
+const MOCK_MANDI_DATA = [
+  { market: "Nellore", commodity: "Rice", min_price: 2100, max_price: 2400, modal_price: 2300, district: "Nellore", state: "Andhra Pradesh" },
+  { market: "Nellore", commodity: "Groundnut", min_price: 6100, max_price: 6700, modal_price: 6500, district: "Nellore", state: "Andhra Pradesh" },
+  { market: "Nellore", commodity: "Wheat", min_price: 2200, max_price: 2500, modal_price: 2400, district: "Nellore", state: "Andhra Pradesh" },
+  { market: "Visakhapatnam", commodity: "Rice", min_price: 2000, max_price: 2300, modal_price: 2150, district: "Visakhapatnam", state: "Andhra Pradesh" },
+  { market: "Visakhapatnam", commodity: "Maize", min_price: 1950, max_price: 2200, modal_price: 2100, district: "Visakhapatnam", state: "Andhra Pradesh" },
+  { market: "Visakhapatnam", commodity: "Cotton", min_price: 6800, max_price: 7200, modal_price: 7000, district: "Visakhapatnam", state: "Andhra Pradesh" },
+  { market: "Visakhapatnam", commodity: "Mustard", min_price: 5200, max_price: 5700, modal_price: 5500, district: "Visakhapatnam", state: "Andhra Pradesh" },
+  { market: "Guntur", commodity: "Chilli", min_price: 14000, max_price: 16500, modal_price: 15500, district: "Guntur", state: "Andhra Pradesh" },
+  { market: "Guntur", commodity: "Cotton", min_price: 6900, max_price: 7300, modal_price: 7100, district: "Guntur", state: "Andhra Pradesh" },
+  { market: "Guntur", commodity: "Chickpea", min_price: 5000, max_price: 5600, modal_price: 5300, district: "Guntur", state: "Andhra Pradesh" },
+  { market: "Vijayawada", commodity: "Tomato", min_price: 900, max_price: 1100, modal_price: 1000, district: "Krishna", state: "Andhra Pradesh" },
+  { market: "Vijayawada", commodity: "Maize", min_price: 2000, max_price: 2250, modal_price: 2150, district: "Krishna", state: "Andhra Pradesh" },
+  { market: "Vijayawada", commodity: "Potato", min_price: 1100, max_price: 1300, modal_price: 1200, district: "Krishna", state: "Andhra Pradesh" },
+  { market: "Kavali", commodity: "Groundnut", min_price: 6000, max_price: 6600, modal_price: 6300, district: "Nellore", state: "Andhra Pradesh" },
+  { market: "Kavali", commodity: "Rice", min_price: 2050, max_price: 2350, modal_price: 2200, district: "Nellore", state: "Andhra Pradesh" },
+  { market: "Kavali", commodity: "Tomato", min_price: 850, max_price: 1050, modal_price: 950, district: "Nellore", state: "Andhra Pradesh" }
+];
+
+let latestWeatherState = {
+  temp: 28,
+  humidity: 75,
+  rainfall: 850,
+  status: "live"
+};
+
+const CROP_KNOWLEDGE_BASE = {
+  Rice: {
+    soil: ["alluvial", "clayey", "loamy"],
+    phMin: 5.5,
+    phMax: 7.0,
+    tempMin: 20,
+    tempMax: 35,
+    rainMin: 1000,
+    rainMax: 2000,
+    waterRequirement: "High",
+    seasons: ["Kharif", "Rabi"],
+    durationDays: 120,
+    typicalYieldMin: 18,
+    typicalYieldMax: 25,
+    cultivationCostPerAcre: 18000,
+    diseaseRisk: "Blast, BLB",
+    marketDemand: "High",
+    icon: "🌾"
+  },
+  Groundnut: {
+    soil: ["sandy", "loamy", "alluvial"],
+    phMin: 6.0,
+    phMax: 7.5,
+    tempMin: 20,
+    tempMax: 30,
+    rainMin: 500,
+    rainMax: 1000,
+    waterRequirement: "Low",
+    seasons: ["Kharif", "Rabi"],
+    durationDays: 110,
+    typicalYieldMin: 8,
+    typicalYieldMax: 12,
+    cultivationCostPerAcre: 15000,
+    diseaseRisk: "Tikka Leaf Spot",
+    marketDemand: "Medium",
+    icon: "🥜"
+  },
+  Maize: {
+    soil: ["alluvial", "loamy", "red"],
+    phMin: 5.8,
+    phMax: 7.2,
+    tempMin: 18,
+    tempMax: 27,
+    rainMin: 600,
+    rainMax: 1200,
+    waterRequirement: "Medium",
+    seasons: ["Kharif", "Rabi"],
+    durationDays: 100,
+    typicalYieldMin: 15,
+    typicalYieldMax: 22,
+    cultivationCostPerAcre: 12000,
+    diseaseRisk: "Turcicum Blight",
+    marketDemand: "High",
+    icon: "🌽"
+  },
+  Cotton: {
+    soil: ["black", "alluvial"],
+    phMin: 6.0,
+    phMax: 8.0,
+    tempMin: 21,
+    tempMax: 30,
+    rainMin: 500,
+    rainMax: 1100,
+    waterRequirement: "Medium",
+    seasons: ["Kharif"],
+    durationDays: 160,
+    typicalYieldMin: 10,
+    typicalYieldMax: 15,
+    cultivationCostPerAcre: 20000,
+    diseaseRisk: "Bollworm",
+    marketDemand: "High",
+    icon: "🧶"
+  },
+  Tomato: {
+    soil: ["sandy", "loamy", "red", "alluvial"],
+    phMin: 6.0,
+    phMax: 7.0,
+    tempMin: 18,
+    tempMax: 32,
+    rainMin: 400,
+    rainMax: 800,
+    waterRequirement: "Medium",
+    seasons: ["Kharif", "Rabi"],
+    durationDays: 90,
+    typicalYieldMin: 80,
+    typicalYieldMax: 120,
+    cultivationCostPerAcre: 25000,
+    diseaseRisk: "Early Blight",
+    marketDemand: "High",
+    icon: "🍅"
+  },
+  Wheat: {
+    soil: ["clayey", "loamy", "alluvial"],
+    phMin: 6.0,
+    phMax: 7.5,
+    tempMin: 10,
+    tempMax: 25,
+    rainMin: 400,
+    rainMax: 750,
+    waterRequirement: "Medium",
+    seasons: ["Rabi"],
+    durationDays: 130,
+    typicalYieldMin: 16,
+    typicalYieldMax: 22,
+    cultivationCostPerAcre: 14000,
+    diseaseRisk: "Rust, Mildew",
+    marketDemand: "High",
+    icon: "🌾"
+  },
+  Chilli: {
+    soil: ["loamy", "black", "red", "alluvial"],
+    phMin: 6.0,
+    phMax: 7.5,
+    tempMin: 20,
+    tempMax: 35,
+    rainMin: 600,
+    rainMax: 1000,
+    waterRequirement: "Medium",
+    seasons: ["Kharif", "Rabi"],
+    durationDays: 140,
+    typicalYieldMin: 12,
+    typicalYieldMax: 18,
+    cultivationCostPerAcre: 22000,
+    diseaseRisk: "Anthracnose",
+    marketDemand: "High",
+    icon: "🌶"
+  },
+  Chickpea: {
+    soil: ["clayey", "loamy", "black"],
+    phMin: 6.0,
+    phMax: 7.2,
+    tempMin: 15,
+    tempMax: 25,
+    rainMin: 350,
+    rainMax: 500,
+    waterRequirement: "Low",
+    seasons: ["Rabi"],
+    durationDays: 110,
+    typicalYieldMin: 6,
+    typicalYieldMax: 10,
+    cultivationCostPerAcre: 10000,
+    diseaseRisk: "Fusarium Wilt",
+    marketDemand: "Medium",
+    icon: "🌱"
+  },
+  Mustard: {
+    soil: ["loamy", "clayey", "sandy"],
+    phMin: 6.0,
+    phMax: 7.5,
+    tempMin: 10,
+    tempMax: 25,
+    rainMin: 300,
+    rainMax: 500,
+    waterRequirement: "Low",
+    seasons: ["Rabi"],
+    durationDays: 110,
+    typicalYieldMin: 5,
+    typicalYieldMax: 8,
+    cultivationCostPerAcre: 8000,
+    diseaseRisk: "White Rust",
+    marketDemand: "Medium",
+    icon: "🌼"
+  },
+  Potato: {
+    soil: ["sandy", "loamy", "alluvial"],
+    phMin: 5.2,
+    phMax: 6.5,
+    tempMin: 15,
+    tempMax: 22,
+    rainMin: 500,
+    rainMax: 800,
+    waterRequirement: "Medium",
+    seasons: ["Rabi"],
+    durationDays: 100,
+    typicalYieldMin: 80,
+    typicalYieldMax: 120,
+    cultivationCostPerAcre: 28000,
+    diseaseRisk: "Late Blight",
+    marketDemand: "High",
+    icon: "🥔"
+  }
+};
+
+const CropEngine = {
+  calculateSuitability(cropName, profile, weather) {
+    const crop = CROP_KNOWLEDGE_BASE[cropName];
+    if (!crop) return null;
+
+    // Soil compatibility
+    const cropSoil = crop.soil;
+    const farmerSoil = (profile.soil_type || "loamy").toLowerCase();
+    let soilScore = 30;
+    if (cropSoil.includes(farmerSoil)) {
+      soilScore = 100;
+    } else if (farmerSoil === "loamy" || farmerSoil === "alluvial") {
+      soilScore = 70;
+    }
+
+    // pH compatibility
+    const farmerPh = parseFloat(profile.soil_ph) || 6.5;
+    let phScore = 100;
+    if (farmerPh < crop.phMin) {
+      const diff = crop.phMin - farmerPh;
+      phScore = Math.max(40, Math.round(100 - diff * 40));
+    } else if (farmerPh > crop.phMax) {
+      const diff = farmerPh - crop.phMax;
+      phScore = Math.max(40, Math.round(100 - diff * 40));
+    }
+
+    // Temperature suitability
+    const temp = weather?.temp || 28;
+    let tempScore = 100;
+    if (temp < crop.tempMin) {
+      const diff = crop.tempMin - temp;
+      tempScore = Math.max(45, Math.round(100 - diff * 8));
+    } else if (temp > crop.tempMax) {
+      const diff = temp - crop.tempMax;
+      tempScore = Math.max(45, Math.round(100 - diff * 8));
+    }
+
+    // Rainfall suitability
+    const rain = weather?.rainfall || 800;
+    let rainScore = 100;
+    if (rain < crop.rainMin) {
+      const diff = crop.rainMin - rain;
+      rainScore = Math.max(40, Math.round(100 - (diff / crop.rainMin) * 80));
+    } else if (rain > crop.rainMax) {
+      const diff = rain - crop.rainMax;
+      rainScore = Math.max(40, Math.round(100 - (diff / crop.rainMax) * 50));
+    }
+
+    // Water suitability
+    const waterAvail = (profile.water_availability || "Medium").toLowerCase();
+    let waterScore = 80;
+    if (crop.waterRequirement === "High") {
+      if (waterAvail === "high") waterScore = 100;
+      else if (waterAvail === "medium") waterScore = 70;
+      else waterScore = 40;
+    } else if (crop.waterRequirement === "Medium") {
+      if (waterAvail === "high") waterScore = 90;
+      else if (waterAvail === "medium") waterScore = 100;
+      else waterScore = 60;
+    } else {
+      if (waterAvail === "high") waterScore = 70;
+      else if (waterAvail === "medium") waterScore = 90;
+      else waterScore = 100;
+    }
+
+    // Season suitability
+    const activeSeason = document.getElementById("calc-season")?.value || "Kharif";
+    const activeSeasonNorm = activeSeason.charAt(0).toUpperCase() + activeSeason.slice(1).toLowerCase();
+    const seasonScore = crop.seasons.includes(activeSeasonNorm) ? 100 : 25;
+
+    // Market score
+    let marketScore = 80;
+    if (crop.marketDemand === "High") marketScore = 100;
+    else if (crop.marketDemand === "Medium") marketScore = 80;
+    else marketScore = 60;
+
+    // Risk score
+    let riskScore = 90;
+    try {
+      const history = JSON.parse(localStorage.getItem("krushakseva_diagnosis_history") || "[]");
+      const cropIncidents = history.filter(h => h.crop.toLowerCase().includes(cropName.toLowerCase()));
+      if (cropIncidents.length > 0) {
+        riskScore = Math.max(40, 90 - cropIncidents.length * 15);
+      }
+    } catch (e) {}
+
+    const overallSuitability = Math.round(
+      (soilScore * 0.2) +
+      (phScore * 0.1) +
+      (tempScore * 0.15) +
+      (rainScore * 0.15) +
+      (waterScore * 0.15) +
+      (seasonScore * 0.15) +
+      (marketScore * 0.1)
+    );
+
+    return {
+      overallSuitability,
+      soilScore,
+      phScore,
+      tempScore,
+      rainScore,
+      waterScore,
+      seasonScore,
+      marketScore,
+      riskScore
+    };
+  },
+
+  estimateYieldRange(cropName, suitabilityScore, landSize) {
+    const crop = CROP_KNOWLEDGE_BASE[cropName];
+    const suitabilityFactor = 0.6 + (suitabilityScore / 100) * 0.4;
+    const yieldPerAcreMin = parseFloat((crop.typicalYieldMin * suitabilityFactor).toFixed(1));
+    const yieldPerAcreMax = parseFloat((crop.typicalYieldMax * suitabilityFactor).toFixed(1));
+    
+    return {
+      yieldPerAcreMin,
+      yieldPerAcreMax,
+      expectedYieldMin: parseFloat((yieldPerAcreMin * landSize).toFixed(1)),
+      expectedYieldMax: parseFloat((yieldPerAcreMax * landSize).toFixed(1))
+    };
+  },
+
+  calculateFinancials(cropName, yieldRange, landSize, mandiPrice) {
+    const crop = CROP_KNOWLEDGE_BASE[cropName];
+    const costPerAcre = crop.cultivationCostPerAcre;
+    const totalCost = Math.round(costPerAcre * landSize);
+    
+    const revenueMin = Math.round(yieldRange.expectedYieldMin * mandiPrice);
+    const revenueMax = Math.round(yieldRange.expectedYieldMax * mandiPrice);
+    
+    const profitMin = revenueMin - totalCost;
+    const profitMax = revenueMax - totalCost;
+    
+    const profitMarginMin = parseFloat(((profitMin / revenueMin) * 100).toFixed(1));
+    const profitMarginMax = parseFloat(((profitMax / revenueMax) * 100).toFixed(1));
+    
+    return {
+      costPerAcre,
+      totalCost,
+      revenueMin,
+      revenueMax,
+      profitMin,
+      profitMax,
+      profitMarginMin,
+      profitMarginMax
+    };
+  },
+
+  evaluateCrop(cropName, profile, weather, mandiPrice, landSize) {
+    const suitability = this.calculateSuitability(cropName, profile, weather);
+    const yieldRange = this.estimateYieldRange(cropName, suitability.overallSuitability, landSize);
+    const financials = this.calculateFinancials(cropName, yieldRange, landSize, mandiPrice);
+    
+    let confidence = "High";
+    if (weather.status === "unavailable" || activeMandiData?.isDemo) {
+      confidence = "Medium";
+    }
+    if (weather.status === "unavailable" && activeMandiData?.isDemo) {
+      confidence = "Low";
+    }
+
+    return {
+      crop: cropName,
+      suitability: suitability.overallSuitability,
+      scores: suitability,
+      yieldRange,
+      financials,
+      confidence,
+      mandiPrice,
+      diseaseRisk: CROP_KNOWLEDGE_BASE[cropName].diseaseRisk,
+      marketDemand: CROP_KNOWLEDGE_BASE[cropName].marketDemand,
+      icon: CROP_KNOWLEDGE_BASE[cropName].icon
+    };
+  }
+};
+
+const CropRecommendation = {
+  findBestRecommendations(evaluationList) {
+    if (!evaluationList || evaluationList.length === 0) return null;
+    
+    let bestOverall = evaluationList[0];
+    evaluationList.forEach(e => {
+      if (e.suitability > bestOverall.suitability) bestOverall = e;
+    });
+
+    let highestProfit = evaluationList[0];
+    evaluationList.forEach(e => {
+      if (e.financials.profitMax > highestProfit.financials.profitMax) highestProfit = e;
+    });
+
+    let bestSoil = evaluationList[0];
+    evaluationList.forEach(e => {
+      if (e.scores.soilScore > bestSoil.scores.soilScore) bestSoil = e;
+    });
+
+    let lowestWater = evaluationList[0];
+    const waterMapping = { "Low": 1, "Medium": 2, "High": 3 };
+    evaluationList.forEach(e => {
+      const eReq = CROP_KNOWLEDGE_BASE[e.crop].waterRequirement;
+      const lwReq = CROP_KNOWLEDGE_BASE[lowestWater.crop].waterRequirement;
+      if (waterMapping[eReq] < waterMapping[lwReq]) lowestWater = e;
+    });
+
+    let lowestRisk = evaluationList[0];
+    evaluationList.forEach(e => {
+      if (e.scores.riskScore > lowestRisk.scores.riskScore) lowestRisk = e;
+    });
+
+    return {
+      bestOverall,
+      highestProfit,
+      bestSoil,
+      lowestWater,
+      lowestRisk
+    };
+  }
+};
+
+function generateAIAdvisoryExplanation(evalItem) {
+  const crop = evalItem.crop;
+  const isTe = currentLang === "te";
+  
+  let explanation = "";
+  if (isTe) {
+    explanation += `<h3 style="font-weight:700; color:var(--text-main); margin-bottom:8px;">${translateMandiTerm(crop)} ఎందుకు ఉత్తమ ఎంపిక?</h3><ul style="margin-top:8px; display:flex; flex-direction:column; gap:6px; padding-left:20px; list-style-type:disc; color:var(--text-main);">`;
+    explanation += `<li><strong>నేల అనుకూలత:</strong> మీ క్షేత్ర నేల రకానికి ఈ పంట ${evalItem.scores.soilScore}% అనుకూలంగా ఉంది.</li>`;
+    explanation += `<li><strong>వాతావరణం:</strong> ప్రస్తుత ఉష్ణోగ్రత మరియు వర్షపాతం ఈ పంట అవసరాలకు ${evalItem.scores.tempScore}% సరిపోతాయి.</li>`;
+    explanation += `<li><strong>మార్కెట్ విలువ:</strong> మండి మార్కెట్లో క్వింటాలుకు ₹${evalItem.mandiPrice.toLocaleString()} సగటు ధర లభిస్తుంది.</li>`;
+    explanation += `<li><strong>లాభాల అంచనా:</strong> ఈ పంట సాగు ద్వారా హెక్టారుకు ₹${evalItem.financials.profitMin.toLocaleString()} నుండి ₹${evalItem.financials.profitMax.toLocaleString()} నికర లాభం పొందవచ్చు.</li>`;
+    explanation += `</ul>`;
+  } else {
+    explanation += `<h3 style="font-weight:700; color:var(--text-main); margin-bottom:8px;">Why ${crop} is the Best Match?</h3><ul style="margin-top:8px; display:flex; flex-direction:column; gap:6px; padding-left:20px; list-style-type:disc; color:var(--text-main);">`;
+    
+    if (evalItem.scores.soilScore >= 80) {
+      explanation += `<li><strong>Soil Compatibility:</strong> Highly compatible with your registered soil type (Compatibility Score: ${evalItem.scores.soilScore}%).</li>`;
+    } else {
+      explanation += `<li><strong>Soil Compatibility:</strong> Sub-optimal soil fit (Compatibility Score: ${evalItem.scores.soilScore}%) but manageable with local soil additives.</li>`;
+    }
+    
+    if (evalItem.scores.tempScore >= 80) {
+      explanation += `<li><strong>Climate Suitability:</strong> Temperature conditions are perfect for growth (Climate Match: ${evalItem.scores.tempScore}%).</li>`;
+    } else {
+      explanation += `<li><strong>Climate Suitability:</strong> Temperatures are slightly extreme but within acceptable cultivation limits.</li>`;
+    }
+    
+    explanation += `<li><strong>Profit Outlook:</strong> Strong financial prospects with expected profit margins between ${evalItem.financials.profitMarginMin}% and ${evalItem.financials.profitMarginMax}%.</li>`;
+    explanation += `<li><strong>Water/Irrigation match:</strong> Suitable water allocation profile aligned with your available irrigation sources.</li>`;
+    
+    if (evalItem.scores.riskScore < 70) {
+      explanation += `<li>⚠️ <strong>Risk Warning:</strong> Moderate local disease history noted for ${crop} (Blast/Blight risk). Keep crop doctor monitoring enabled.</li>`;
+    } else {
+      explanation += `<li>✓ <strong>Low Disease Risk:</strong> Crop shows low historical disease occurrences in this geographical sector.</li>`;
+    }
+    
+    explanation += `</ul>`;
+  }
+  
+  return explanation;
+}
+
+function getMandiPriceForCrop(cropName) {
+  try {
+    const marketSelect = document.getElementById("filter-mandi-market");
+    const activeMarket = marketSelect ? marketSelect.value : "Nellore";
+    return getDemoMarketPrice(cropName, activeMarket);
+  } catch (e) {
+    return getDemoBasePriceForCrop(cropName);
+  }
+}
+
 async function loadFarmRiskAssessment(profile, lat, lon) {
   const params = new URLSearchParams({
     lat, lon,
@@ -988,112 +1468,6 @@ async function loadCropRecommendations(lat, lon, soil = "alluvial", waterAvail =
     console.log("Could not load suitability rankings:", err);
   }
 }
-
-const compareCropsBtn = document.getElementById("compareCropsBtn");
-if (compareCropsBtn) {
-  compareCropsBtn.addEventListener("click", async () => {
-    const checkedBoxes = document.querySelectorAll("input[name='crop_compare_pref']:checked");
-    const selectedCrops = Array.from(checkedBoxes).map(cb => cb.value);
-    
-    if (selectedCrops.length < 3 || selectedCrops.length > 5) {
-      alert("Please select between 3 and 5 crops to compare.");
-      return;
-    }
-    
-    const loading = document.getElementById("compareCropsLoading");
-    const resultBox = document.getElementById("advisorComparisonResultBox");
-    const tbody = document.getElementById("cropComparisonTableBody");
-    
-    if (loading) loading.style.display = "block";
-    if (resultBox) resultBox.style.display = "block";
-    tbody.innerHTML = "";
-    
-    try {
-      const lat = registeredFarmer ? registeredFarmer.latitude : (detectedLat || 14.4426);
-      const lon = registeredFarmer ? registeredFarmer.longitude : (detectedLon || 79.9865);
-      
-      const res = await fetch(`${BACKEND_URL}/api/crop-recommendation/detailed`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          location: registeredFarmer ? registeredFarmer.location : "Andhra Pradesh",
-          land_size: registeredFarmer ? registeredFarmer.land_size_acres : 5.0,
-          soil_type: registeredFarmer ? registeredFarmer.soil_type : "Black",
-          water_resources: registeredFarmer ? registeredFarmer.irrigation_method : "borewell",
-          language: currentLang,
-          lat: lat,
-          lon: lon,
-          selected_crops: selectedCrops
-        })
-      });
-      
-      const data = await res.json();
-      if (loading) loading.style.display = "none";
-      
-      if (res.ok && data.comparison) {
-        tbody.innerHTML = "";
-        data.comparison.forEach(item => {
-          const tr = document.createElement("tr");
-          
-          const cropVal = translateMandiTerm(item.crop);
-          const scoreVal = Math.round((item.suitability_score || 8) * 10) + "%";
-          const soilVal = translateMandiTerm(item.soil_compatibility || "—");
-          const waterVal = translateMandiTerm(item.water_requirement || "—");
-          const climateVal = translateMandiTerm(item.climate_suitability || "—");
-          const investVal = translateMandiTerm(item.expected_investment || item.investment || "—");
-          const yieldVal = translateMandiTerm(item.expected_yield || "—");
-          const revVal = translateMandiTerm(item.expected_revenue || item.revenue || "—");
-          const profitVal = translateMandiTerm(item.expected_profit || item.profit || "—");
-          const riskVal = translateMandiTerm(item.disease_risk || item.risk || "—");
-          const demandVal = translateMandiTerm(item.local_demand || "—");
-          const priceVal = translateMandiTerm(item.mandi_price || "—");
-
-          tr.innerHTML = `
-            <td><strong>${cropVal}</strong></td>
-            <td>${scoreVal}</td>
-            <td>${soilVal}</td>
-            <td>${waterVal}</td>
-            <td>${climateVal}</td>
-            <td>${investVal}</td>
-            <td>${yieldVal}</td>
-            <td>${revVal}</td>
-            <td class="net-profit-val">${profitVal}</td>
-            <td>${riskVal}</td>
-            <td>${demandVal}</td>
-            <td>${priceVal}</td>
-          `;
-          tbody.appendChild(tr);
-        });
-        
-        document.getElementById("bestCropNameText").textContent = translateMandiTerm(data.best_crop || selectedCrops[0]);
-        document.getElementById("bestCropExplanationText").textContent = data.explanation || "";
-        document.getElementById("bestCropRecommendationBanner").style.display = "flex";
-      }
-    } catch (err) {
-      if (loading) loading.style.display = "none";
-      console.error("Comparison load failed:", err);
-    }
-  });
-}
-
-const MOCK_MANDI_DATA = [
-  { market: "Nellore", commodity: "Rice", min_price: 2100, max_price: 2400, modal_price: 2300, district: "Nellore", state: "Andhra Pradesh" },
-  { market: "Nellore", commodity: "Groundnut", min_price: 6100, max_price: 6700, modal_price: 6500, district: "Nellore", state: "Andhra Pradesh" },
-  { market: "Nellore", commodity: "Wheat", min_price: 2200, max_price: 2500, modal_price: 2400, district: "Nellore", state: "Andhra Pradesh" },
-  { market: "Visakhapatnam", commodity: "Rice", min_price: 2000, max_price: 2300, modal_price: 2150, district: "Visakhapatnam", state: "Andhra Pradesh" },
-  { market: "Visakhapatnam", commodity: "Maize", min_price: 1950, max_price: 2200, modal_price: 2100, district: "Visakhapatnam", state: "Andhra Pradesh" },
-  { market: "Visakhapatnam", commodity: "Cotton", min_price: 6800, max_price: 7200, modal_price: 7000, district: "Visakhapatnam", state: "Andhra Pradesh" },
-  { market: "Visakhapatnam", commodity: "Mustard", min_price: 5200, max_price: 5700, modal_price: 5500, district: "Visakhapatnam", state: "Andhra Pradesh" },
-  { market: "Guntur", commodity: "Chilli", min_price: 14000, max_price: 16500, modal_price: 15500, district: "Guntur", state: "Andhra Pradesh" },
-  { market: "Guntur", commodity: "Cotton", min_price: 6900, max_price: 7300, modal_price: 7100, district: "Guntur", state: "Andhra Pradesh" },
-  { market: "Guntur", commodity: "Chickpea", min_price: 5000, max_price: 5600, modal_price: 5300, district: "Guntur", state: "Andhra Pradesh" },
-  { market: "Vijayawada", commodity: "Tomato", min_price: 900, max_price: 1100, modal_price: 1000, district: "Krishna", state: "Andhra Pradesh" },
-  { market: "Vijayawada", commodity: "Maize", min_price: 2000, max_price: 2250, modal_price: 2150, district: "Krishna", state: "Andhra Pradesh" },
-  { market: "Vijayawada", commodity: "Potato", min_price: 1100, max_price: 1300, modal_price: 1200, district: "Krishna", state: "Andhra Pradesh" },
-  { market: "Kavali", commodity: "Groundnut", min_price: 6000, max_price: 6600, modal_price: 6300, district: "Nellore", state: "Andhra Pradesh" },
-  { market: "Kavali", commodity: "Rice", min_price: 2050, max_price: 2350, modal_price: 2200, district: "Nellore", state: "Andhra Pradesh" },
-  { market: "Kavali", commodity: "Tomato", min_price: 850, max_price: 1050, modal_price: 950, district: "Nellore", state: "Andhra Pradesh" }
-];
 
 let activeMandiData = null;
 
