@@ -733,35 +733,65 @@ def get_local_fallback_response(message, profile=None, lang="en"):
             if not forecast:
                 raise RuntimeError("No forecast returned")
 
-            if "tomorrow" in msg and len(forecast) > 1:
-                day = forecast[1]
+            # Check if user asked about tomorrow
+            if "tomorrow" in msg:
+                if len(forecast) > 1:
+                    day = forecast[1]
+                    probability = day.get("rain_prob", 0)
+                    rainfall = day.get("rain_mm", 0)
+                    if probability >= 60 or rainfall >= 5:
+                        return localized(
+                            f"Tomorrow has a {probability}% chance of rain, with about {rainfall} mm forecast. Avoid spraying pesticides if rain arrives.",
+                            f"రేపు వర్షం పడే అవకాశం {probability}%; సుమారు {rainfall} మి.మీ. వర్షం అంచనా ఉంది. వర్షం వచ్చే అవకాశం ఉంటే పురుగుమందులు పిచికారీ చేయవద్దు."
+                        )
+                    return localized(
+                        f"Tomorrow has only a {probability}% chance of rain, with about {rainfall} mm forecast. Irrigate only if your field needs it.",
+                        f"రేపు వర్షం పడే అవకాశం కేవలం {probability}%; సుమారు {rainfall} మి.మీ. వర్షం అంచనా ఉంది. అవసరమైతేనే నీరు పెట్టండి."
+                    )
+            
+            # Check if user asked about today
+            if "today" in msg or "ఇవాళ" in msg or "ఈరోజు" in msg:
+                day = forecast[0]
                 probability = day.get("rain_prob", 0)
                 rainfall = day.get("rain_mm", 0)
                 if probability >= 60 or rainfall >= 5:
                     return localized(
-                        f"Tomorrow has a {probability}% chance of rain, with about {rainfall} mm forecast. Avoid spraying pesticides if rain arrives.",
-                        f"రేపు వర్షం పడే అవకాశం {probability}%; సుమారు {rainfall} మి.మీ. వర్షం అంచనా ఉంది. వర్షం వచ్చే అవకాశం ఉంటే పురుగుమందులు పిచికారీ చేయవద్దు."
+                        f"Today has a {probability}% chance of rain, with about {rainfall} mm forecast. Keep post-harvest crops in a dry place.",
+                        f"ఈ రోజు వర్షం పడే అవకాశం {probability}%; సుమారు {rainfall} మి.మీ. వర్షం అంచనా ఉంది. కోత కోసిన పంటను పొడి ప్రదేశంలో ఉంచండి."
                     )
                 return localized(
-                    f"Tomorrow has only a {probability}% chance of rain, with about {rainfall} mm forecast. Irrigate only if your field needs it.",
-                    f"రేపు వర్షం పడే అవకాశం కేవలం {probability}%; సుమారు {rainfall} మి.మీ. వర్షం అంచనా ఉంది. అవసరమైతేనే నీరు పెట్టండి."
+                    f"Today has only a {probability}% chance of rain, with about {rainfall} mm forecast. Suitable for field work.",
+                    f"ఈ రోజు వర్షం పడే అవకాశం కేవలం {probability}%; సుమారు {rainfall} మి.మీ. వర్షం అంచనా ఉంది. పొలం పనులకు అనుకూలం."
                 )
 
+            # Week or general forecast
             total_rain = round(sum(day.get("rain_mm", 0) for day in forecast[:7]), 1)
             wet_days = sum(1 for day in forecast[:7] if day.get("rain_prob", 0) >= 50)
             current = weather_data.get("weather", {})
+            
+            recommendation = (
+                "Postpone spraying if rain is expected, and schedule irrigation accordingly."
+                if wet_days > 0 else
+                "Weather is mostly dry. Irrigate as needed."
+            )
+            recommendation_te = (
+                "వర్షాలు కురిసే అవకాశం ఉన్నందున మందుల పిచికారీని వాయిదా వేయండి మరియు తదనుగుణంగా నీటి పారుదల ప్రణాళిక చేయండి."
+                if wet_days > 0 else
+                "వాతావరణం ఎక్కువగా పొడిగా ఉంటుంది. అవసరాన్ని బట్టి నీరు పెట్టండి."
+            )
+
             return localized(
                 f"For your farm, it is currently {current.get('condition', 'unknown')} at "
                 f"{current.get('temp_c', 'unknown')}°C. The next 7 days show about {total_rain} mm "
-                f"of rain across {wet_days} likely rainy day(s); plan irrigation around those days.",
+                f"of rain across {wet_days} likely rainy day(s). Recommendation: {recommendation}",
                 f"మీ పొలం వద్ద ప్రస్తుతం {current.get('condition', 'తెలియదు')}, ఉష్ణోగ్రత "
                 f"{current.get('temp_c', 'తెలియదు')}°C ఉంది. రాబోయే 7 రోజుల్లో సుమారు {total_rain} మి.మీ. "
-                f"వర్షం, {wet_days} వర్షపు రోజు/రోజులు ఉండే అవకాశం ఉంది; దానికి అనుగుణంగా నీరు పెట్టండి."
+                f"వర్షం, {wet_days} వర్షపు రోజులు ఉండే అవకాశం ఉంది. సూచన: {recommendation_te}"
             )
         except (TypeError, ValueError, RuntimeError):
             return localized(
-                "I could not reach the live weather service for your saved location. Please try again shortly.",
-                "మీ నమోదైన ప్రాంతానికి ప్రత్యక్ష వాతావరణ సేవను చేరుకోలేకపోయాను. కొద్దిసేపటి తర్వాత మళ్లీ ప్రయత్నించండి."
+                "The weather forecast is temporarily unavailable. Please try again shortly.",
+                "వాతావరణ సూచన తాత్కాలికంగా అందుబాటులో లేదు. దయచేసి కొద్దిసేపటి తర్వాత మళ్లీ ప్రయత్నించండి."
             )
 
     def profile_crop_advice():
@@ -881,6 +911,7 @@ def chat_query():
     # Use live, free Open-Meteo data when available.  The local fallback also
     # calls this service for weather questions, so it never invents a forecast.
     weather_summary = "Live weather unavailable for this request."
+    forecast_summary = "Forecast data unavailable."
     try:
         lat = float(profile.get("latitude"))
         lon = float(profile.get("longitude"))
@@ -892,15 +923,25 @@ def chat_query():
                 f"{current_weather.get('temp_c', 'unknown')}°C, "
                 f"humidity {current_weather.get('humidity', 'unknown')}%."
             )
+            forecast = weather_data.get("forecast", [])
+            if forecast:
+                forecast_lines = []
+                for idx, day in enumerate(forecast[:7]):
+                    day_name = "Today" if idx == 0 else ("Tomorrow" if idx == 1 else day.get("date", f"Day {idx}"))
+                    forecast_lines.append(
+                        f"- {day_name}: Temp {day.get('temp_min', 'unknown')}-{day.get('temp_max', 'unknown')}°C, "
+                        f"Rain Prob {day.get('rain_prob', 0)}%, Rain {day.get('rain_mm', 0)} mm."
+                    )
+                forecast_summary = "\n".join(forecast_lines)
     except (TypeError, ValueError):
         pass
     mandi_context = f"Crop Modal Price: ₹2,600 per quintal. Nearest Mandi: {profile.get('location', 'Nellore')} Mandi."
 
     system_prompt = (
-        "You are KṛṣakaSevā (KṛṣakaSevā), an expert agricultural scientist AI.\n"
-        f"Reply in {'Telugu' if requested_language == 'te' else 'English'}. The farmer may mix Telugu and English; understand both and use {'Telugu' if requested_language == 'te' else 'English'} in your reply.\n"
-        "CRITICAL: Do NOT output any greetings, taglines, slogans, or introductions. Answer the question directly and immediately.\n"
-        "CRITICAL: Do NOT say 'He Kṛṣaka, Sukhī Bhava!' or any greetings. Do not repeat any slogans.\n"
+        "You are KṛṣakaSevā, an expert agricultural scientist AI.\n"
+        f"Reply in {'Telugu' if requested_language == 'te' else 'English'}. The farmer may mix Telugu and English; reply in {'Telugu' if requested_language == 'te' else 'English'}.\n"
+        "CRITICAL: Answer the question directly and immediately. Do NOT output any greetings, taglines, introductions, summaries, or metadata.\n"
+        "CRITICAL: Do NOT output any chain-of-thought, thinking process, reasoning, system instructions, analysis, or hidden model outputs. NEVER use <think> tags or output anything matching <think>...</think>.\n"
         "CRITICAL: Keep your response extremely brief, direct, and under 3 sentences.\n"
         "Do NOT use markdown code blocks, bold markers (**), or symbols. Answer concisely.\n\n"
         "Here is the context of the farmer asking the question:\n"
@@ -913,7 +954,16 @@ def chat_query():
         f"- Land Size: {profile.get('land_size_acres', 2.0)} acres\n"
         f"- Location: {profile.get('location', 'Andhra Pradesh')}\n"
         f"- Current Weather: {weather_summary}\n"
-        f"- Live Mandi prices context: {mandi_context}\n"
+        f"- 7-Day Forecast:\n{forecast_summary}\n"
+        f"- Live Mandi prices context: {mandi_context}\n\n"
+        "INSTRUCTIONS FOR WEATHER QUESTIONS:\n"
+        "- Use the provided 7-day forecast. Never say you don't have access to live weather.\n"
+        "- For 'today', give today's rain probability and rainfall forecast.\n"
+        "- For 'this week', summarize the next 7 days (rainy days count, total rainfall mm) and give a simple farming recommendation (e.g. postpone spraying or irrigate as needed).\n"
+        "- If forecast says 'Forecast data unavailable.', clearly state that the forecast is temporarily unavailable.\n\n"
+        "INSTRUCTIONS FOR CROP RECOMMENDATION QUESTIONS:\n"
+        "- Use the farmer's actual location, soil type, pH, water availability, and weather to recommend the best 1-2 crops.\n"
+        "- Provide a brief explanation for the choice and do not give generic suggestions.\n"
     )
 
     messages = [{"role": "system", "content": system_prompt}]

@@ -1494,7 +1494,7 @@ input:focus, select:focus {
 -------------------------------------------------- */
 .services-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 24px;
 }
 
