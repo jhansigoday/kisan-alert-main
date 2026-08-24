@@ -1945,56 +1945,123 @@ function getDynamicGrowthStageAndMessage(cropName, suitabilityScore) {
 async function loadFarmRiskAssessment(profile, lat, lon) {
   const isTe = currentLang === "te";
   
-  // Use CropEngine to calculate crop-specific parameters
-  const weather = latestWeatherState || { temp: 28, humidity: 75, rainfall: 850 };
-  const cropName = profile.crop_type || "Rice";
-  const suitability = CropEngine.calculateSuitability(cropName, profile, weather);
-  const suitabilityScore = suitability.overallSuitability;
-  const yieldRange = CropEngine.estimateYieldRange(cropName, suitabilityScore, parseFloat(profile.land_size_acres || 5.0));
-
-  const growthInfo = getDynamicGrowthStageAndMessage(cropName, suitabilityScore);
-
-  // Update DOM elements immediately with crop-specific dynamic data
   const cropNameElem = document.getElementById("dash-crop-name");
-  if (cropNameElem) {
-    cropNameElem.textContent = translateMandiTerm(cropName);
-  }
   const stageElem = document.getElementById("dash-crop-stage");
-  if (stageElem) {
-    stageElem.textContent = growthInfo.stage;
-  }
   const yieldElem = document.getElementById("dash-crop-yield");
-  if (yieldElem) {
-    yieldElem.textContent = `${suitabilityScore}% — ${isTe ? "అంచనా దిగుబడి" : "Est"}: ${yieldRange.expectedYieldMin.toFixed(0)}–${yieldRange.expectedYieldMax.toFixed(0)} Qtl`;
-  }
   const scoreElem = document.getElementById("healthScoreValue");
-  if (scoreElem) {
-    scoreElem.textContent = suitabilityScore;
-  }
   const msgElem = document.getElementById("healthScoreMsg");
-  if (msgElem) {
-    msgElem.textContent = growthInfo.message;
-  }
   const fillElem = document.querySelector(".status-gauge-bar .gauge-fill");
-  if (fillElem) {
-    fillElem.style.width = `${suitabilityScore}%`;
-    fillElem.className = `gauge-fill ${suitabilityScore >= 80 ? "green-fill" : suitabilityScore >= 60 ? "yellow-fill" : "red-fill"}`;
-  }
 
-  // Query api endpoint in the background to ensure API routes are working
-  const params = new URLSearchParams({
-    lat, lon,
-    crop_type: cropName,
-    soil_type: profile.soil_type || "",
-    soil_ph: profile.soil_ph || "",
-    water_availability: profile.water_availability || "",
-    irrigation_method: profile.irrigation_method || "",
-    land_size_acres: profile.land_size_acres || ""
-  });
   try {
-    await fetch(`${BACKEND_URL}/api/field-health?${params}`);
+    // 1. Normalize Crop Name
+    let cropName = profile.crop_type || "Rice";
+    if (cropName.length > 0) {
+      cropName = cropName.charAt(0).toUpperCase() + cropName.slice(1).toLowerCase();
+    }
+    
+    // Check if crop exists in knowledge base
+    if (!CROP_KNOWLEDGE_BASE[cropName]) {
+      throw new Error(`Crop ${cropName} not supported in knowledge base`);
+    }
+
+    // 2. Fetch or mock weather parameters
+    const weather = latestWeatherState || { temp: 28, humidity: 75, rainfall: 850 };
+    
+    // 3. Perform Calculations
+    const suitability = CropEngine.calculateSuitability(cropName, profile, weather);
+    if (!suitability) {
+      throw new Error("Suitability calculation returned null");
+    }
+    
+    const suitabilityScore = suitability.overallSuitability || 0;
+    const landSize = parseFloat(profile.land_size_acres) || 5.0;
+    const yieldRange = CropEngine.estimateYieldRange(cropName, suitabilityScore, landSize);
+    const growthInfo = getDynamicGrowthStageAndMessage(cropName, suitabilityScore);
+
+    // Determine Risk Status based on suitabilityScore
+    let riskStatusEn = "Low Risk";
+    let riskStatusTe = "తక్కువ ముప్పు";
+    let riskColor = "#10b981"; // green
+    
+    if (suitabilityScore < 60) {
+      riskStatusEn = "High Risk";
+      riskStatusTe = "అధిక ముప్పు";
+      riskColor = "#ef4444"; // red
+    } else if (suitabilityScore < 80) {
+      riskStatusEn = "Moderate Risk";
+      riskStatusTe = "మధ్యస్థ ముప్పు";
+      riskColor = "#eab308"; // yellow
+    }
+
+    const currentRiskStatus = isTe ? riskStatusTe : riskStatusEn;
+
+    // 4. Update UI Elements with verified actual values
+    if (cropNameElem) {
+      cropNameElem.textContent = translateMandiTerm(cropName);
+    }
+    if (stageElem) {
+      stageElem.textContent = growthInfo.stage;
+    }
+    if (yieldElem) {
+      yieldElem.innerHTML = `<span style="color: ${riskColor}; font-weight: 700;">${currentRiskStatus}</span> — ${isTe ? "అంచనా దిగుబడి" : "Est"}: ${yieldRange.expectedYieldMin.toFixed(0)}–${yieldRange.expectedYieldMax.toFixed(0)} Qtl`;
+    }
+    if (scoreElem) {
+      scoreElem.textContent = suitabilityScore;
+    }
+    if (msgElem) {
+      msgElem.textContent = `${growthInfo.message} (${isTe ? "ఉష్ణోగ్రత" : "Temp"}: ${weather.temp}°C, ${isTe ? "నేల" : "Soil"}: ${profile.soil_type || "loamy"})`;
+    }
+    if (fillElem) {
+      fillElem.style.width = `${suitabilityScore}%`;
+      fillElem.className = `gauge-fill ${suitabilityScore >= 80 ? "green-fill" : suitabilityScore >= 60 ? "yellow-fill" : "red-fill"}`;
+    }
+
+    // 5. Background API check with a 4s timeout AbortController
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
+    const params = new URLSearchParams({
+      lat, lon,
+      crop_type: cropName,
+      soil_type: profile.soil_type || "",
+      soil_ph: profile.soil_ph || "",
+      water_availability: profile.water_availability || "",
+      irrigation_method: profile.irrigation_method || "",
+      land_size_acres: profile.land_size_acres || ""
+    });
+    
+    try {
+      await fetch(`${BACKEND_URL}/api/field-health?${params}`, { signal: controller.signal });
+    } catch (err) {
+      console.log("Background field-health API check skipped or timed out:", err.message);
+    } finally {
+      clearTimeout(timeoutId);
+    }
+
   } catch (err) {
-    console.log("Background API health check failed:", err);
+    console.error("Risk assessment calculation failed:", err);
+    
+    // Graceful error fallback
+    if (cropNameElem) {
+      cropNameElem.textContent = translateMandiTerm(profile.crop_type || "Rice");
+    }
+    if (stageElem) {
+      stageElem.textContent = isTe ? "డేటా అందుబాటులో లేదు" : "Data unavailable";
+    }
+    if (yieldElem) {
+      yieldElem.textContent = isTe ? "ప్రమాద అంచనా అందుబాటులో లేదు" : "Risk assessment unavailable";
+    }
+    if (scoreElem) {
+      scoreElem.textContent = "--";
+    }
+    if (msgElem) {
+      msgElem.textContent = isTe 
+        ? "సాగు వివరాలు లేదా వాతావరణ సమాచారం లేనందున ప్రమాద అంచనా వేయలేకపోయాము." 
+        : "Could not calculate risk. Please check your farm details and network connection.";
+    }
+    if (fillElem) {
+      fillElem.style.width = `0%`;
+      fillElem.className = `gauge-fill`;
+    }
   }
 }
 
