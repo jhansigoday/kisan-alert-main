@@ -252,8 +252,7 @@ Do not return any markdown formatting or text outside the JSON. Return only a ra
                     }
                 ],
                 temperature=0.1,
-                max_tokens=3000,
-                response_format={"type": "json_object"}
+                max_tokens=3000
             )
             
             import json, re

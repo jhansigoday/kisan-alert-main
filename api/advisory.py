@@ -188,8 +188,7 @@ def generate_crop_doctor_report(disease_label: str, confidence: float, lang: str
                     {"role": "user", "content": user_prompt}
                 ],
                 max_tokens=3000,
-                temperature=0.3,
-                response_format={"type": "json_object"}
+                temperature=0.3
             )
             content = res.choices[0].message.content.strip()
             import re
