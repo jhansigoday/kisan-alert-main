@@ -129,12 +129,11 @@ def photo_query():
 
     try:
         from image_diagnosis import diagnose_leaf
-        diagnosis = diagnose_leaf(image_path, original_filename=request.files["image"].filename)
+        lang = request.form.get("lang", "en").strip()
+        diagnosis = diagnose_leaf(image_path, original_filename=request.files["image"].filename, lang=lang)
         diagnosis_state = diagnosis.get("state", "unavailable")
         disease_label = diagnosis.get("disease_label")
         confidence = diagnosis.get("confidence")
-        
-        lang = request.form.get("lang", "en").strip()
 
         crop_name = diagnosis.get("crop_name") or ""
         price_info = get_market_price(crop_name) if crop_name else {"available": False}

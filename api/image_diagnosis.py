@@ -171,7 +171,7 @@ if HAS_LOCAL_VIT:
         HAS_LOCAL_VIT = False
 
 
-def diagnose_leaf(image_path: str, top_k: int = 3, original_filename: str = "") -> dict:
+def diagnose_leaf(image_path: str, top_k: int = 3, original_filename: str = "", lang: str = "en") -> dict:
     """Return a validated model prediction or an honest uncertainty state."""
     image_issue = _validate_image(image_path)
     if image_issue:
@@ -202,10 +202,11 @@ def diagnose_leaf(image_path: str, top_k: int = 3, original_filename: str = "") 
             with open(image_path, "rb") as image_file:
                 encoded_image = base64.b64encode(image_file.read()).decode("utf-8")
                 
-            prompt = """You must respond in JSON format. Return a JSON object. Analyze the provided plant leaf image. 
+            lang_name = "Telugu" if lang == "te" else "English"
+            prompt = f"""You must respond in JSON format. Return a JSON object. Analyze the provided plant leaf image. 
 Identify the crop name and the specific disease. 
 If the image is not a plant leaf, or is too blurry to diagnose, return:
-{
+{{
   "diagnosis_state": "invalid",
   "disease_label": "Unable to reliably diagnose this image",
   "crop_name": "",
@@ -217,10 +218,10 @@ If the image is not a plant leaf, or is too blurry to diagnose, return:
   "chemical_solution": "N/A",
   "preventive_measures": "N/A",
   "advisory_text": "Please upload a clearer photo."
-}
+}}
 
 Otherwise, identify the crop name, disease label, and return a JSON object with this exact schema:
-{
+{{
   "diagnosis_state": "high",
   "disease_label": "Disease Name",
   "crop_name": "Crop Name",
@@ -232,8 +233,8 @@ Otherwise, identify the crop name, disease label, and return a JSON object with 
   "chemical_solution": "Recommended chemical treatments if severe...",
   "preventive_measures": "Actions to prevent future occurrences...",
   "advisory_text": "Personalized AI farming advisory report..."
-}
-Do not return any markdown formatting or text outside the JSON. Return only a raw JSON string."""
+}}
+Write all text field values (disease_label, crop_name, symptoms, causes, treatment, organic_solution, chemical_solution, preventive_measures, advisory_text) strictly in {lang_name}."""
 
             response = client.chat.completions.create(
                 model="qwen/qwen3.6-27b",

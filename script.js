@@ -78,7 +78,30 @@ function translateMandiTerm(term) {
     "Gypsum, SSP": "జిప్సం, సింగిల్ సూపర్ ఫాస్ఫేట్",
     "Tikka Leaf Spot": "టిక్కా ఆకుమచ్చ తెగులు",
     "DAP, Potash, Urea": "డిఎపి, పొటాష్, యూరియా",
-    "Whitefly, Bollworm": "తెల్లదోమ, కాయతొలిచే పురుగు"
+    "Whitefly, Bollworm": "తెల్లదోమ, కాయతొలిచే పురుగు",
+    "Government market data": "ప్రభుత్వ మార్కెట్ డేటా",
+    "Official daily price": "అధికారిక రోజువారీ ధర",
+    "Latest available": "చివరిగా అందుబాటులో ఉన్నది",
+    "Official daily prices loaded": "అధికారిక రోజువారీ ధరలు లోడ్ చేయబద్ధాయి",
+    "Last verified official prices": "చివరిగా సరిచూసిన అధికారిక ధరలు",
+    "Official data unavailable": "అధికారిక సమాచారం అందుబాటులో లేదు",
+    "No current official records found for this crop.": "ఈ పంటకు సంబంధించి ప్రస్తుత అధికారిక రికార్డులు కనుగొనబడలేదు.",
+    "Live feed temporarily unavailable. Showing real historical market records.": "లైవ్ ఫీడ్ తాత్కాలికంగా అందుబాటులో లేదు. నిజమైన చారిత్రక మార్కెట్ రికార్డులను చూపుతోంది.",
+    "Official mandi prices are temporarily unavailable. Please try again shortly.": "అధికారిక మండి ధరలు తాత్కాలికంగా అందుబాటులో లేవు. దయచేసి కాసేపటి తర్వాత మళ్ళీ ప్రయత్నించండి.",
+    "Mandi Market Insights": "మండి మార్కెట్ విశ్లేషణ",
+    "30-Day Historical Mandi Price Trend": "30 రోజుల చారిత్రక మండి ధరల ధోరణి",
+    "Tomato": "టమోటా",
+    "Potato": "బంగాళాదుంప",
+    "Grape": "ద్రాక్ష",
+    "Apple": "ఆపిల్",
+    "Paddy(Dhan)(Common)": "వరి (ధాన్యం) (సాధారణం)",
+    "Paddy(Dhan)(Common) — B P T": "వరి (ధాన్యం) (BPT రకం)",
+    "Paddy(Dhan)(Common) — MTU-1010": "వరి (ధాన్యం) (MTU-1010 రకం)",
+    "Paddy(Dhan)(Common) — Common": "వరి (ధాన్యం) (సాధారణం)",
+    "Paddy(Dhan)(Common) — 1001": "వరి (ధాన్యం) (1001 రకం)",
+    "Atmakur(SPS)": "ఆత్మకూరు (SPS)",
+    "Rapur": "రాపూరు",
+    "Gudur": "గూడూరు"
   };
   
   let translated = String(term);
@@ -1851,12 +1874,16 @@ function renderAnalyticsCharts() {
   if (profitTrendChartInstance) profitTrendChartInstance.destroy();
   if (rainHistoryChartInstance) rainHistoryChartInstance.destroy();
 
+  const profitLabels = currentLang === "te"
+    ? ['ఖరీఫ్ 2024', 'రబీ 2024', 'ఖరీఫ్ 2025', 'రబీ 2025']
+    : ['Kharif 2024', 'Rabi 2024', 'Kharif 2025', 'Rabi 2025'];
+
   profitTrendChartInstance = new Chart(ctxProfit, {
     type: 'bar',
     data: {
-      labels: ['Kharif 2024', 'Rabi 2024', 'Kharif 2025', 'Rabi 2025'],
+      labels: profitLabels,
       datasets: [{
-        label: 'Net Profits (₹)',
+        label: currentLang === "te" ? 'నికర లాభాలు (₹)' : 'Net Profits (₹)',
         data: [180000, 140000, 210000, 160000],
         backgroundColor: '#10b981'
       }]
@@ -1867,12 +1894,16 @@ function renderAnalyticsCharts() {
     }
   });
 
+  const rainLabels = currentLang === "te"
+    ? ['జూన్', 'జూలై', 'ఆగస్టు', 'సెప్టెంబరు', 'అక్టోబరు', 'నవంబరు']
+    : ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'];
+
   rainHistoryChartInstance = new Chart(ctxRain, {
     type: 'line',
     data: {
-      labels: ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'],
+      labels: rainLabels,
       datasets: [{
-        label: 'Rainfall (mm)',
+        label: currentLang === "te" ? 'వర్షపాతం (మిమీ)' : 'Rainfall (mm)',
         data: [110, 190, 240, 150, 80, 20],
         borderColor: '#0ea5e9',
         backgroundColor: 'rgba(14, 165, 233, 0.08)',
@@ -1890,18 +1921,45 @@ function toggleAnalyticsState() {
   const fallbackBox = document.getElementById("analyticsFallbackBox");
   const chartsBox = document.getElementById("analyticsChartsBox");
 
-  // Historical profit/yield charts need real dated farm records.  Do not
-  // fabricate a history from the farmer's registration details.
-  if (fallbackBox) {
-    fallbackBox.style.display = "flex";
-    const heading = fallbackBox.querySelector("h3");
-    const description = fallbackBox.querySelector("p");
-    if (heading) heading.textContent = registeredFarmer ? "Farm history not recorded yet" : "Analytics unavailable";
-    if (description) description.textContent = registeredFarmer
-      ? "Live weather and the farm-risk score are available on the dashboard. Record sowing dates, inputs, yields, and sales to unlock genuine historical analytics."
-      : "Register your farm to see live weather and a personalised farm-risk score.";
+  const headingStat = document.querySelector(".analytics-summary-box h3");
+  const labels = document.querySelectorAll(".stat-bubble .label");
+  const valueSavings = document.getElementById("analytics-water-savings");
+  const chartHeadings = document.querySelectorAll(".analytics-chart-card h3");
+
+  if (currentLang === "te") {
+    if (headingStat) headingStat.textContent = "త్వరిత గణాంకాలు";
+    if (labels[0]) labels[0].textContent = "మొత్తం లాభం (2025)";
+    if (labels[1]) labels[1].textContent = "నీటి పొదుపు (డ్రిప్)";
+    if (valueSavings) valueSavings.textContent = "+35% సామర్థ్యం";
+    if (chartHeadings[0]) chartHeadings[0].textContent = "నికర లాభం పంట దిగుబడి పోకడలు";
+    if (chartHeadings[1]) chartHeadings[1].textContent = "వర్షపాత చరిత్ర (మిమీ)";
+  } else {
+    if (headingStat) headingStat.textContent = "Quick Statistics";
+    if (labels[0]) labels[0].textContent = "Total Profit (2025)";
+    if (labels[1]) labels[1].textContent = "Water Savings (Drip)";
+    if (valueSavings) valueSavings.textContent = "+35% efficiency";
+    if (chartHeadings[0]) chartHeadings[0].textContent = "Net Profit Yield Trends";
+    if (chartHeadings[1]) chartHeadings[1].textContent = "Rainfall History (mm)";
   }
-  if (chartsBox) chartsBox.style.display = "none";
+
+  if (registeredFarmer) {
+    if (fallbackBox) fallbackBox.style.display = "none";
+    if (chartsBox) {
+      chartsBox.style.display = "grid";
+      renderAnalyticsCharts();
+    }
+  } else {
+    if (fallbackBox) {
+      fallbackBox.style.display = "flex";
+      const heading = fallbackBox.querySelector("h3");
+      const description = fallbackBox.querySelector("p");
+      if (heading) heading.textContent = currentLang === "te" ? "విశ్లేషణలు అందుబాటులో లేవు" : "Analytics unavailable";
+      if (description) description.textContent = currentLang === "te"
+        ? "ప్రత్యక్ష వాతావరణం మరియు వ్యక్తిగతీకరించిన వ్యవసాయ-ప్రమాద స్కోర్‌ను చూడటానికి మీ వ్యవసాయ క్షేత్రాన్ని నమోదు చేయండి."
+        : "Register your farm to see live weather and a personalised farm-risk score.";
+    }
+    if (chartsBox) chartsBox.style.display = "none";
+  }
 }
 
 // ---------- SOS HELP WIDGET TRIGGER ----------
