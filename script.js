@@ -101,7 +101,8 @@ function translateMandiTerm(term) {
     "Paddy(Dhan)(Common) — 1001": "వరి (ధాన్యం) (1001 రకం)",
     "Atmakur(SPS)": "ఆత్మకూరు (SPS)",
     "Rapur": "రాపూరు",
-    "Gudur": "గూడూరు"
+    "Gudur": "గూడూరు",
+    "Official mandi prices are taking longer than usual. Please try again in a few minutes.": "అధికారిక మండి ధరల లోడ్ కావడానికి సాధారణం కంటే ఎక్కువ సమయం పడుతోంది. దయచేసి కొన్ని నిమిషాల తర్వాత మళ్లీ ప్రయత్నించండి."
   };
   
   let translated = String(term);
@@ -279,7 +280,22 @@ const TRANSLATIONS = {
     sos_opt_drought: "☀️ Severe Drought / Crop Wilting",
     sos_helplines: "Emergency Regional Helplines",
     btn_broadcast_sos: "Broadcast SOS GPS Alert",
-    btn_trigger_sos_call: "Trigger Voice Call & SMS Alert to My Number"
+    btn_trigger_sos_call: "Trigger Voice Call & SMS Alert to My Number",
+    market_subtitle: "Track mandi prices, compare market rates, and monitor price trends.",
+    market_card_title: "Latest Official Mandi Prices",
+    market_live_link: "🔗 View Official Live Mandi Data →",
+    market_trend_title: "30-Day Historical Mandi Price Trend",
+    market_trend_notice: "Official 30-day price history is not currently available.",
+    th_market: "Market",
+    th_commodity: "Commodity",
+    th_min_price: "Minimum Price",
+    th_max_price: "Maximum Price",
+    th_modal_price: "Modal Price",
+    th_reported_date: "Reported Date",
+    th_source: "Source",
+    awaiting_data_title: "Awaiting official price data",
+    awaiting_data_desc: "Loading official mandi prices for your crop and saved location.",
+    mandi_insights_title: "Mandi Market Insights"
   },
   te: {
     app_subtitle: "ఓ రైతు, వర్ధిల్లు!",
@@ -441,7 +457,22 @@ const TRANSLATIONS = {
     sos_opt_drought: "☀️ తీవ్రమైన కరవు / పంట ఎండిపోవడం",
     sos_helplines: "అత్యవసర ప్రాంతీయ హెల్ప్‌లైన్లు",
     btn_broadcast_sos: "SOS GPS అలర్ట్‌ను ప్రసారం చేయండి",
-    btn_trigger_sos_call: "నా నంబర్‌కు వాయిస్ కాల్ & SMS అలర్ట్‌ను పంపండి"
+    btn_trigger_sos_call: "నా నంబర్‌కు వాయిస్ కాల్ & SMS అలర్ట్‌ను పంపండి",
+    market_subtitle: "మండి ధరలను ట్రాక్ చేయండి, మార్కెట్ రేట్లను పోల్చండి మరియు ధరల ధోరణులను పర్యవేక్షించండి.",
+    market_card_title: "తాజా అధికారిక మండి ధరలు",
+    market_live_link: "🔗 అధికారిక ప్రత్యక్ష మండి డేటాను చూడండి →",
+    market_trend_title: "30-Day Historical Mandi Price Trend",
+    market_trend_notice: "అధికారిక 30 రోజుల ధరల చరిత్ర ప్రస్తుతం అందుబాటులో లేదు.",
+    th_market: "మార్కెట్",
+    th_commodity: "కమోడిటీ",
+    th_min_price: "కనీస ధర",
+    th_max_price: "గరిష్ట ధర",
+    th_modal_price: "సగటు ధర",
+    th_reported_date: "నివేదించిన తేదీ",
+    th_source: "మూలం",
+    awaiting_data_title: "అధికారిక ధరల సమాచారం కోసం వేచి ఉంది",
+    awaiting_data_desc: "మీ పంట మరియు సేవ్ చేసిన ప్రదేశానికి సంబంధించిన అధికారిక మండి ధరలను లోడ్ చేస్తోంది.",
+    mandi_insights_title: "మండి మార్కెట్ విశ్లేషణ"
   }
 };
 
@@ -1155,9 +1186,10 @@ function renderMandiPrices(data, cachedAt = null, history = []) {
 }
 
 function showMandiUnavailable(message) {
-  const safeMessage = getSafeMandiMessage(message);
+  const rawMessage = getSafeMandiMessage(message);
+  const safeMessage = translateMandiTerm(rawMessage);
   const comparisonTitle = document.getElementById("marketComparisonTitle");
-  if (comparisonTitle) comparisonTitle.textContent = "Market Data Unavailable";
+  if (comparisonTitle) comparisonTitle.textContent = currentLang === "te" ? "మార్కెట్ సమాచారం అందుబాటులో లేదు" : "Market Data Unavailable";
   if (marketTrendChartInstance) {
     marketTrendChartInstance.destroy();
     marketTrendChartInstance = null;
@@ -1186,15 +1218,15 @@ function setMandiStatus(status) {
   const badge = document.getElementById("marketDataStatus");
   if (!badge) return;
   if (status === "live") {
-    badge.textContent = "🟢 Live Government Data";
+    badge.textContent = currentLang === "te" ? "🟢 ప్రత్యక్ష ప్రభుత్వ డేటా" : "🟢 Live Government Data";
     badge.style.background = "#dcfce7";
     badge.style.color = "#166534";
   } else if (status === "historical") {
-    badge.textContent = "🟡 Reference Market Data · Live feed unavailable";
+    badge.textContent = currentLang === "te" ? "🟡 సూచన మార్కెట్ డేటా · లైవ్ ఫీడ్ అందుబాటులో లేదు" : "🟡 Reference Market Data · Live feed unavailable";
     badge.style.background = "#fef3c7";
     badge.style.color = "#92400e";
   } else {
-    badge.textContent = "🔴 Mandi Data Temporarily Unavailable";
+    badge.textContent = currentLang === "te" ? "🔴 మండి సమాచారం అందుబాటులో లేదు" : "🔴 Mandi Data Temporarily Unavailable";
     badge.style.background = "#fee2e2";
     badge.style.color = "#991b1b";
   }
@@ -1211,7 +1243,7 @@ if (retryMandiPricesBtn) {
   retryMandiPricesBtn.addEventListener("click", () => {
     if (!registeredFarmer) return;
     retryMandiPricesBtn.disabled = true;
-    retryMandiPricesBtn.textContent = "Refreshing official prices…";
+    retryMandiPricesBtn.textContent = currentLang === "te" ? "ధరలను రిఫ్రెష్ చేస్తోంది..." : "Refreshing official prices...";
     loadMandiMarketData(
       registeredFarmer.crop_type || "Rice",
       registeredFarmer.latitude || detectedLat || 14.4426,
@@ -1219,7 +1251,7 @@ if (retryMandiPricesBtn) {
       registeredFarmer.location || ""
     ).finally(() => {
       retryMandiPricesBtn.disabled = false;
-      retryMandiPricesBtn.innerHTML = '<i class="fa-solid fa-rotate"></i> Retry official prices';
+      retryMandiPricesBtn.innerHTML = currentLang === "te" ? '<i class="fa-solid fa-rotate"></i> మళ్ళీ ప్రయత్నించండి' : '<i class="fa-solid fa-rotate"></i> Retry official prices';
     });
   });
 }

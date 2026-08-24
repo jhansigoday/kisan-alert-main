@@ -552,37 +552,37 @@
         <div class="panel-section">
           <div class="panel-header">
             <h2 data-translate-key="nav_market">Mandi Market <span id="marketDataStatus" style="display:inline-block; margin-left:10px; padding:4px 9px; border-radius:999px; font-size:12px; background:#fef3c7; color:#92400e; vertical-align:middle;">Loading data…</span></h2>
-            <p>Track mandi prices, compare market rates, and monitor price trends.</p>
+            <p data-translate-key="market_subtitle">Track mandi prices, compare market rates, and monitor price trends.</p>
           </div>
           
           <div class="market-grid">
             <div class="chart-card">
-              <h3>Latest Official Mandi Prices</h3>
+              <h3 data-translate-key="market_card_title">Latest Official Mandi Prices</h3>
               <p id="marketDataSource" style="margin: 8px 0 6px; color: var(--text-muted); font-size: 13px;">Loading official AGMARKNET prices for your crop and saved location…</p>
-              <a href="https://www.data.gov.in/catalog/current-daily-price-various-commodities-various-markets-mandi" target="_blank" rel="noopener noreferrer" style="display:inline-block; margin:0 0 12px; color:var(--primary); font-size:13px; font-weight:600;">🔗 View Official Live Mandi Data →</a>
+              <a href="https://www.data.gov.in/catalog/current-daily-price-various-commodities-various-markets-mandi" target="_blank" rel="noopener noreferrer" data-translate-key="market_live_link" style="display:inline-block; margin:0 0 12px; color:var(--primary); font-size:13px; font-weight:600;">🔗 View Official Live Mandi Data →</a>
               <button id="retryMandiPricesBtn" class="btn secondary-btn" style="display:none; margin-bottom:16px; font-size:12px; padding:7px 12px;"><i class="fa-solid fa-rotate"></i> Retry official prices</button>
               <div class="table-container">
                 <table class="prices-table">
-                  <thead><tr><th>Market</th><th>Commodity</th><th>Minimum Price</th><th>Maximum Price</th><th>Modal Price</th><th>Reported Date</th><th>Source</th></tr></thead>
+                  <thead><tr><th data-translate-key="th_market">Market</th><th data-translate-key="th_commodity">Commodity</th><th data-translate-key="th_min_price">Minimum Price</th><th data-translate-key="th_max_price">Maximum Price</th><th data-translate-key="th_modal_price">Modal Price</th><th data-translate-key="th_reported_date">Reported Date</th><th data-translate-key="th_source">Source</th></tr></thead>
                   <tbody id="market-prices-body"><tr><td colspan="7">Loading…</td></tr></tbody>
                 </table>
               </div>
             </div>
             <div class="chart-card">
-              <h3 id="marketComparisonTitle">30-Day Historical Mandi Price Trend</h3>
-              <p id="marketChartNotice" style="margin: 16px 0; color: var(--text-muted); line-height: 1.5;">Official 30-day price history is not currently available.</p>
+              <h3 id="marketComparisonTitle" data-translate-key="market_trend_title">30-Day Historical Mandi Price Trend</h3>
+              <p id="marketChartNotice" data-translate-key="market_trend_notice" style="margin: 16px 0; color: var(--text-muted); line-height: 1.5;">Official 30-day price history is not currently available.</p>
               <div class="chart-container-large">
                 <canvas id="marketTrendChart"></canvas>
               </div>
             </div>
             
             <div class="price-insights-card">
-              <h3>Mandi Market Insights</h3>
+              <h3 data-translate-key="mandi_insights_title">Mandi Market Insights</h3>
               <div id="marketInsightsContent" class="insight-row">
                 <div class="icon"><i class="fa-solid fa-circle-info"></i></div>
                 <div class="info">
-                  <strong>Awaiting official price data</strong>
-                  <span>Loading official mandi prices for your crop and saved location.</span>
+                  <strong data-translate-key="awaiting_data_title">Awaiting official price data</strong>
+                  <span data-translate-key="awaiting_data_desc">Loading official mandi prices for your crop and saved location.</span>
                 </div>
               </div>
             </div>
