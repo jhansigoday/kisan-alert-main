@@ -236,7 +236,7 @@ Otherwise, identify the crop name, disease label, and return a JSON object with 
 Do not return any markdown formatting or text outside the JSON. Return only a raw JSON string."""
 
             response = client.chat.completions.create(
-                model="llama-3.2-11b-vision-preview",
+                model="qwen/qwen3.6-27b",
                 messages=[
                     {
                         "role": "user",
