@@ -9,6 +9,7 @@ let isDarkMode = false;
 let registeredFarmer = null;
 let chatHistory = [];
 let detectedLocationName = null;
+let analyticsLocationDetected = false;
 
 function normalizePhone(phone) {
   const digits = String(phone || "").replace(/\D/g, "");
@@ -4257,6 +4258,7 @@ function toggleAnalyticsState() {
       chartsBox.style.display = "block";
       initAnalyticsFilters();
       renderDynamicDashboard();
+      detectAnalyticsLocation();
     }
   } else {
     if (fallbackBox) {
@@ -4270,6 +4272,93 @@ function toggleAnalyticsState() {
     }
     if (chartsBox) chartsBox.style.display = "none";
   }
+}
+
+async function detectAnalyticsLocation() {
+  if (analyticsLocationDetected) return;
+
+  const displayEl = document.getElementById("analytics-location-display");
+  if (!displayEl) return;
+
+  const isTe = currentLang === "te";
+  displayEl.textContent = isTe ? "📍 స్థానం: స్థానాన్ని గుర్తిస్తోంది..." : "📍 Location: Detecting location...";
+  displayEl.style.color = "#3b82f6";
+  displayEl.style.background = "rgba(59, 130, 246, 0.1)";
+
+  if (!navigator.geolocation) {
+    const fallbackText = isTe ? "📍 స్థానం: మద్దతు లేదు (నెల్లూరు, ఆంధ్రప్రదేశ్)" : "📍 Location: Geolocation Not Supported (Fallback: Nellore, Andhra Pradesh)";
+    displayEl.textContent = fallbackText;
+    displayEl.style.color = "#ef4444";
+    displayEl.style.background = "rgba(239, 68, 68, 0.1)";
+    applyAnalyticsLocationFallback();
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    async (position) => {
+      analyticsLocationDetected = true;
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+      const geoResult = await reverseGeocode(lat, lon);
+      
+      let locName = "Nellore, Andhra Pradesh";
+      if (geoResult) {
+        const place = geoResult.village || geoResult.district || "Nellore";
+        locName = `${place}, ${geoResult.state}`;
+      }
+      
+      displayEl.textContent = `📍 ${isTe ? "స్థానం" : "Location"}: ${locName}`;
+      displayEl.style.color = "#10b981";
+      displayEl.style.background = "rgba(16, 185, 129, 0.1)";
+      
+      updateAnalyticsLocationValue(locName);
+    },
+    (error) => {
+      console.log("Analytics location access denied/failed:", error);
+      analyticsLocationDetected = true;
+      let errorMsg = isTe ? "అనుమతి నిరాకరించబడింది" : "Permission Denied";
+      if (error.code === error.TIMEOUT) errorMsg = isTe ? "సమయం ముగిసింది" : "Timeout";
+      else if (error.code === error.POSITION_UNAVAILABLE) errorMsg = isTe ? "స్థానం అందుబాటులో లేదు" : "Position Unavailable";
+      
+      let fallbackLoc = "Nellore, Andhra Pradesh";
+      if (registeredFarmer && registeredFarmer.location) {
+        fallbackLoc = registeredFarmer.location;
+      }
+      
+      displayEl.textContent = `📍 ${isTe ? "స్థానం" : "Location"}: ${fallbackLoc} (${errorMsg})`;
+      displayEl.style.color = "#ef4444";
+      displayEl.style.background = "rgba(239, 68, 68, 0.1)";
+      
+      updateAnalyticsLocationValue(fallbackLoc);
+    },
+    { timeout: 8000 }
+  );
+}
+
+function updateAnalyticsLocationValue(locName) {
+  let shortLoc = locName.split(",")[0].trim();
+  const locationSelect = document.getElementById("filter-location");
+  if (locationSelect) {
+    let found = Array.from(locationSelect.options).find(opt => opt.value.toLowerCase() === shortLoc.toLowerCase());
+    if (!found) {
+      const opt = document.createElement("option");
+      opt.value = shortLoc;
+      opt.textContent = shortLoc;
+      locationSelect.appendChild(opt);
+      locationSelect.value = shortLoc;
+    } else {
+      locationSelect.value = found.value;
+    }
+    renderDynamicDashboard();
+  }
+}
+
+function applyAnalyticsLocationFallback() {
+  let fallbackLoc = "Nellore, Andhra Pradesh";
+  if (registeredFarmer && registeredFarmer.location) {
+    fallbackLoc = registeredFarmer.location;
+  }
+  updateAnalyticsLocationValue(fallbackLoc);
 }
 
 // ---------- SOS HELP WIDGET TRIGGER ----------
@@ -4489,6 +4578,19 @@ window.addEventListener("DOMContentLoaded", async () => {
   
   // Restore the active session from localStorage.  Profiles are intentionally
   // not fetched from the server because Vercel has no persistent filesystem.
+  try {
+    const savedPhone = localStorage.getItem("krushakseva_phone");
+    const savedProfile = localStorage.getItem("krushakseva_profile");
+    if (savedPhone && savedProfile) {
+      registeredFarmer = JSON.parse(savedProfile);
+      document.getElementById("auth-portal-box").style.display = "none";
+      document.getElementById("farmerRegistrationForm").style.display = "none";
+      updateDashboardWithProfile(registeredFarmer);
+      switchTab("dashboard");
+    }
+  } catch (e) {
+    console.log("Auto-login error on reload:", e);
+  }
 
   // Bind Extension Services search inputs
   const schemeSearchInput = document.getElementById("scheme-search-input");

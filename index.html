@@ -949,11 +949,12 @@
                 <label for="filter-crop" style="font-weight: 600; font-size: 13px; color: var(--text-main);">Crop:</label>
                 <select id="filter-crop" style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main); font-size: 13px; cursor: pointer;"></select>
               </div>
-              <div class="filter-group" style="display: flex; align-items: center; gap: 8px;">
+              <div class="filter-group" style="display: none !important;">
                 <label for="filter-location" style="font-weight: 600; font-size: 13px; color: var(--text-main);">Location:</label>
                 <select id="filter-location" style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main); font-size: 13px; cursor: pointer;"></select>
               </div>
               <div style="margin-left: auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span id="analytics-location-display" style="font-size: 11px; font-weight: 600; padding: 4px 8px; border-radius: 4px; background: rgba(59, 130, 246, 0.1); color: #3b82f6;">📍 Location: Detecting location...</span>
                 <span id="analytics-farm-area" style="font-size: 11px; font-weight: 600; padding: 4px 8px; border-radius: 4px; background: rgba(59, 130, 246, 0.1); color: #3b82f6;">Farm Area: 0.0 acres</span>
                 <span id="data-source-badge" title="These values are from a demonstration historical dataset and are not live farm records." style="font-size: 11px; font-weight: 600; padding: 4px 8px; border-radius: 4px; background: rgba(100, 116, 139, 0.1); color: #64748b; cursor: help; border-bottom: 1px dashed #64748b;">Demo historical data ℹ</span>
               </div>
