@@ -1951,6 +1951,7 @@ async function loadFarmRiskAssessment(profile, lat, lon) {
   const scoreElem = document.getElementById("healthScoreValue");
   const msgElem = document.getElementById("healthScoreMsg");
   const fillElem = document.querySelector(".status-gauge-bar .gauge-fill");
+  const detailsContainer = document.querySelector(".status-details");
 
   try {
     // 1. Normalize Crop Name
@@ -1964,10 +1965,80 @@ async function loadFarmRiskAssessment(profile, lat, lon) {
       throw new Error(`Crop ${cropName} not supported in knowledge base`);
     }
 
-    // 2. Fetch or mock weather parameters
-    const weather = latestWeatherState || { temp: 28, humidity: 75, rainfall: 850 };
+    const cropSeasons = CROP_KNOWLEDGE_BASE[cropName].seasons || ["Kharif"];
     
-    // 3. Perform Calculations
+    // 2. Detect Season based on current date (August 2026 -> Kharif)
+    const currentMonth = new Date().getMonth();
+    let currentSeasonName = "Kharif"; // June to October
+    if (currentMonth >= 10 || currentMonth <= 2) {
+      currentSeasonName = "Rabi"; // November to March
+    } else if (currentMonth >= 3 && currentMonth <= 4) {
+      currentSeasonName = "Zaid"; // April to May
+    }
+
+    const isInSeason = cropSeasons.includes(currentSeasonName);
+    const isSown = (profile.sowing_status === "sown" || profile.sown === true || (profile.sowing_date && profile.sowing_date !== ""));
+
+    // 3. Generate recommendations for off-season or not-yet-sown crops
+    let recommendationText = "";
+    if (cropName === "Wheat") {
+      recommendationText = isTe 
+        ? "గోధుమ రబీ పంట. అక్టోబర్-నవంబర్‌లో ఉష్ణోగ్రతలు తగ్గినప్పుడు విత్తడం ప్రారంభించండి." 
+        : "Wheat is a Rabi crop. Sowing window starts in October-November when temperatures drop.";
+    } else if (cropName === "Chickpea" || cropName === "Mustard") {
+      recommendationText = isTe 
+        ? "ఇది రబీ పంట. అక్టోబర్-నవంబర్‌లో విత్తడం ప్రారంభమవుతుంది. పొలాన్ని సిద్ధం చేసి తేమను తనిఖీ చేయండి." 
+        : "This is a Rabi crop. Sowing window starts in October-November. Prepare fields and check soil moisture.";
+    } else {
+      recommendationText = isTe 
+        ? `${translateMandiTerm(cropName)} పంట విత్తే కాలం ${cropSeasons.join('/')}. దయచేసి విత్తన వివరాలను నమోదు చేయండి.` 
+        : `${cropName} is compatible with ${cropSeasons.join('/')} season(s). Please prepare field and record sowing details to activate tracking.`;
+    }
+
+    if (!isInSeason || !isSown) {
+      const primarySeason = cropSeasons[0] || "Kharif";
+      const statusText = !isInSeason 
+        ? (isTe ? "ఆఫ్-సీజన్" : "Off-season") 
+        : (isTe ? "నాటలేదు" : "Not Sown");
+      
+      // Update Crop Health status card
+      if (cropNameElem) {
+        cropNameElem.textContent = translateMandiTerm(cropName);
+      }
+      if (stageElem) {
+        stageElem.textContent = `${isTe ? "నాటలేదు" : "Not sown"} — ${primarySeason}`;
+      }
+      if (yieldElem) {
+        yieldElem.textContent = isTe ? "విత్తనాలు నాటే వరకు అందుబాటులో లేదు" : "Not available until sowing/field data is recorded";
+      }
+
+      if (detailsContainer) {
+        detailsContainer.innerHTML = `
+          <div class="status-row"><span>${isTe ? "పంట:" : "Crop:"}</span><strong>${translateMandiTerm(cropName)}</strong></div>
+          <div class="status-row"><span>${isTe ? "ఎదుగుదల దశ:" : "Growth Stage:"}</span><strong>${isTe ? "నాటలేదు" : "Not sown"} — ${primarySeason}</strong></div>
+          <div class="status-row"><span>${isTe ? "స్థితి:" : "Status:"}</span><strong><span style="color: #ef4444; font-weight: 700;">${statusText}</span></strong></div>
+          <div class="status-row" style="flex-direction: column; align-items: flex-start; gap: 4px;">
+            <span>${isTe ? "అంచనా దిగుబడి:" : "Estimated Yield:"}</span>
+            <strong style="font-weight: 500; font-size: 12px; color: var(--text-muted);">${isTe ? "విత్తనాలు నాటే వరకు అందుబాటులో లేదు" : "Not available until sowing/field data is recorded"}</strong>
+          </div>
+          <div style="margin-top: 10px; padding: 8px 12px; background: rgba(59,130,246,0.05); border-left: 3px solid #3b82f6; border-radius: 4px; font-size: 12px; line-height: 1.4; color: var(--text-main);">
+            <strong>${isTe ? "సూచన:" : "Recommendation:"}</strong> ${recommendationText}
+          </div>
+        `;
+      }
+
+      // Hide arbitrary health score dial parameters
+      if (scoreElem) scoreElem.textContent = "--";
+      if (msgElem) msgElem.textContent = recommendationText;
+      if (fillElem) {
+        fillElem.style.width = `0%`;
+        fillElem.className = `gauge-fill`;
+      }
+      return;
+    }
+
+    // 4. In-season and sown: calculate and render dynamic calculations
+    const weather = latestWeatherState || { temp: 28, humidity: 75, rainfall: 850 };
     const suitability = CropEngine.calculateSuitability(cropName, profile, weather);
     if (!suitability) {
       throw new Error("Suitability calculation returned null");
@@ -1978,7 +2049,6 @@ async function loadFarmRiskAssessment(profile, lat, lon) {
     const yieldRange = CropEngine.estimateYieldRange(cropName, suitabilityScore, landSize);
     const growthInfo = getDynamicGrowthStageAndMessage(cropName, suitabilityScore);
 
-    // Determine Risk Status based on suitabilityScore
     let riskStatusEn = "Low Risk";
     let riskStatusTe = "తక్కువ ముప్పు";
     let riskColor = "#10b981"; // green
@@ -1995,7 +2065,6 @@ async function loadFarmRiskAssessment(profile, lat, lon) {
 
     const currentRiskStatus = isTe ? riskStatusTe : riskStatusEn;
 
-    // 4. Update UI Elements with verified actual values
     if (cropNameElem) {
       cropNameElem.textContent = translateMandiTerm(cropName);
     }
@@ -2005,6 +2074,15 @@ async function loadFarmRiskAssessment(profile, lat, lon) {
     if (yieldElem) {
       yieldElem.innerHTML = `<span style="color: ${riskColor}; font-weight: 700;">${currentRiskStatus}</span> — ${isTe ? "అంచనా దిగుబడి" : "Est"}: ${yieldRange.expectedYieldMin.toFixed(0)}–${yieldRange.expectedYieldMax.toFixed(0)} Qtl`;
     }
+
+    if (detailsContainer) {
+      detailsContainer.innerHTML = `
+        <div class="status-row"><span data-translate-key="c_crop">${isTe ? "పంట:" : "Crop:"}</span><strong>${translateMandiTerm(cropName)}</strong></div>
+        <div class="status-row"><span data-translate-key="c_growth_stage">${isTe ? "ఎదుగుదల దశ:" : "Growth Stage:"}</span><strong>${growthInfo.stage}</strong></div>
+        <div class="status-row"><span data-translate-key="c_est_yield">${isTe ? "అంచనా దిగుబడి:" : "Estimated Yield:"}</span><strong><span style="color: ${riskColor}; font-weight: 700;">${currentRiskStatus}</span> — ${isTe ? "అంచనా దిగుబడి" : "Est"}: ${yieldRange.expectedYieldMin.toFixed(0)}–${yieldRange.expectedYieldMax.toFixed(0)} Qtl</strong></div>
+      `;
+    }
+
     if (scoreElem) {
       scoreElem.textContent = suitabilityScore;
     }
@@ -2050,6 +2128,15 @@ async function loadFarmRiskAssessment(profile, lat, lon) {
     if (yieldElem) {
       yieldElem.textContent = isTe ? "ప్రమాద అంచనా అందుబాటులో లేదు" : "Risk assessment unavailable";
     }
+    
+    if (detailsContainer) {
+      detailsContainer.innerHTML = `
+        <div class="status-row"><span>${isTe ? "పంట:" : "Crop:"}</span><strong>${translateMandiTerm(profile.crop_type || "Rice")}</strong></div>
+        <div class="status-row"><span>${isTe ? "ఎదుగుదల దశ:" : "Growth Stage:"}</span><strong>${isTe ? "డేటా అందుబాటులో లేదు" : "Data unavailable"}</strong></div>
+        <div class="status-row"><span>${isTe ? "అంచనా దిగుబడి:" : "Estimated Yield:"}</span><strong>${isTe ? "ప్రమాద అంచనా అందుబాటులో లేదు" : "Risk assessment unavailable"}</strong></div>
+      `;
+    }
+
     if (scoreElem) {
       scoreElem.textContent = "--";
     }
