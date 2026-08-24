@@ -546,6 +546,7 @@
                       <th data-translate-key="th_expected_yield">Expected Yield</th>
                       <th data-translate-key="th_expected_revenue">Expected Revenue</th>
                       <th data-translate-key="th_net_profit">Net Profit</th>
+                      <th>Est. Profit Range</th>
                       <th data-translate-key="th_profit_margin">Profit Margin</th>
                     </tr>
                   </thead>
@@ -556,6 +557,7 @@
                       <td>120 <span data-translate-key="unit_quintals">Quintals</span></td>
                       <td>₹2,61,600</td>
                       <td class="net-profit-val">₹2,16,600</td>
+                      <td>₹1,84,120 - ₹2,49,080</td>
                       <td>82.8%</td>
                     </tr>
                     <tr>
@@ -564,6 +566,7 @@
                       <td>40 <span data-translate-key="unit_quintals">Quintals</span></td>
                       <td>₹2,74,000</td>
                       <td class="net-profit-val">₹2,19,000</td>
+                      <td>₹1,86,150 - ₹2,51,850</td>
                       <td>79.9%</td>
                     </tr>
                   </tbody>
@@ -571,6 +574,48 @@
               </div>
             </div>
           </div>
+          
+          <div style="margin-top: 16px; border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; background: var(--bg-card);">
+            <details style="padding: 16px; cursor: pointer;">
+              <summary style="font-weight: 700; color: var(--text-main); display: flex; align-items: center; justify-content: space-between;">
+                <span><i class="fa-solid fa-circle-info"></i> How was this estimate calculated?</span>
+                <span style="font-size: 12px; color: var(--primary); font-weight: 600;">Click to view formulas & data flow</span>
+              </summary>
+              <div style="margin-top: 12px; border-top: 1px solid var(--border-color); padding-top: 12px; font-size: 13px; color: var(--text-main); line-height: 1.6; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+                <div>
+                  <h4 style="margin: 0 0 8px 0; font-weight: 700; color: var(--primary);"><i class="fa-solid fa-gears"></i> Calculation Formulas</h4>
+                  <ul style="padding-left: 20px; list-style-type: disc;">
+                    <li><strong>Total Cost:</strong> <code>(Seed + Fertilizer + Pesticide + Labour + Irrigation + Machinery + Other) × Land Area</code></li>
+                    <li><strong>Expected Yield:</strong> <code>Baseline Yield × Seasonal Factor × Soil Match × Water Match</code></li>
+                    <li><strong>Expected Revenue:</strong> <code>Total Yield × Mandi Modal Price</code></li>
+                    <li><strong>Net Profit:</strong> <code>Expected Revenue − Total Cost</code></li>
+                    <li><strong>Profit Margin:</strong> <code>(Net Profit / Expected Revenue) × 100</code></li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 style="margin: 0 0 8px 0; font-weight: 700; color: var(--primary);"><i class="fa-solid fa-circle-exclamation"></i> Uncertainty Model</h4>
+                  <p>Estimated ranges are computed deterministically by applying a +/-10% yield variance, +/-5% market price variance, and +/-5% input cost variance to simulate variable seasonal conditions.</p>
+                  <p style="margin-top: 8px; font-weight: 600; color: var(--text-muted);">* Actual returns may vary depending on weather, yield, input costs, and market prices.</p>
+                </div>
+                <div id="calc-breakdown-details" style="border-left: 1px solid var(--border-color); padding-left: 16px;">
+                  <h4 style="margin: 0 0 8px 0; font-weight: 700; color: var(--primary);"><i class="fa-solid fa-calculator"></i> Active Calculation (Best Choice)</h4>
+                  <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <div>Land Area: <span id="breakdown-land" style="font-weight: 600;">--</span></div>
+                    <div>Season: <span id="breakdown-season" style="font-weight: 600;">--</span></div>
+                    <div>Recommended Crop: <span id="breakdown-crop" style="font-weight: 600;">--</span></div>
+                    <div>Expected Yield: <span id="breakdown-yield" style="font-weight: 600;">--</span></div>
+                    <div>Market Price: <span id="breakdown-price" style="font-weight: 600;">--</span></div>
+                    <div>Cultivation Cost: <span id="breakdown-cost" style="font-weight: 600;">--</span></div>
+                    <div>Expected Revenue: <span id="breakdown-revenue" style="font-weight: 600;">--</span></div>
+                    <div>Estimated Net Profit: <span id="breakdown-profit" style="font-weight: 600;">--</span></div>
+                    <div>Estimated Range: <span id="breakdown-range" style="font-weight: 600; color: var(--primary);">--</span></div>
+                    <div>Data Source: <span id="breakdown-source" style="font-weight: 600; color: var(--text-muted);">AGMARKNET / Crop Seasonal DB</span></div>
+                  </div>
+                </div>
+              </div>
+            </details>
+          </div>
+        </div>
         </div>
       </section>
       

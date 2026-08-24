@@ -1,7 +1,7 @@
 // Base Backend API configuration dynamically loaded
-const BACKEND_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-  ? "http://localhost:5000"
-  : window.location.origin;
+const BACKEND_URL = window.location.protocol === "file:"
+  ? "http://127.0.0.1:5000"
+  : "";
 
 // Global State
 let currentLang = "en";
@@ -1037,10 +1037,371 @@ const CROP_KNOWLEDGE_BASE = {
   }
 };
 
+const CROP_SEASONAL_DATA = {
+  Rice: {
+    Kharif: {
+      typicalYieldMin: 20,
+      typicalYieldMax: 26,
+      seedCost: 1500,
+      fertilizerCost: 3500,
+      pesticideCost: 2000,
+      labourCost: 6000,
+      irrigationCost: 1000,
+      machineryCost: 3000,
+      otherCosts: 1000,
+      waterRequirement: "High",
+      durationDays: 120,
+      rainMin: 1000,
+      rainMax: 2000,
+      tempMin: 22,
+      tempMax: 35
+    },
+    Rabi: {
+      typicalYieldMin: 18,
+      typicalYieldMax: 24,
+      seedCost: 1500,
+      fertilizerCost: 3500,
+      pesticideCost: 2200,
+      labourCost: 6500,
+      irrigationCost: 3000,
+      machineryCost: 3000,
+      otherCosts: 1200,
+      waterRequirement: "High",
+      durationDays: 130,
+      rainMin: 400,
+      rainMax: 800,
+      tempMin: 18,
+      tempMax: 30
+    },
+    Zaid: {
+      typicalYieldMin: 14,
+      typicalYieldMax: 18,
+      seedCost: 1500,
+      fertilizerCost: 3000,
+      pesticideCost: 1800,
+      labourCost: 5500,
+      irrigationCost: 4500,
+      machineryCost: 2500,
+      otherCosts: 1000,
+      waterRequirement: "High",
+      durationDays: 100,
+      rainMin: 100,
+      rainMax: 400,
+      tempMin: 25,
+      tempMax: 40
+    }
+  },
+  Groundnut: {
+    Kharif: {
+      typicalYieldMin: 8,
+      typicalYieldMax: 12,
+      seedCost: 3000,
+      fertilizerCost: 2500,
+      pesticideCost: 1500,
+      labourCost: 4500,
+      irrigationCost: 500,
+      machineryCost: 2500,
+      otherCosts: 800,
+      waterRequirement: "Low",
+      durationDays: 110,
+      rainMin: 500,
+      rainMax: 1000,
+      tempMin: 22,
+      tempMax: 32
+    },
+    Rabi: {
+      typicalYieldMin: 9,
+      typicalYieldMax: 13,
+      seedCost: 3200,
+      fertilizerCost: 2800,
+      pesticideCost: 1600,
+      labourCost: 5000,
+      irrigationCost: 2000,
+      machineryCost: 2500,
+      otherCosts: 900,
+      waterRequirement: "Low",
+      durationDays: 115,
+      rainMin: 200,
+      rainMax: 500,
+      tempMin: 18,
+      tempMax: 28
+    },
+    Zaid: {
+      typicalYieldMin: 7,
+      typicalYieldMax: 10,
+      seedCost: 3000,
+      fertilizerCost: 2200,
+      pesticideCost: 1400,
+      labourCost: 4000,
+      irrigationCost: 3000,
+      machineryCost: 2000,
+      otherCosts: 800,
+      waterRequirement: "Low",
+      durationDays: 95,
+      rainMin: 50,
+      rainMax: 300,
+      tempMin: 24,
+      tempMax: 38
+    }
+  },
+  Maize: {
+    Kharif: {
+      typicalYieldMin: 16,
+      typicalYieldMax: 22,
+      seedCost: 2000,
+      fertilizerCost: 3000,
+      pesticideCost: 1800,
+      labourCost: 4500,
+      irrigationCost: 800,
+      machineryCost: 2500,
+      otherCosts: 900,
+      waterRequirement: "Medium",
+      durationDays: 100,
+      rainMin: 600,
+      rainMax: 1200,
+      tempMin: 20,
+      tempMax: 32
+    },
+    Rabi: {
+      typicalYieldMin: 18,
+      typicalYieldMax: 25,
+      seedCost: 2200,
+      fertilizerCost: 3200,
+      pesticideCost: 2000,
+      labourCost: 5000,
+      irrigationCost: 2200,
+      machineryCost: 2500,
+      otherCosts: 1000,
+      waterRequirement: "Medium",
+      durationDays: 115,
+      rainMin: 200,
+      rainMax: 600,
+      tempMin: 15,
+      tempMax: 28
+    },
+    Zaid: {
+      typicalYieldMin: 12,
+      typicalYieldMax: 16,
+      seedCost: 2000,
+      fertilizerCost: 2500,
+      pesticideCost: 1500,
+      labourCost: 3800,
+      irrigationCost: 3200,
+      machineryCost: 2000,
+      otherCosts: 800,
+      waterRequirement: "Medium",
+      durationDays: 90,
+      rainMin: 100,
+      rainMax: 400,
+      tempMin: 22,
+      tempMax: 38
+    }
+  },
+  Cotton: {
+    Kharif: {
+      typicalYieldMin: 8,
+      typicalYieldMax: 14,
+      seedCost: 4000,
+      fertilizerCost: 4000,
+      pesticideCost: 3500,
+      labourCost: 6500,
+      irrigationCost: 1500,
+      machineryCost: 3000,
+      otherCosts: 1500,
+      waterRequirement: "Medium",
+      durationDays: 160,
+      rainMin: 600,
+      rainMax: 1200,
+      tempMin: 22,
+      tempMax: 35
+    },
+    Rabi: null,
+    Zaid: null
+  },
+  Tomato: {
+    Kharif: {
+      typicalYieldMin: 70,
+      typicalYieldMax: 100,
+      seedCost: 5000,
+      fertilizerCost: 5000,
+      pesticideCost: 4000,
+      labourCost: 7000,
+      irrigationCost: 1500,
+      machineryCost: 2500,
+      otherCosts: 1500,
+      waterRequirement: "Medium",
+      durationDays: 90,
+      rainMin: 500,
+      rainMax: 900,
+      tempMin: 20,
+      tempMax: 32
+    },
+    Rabi: {
+      typicalYieldMin: 80,
+      typicalYieldMax: 120,
+      seedCost: 5500,
+      fertilizerCost: 5500,
+      pesticideCost: 4200,
+      labourCost: 7500,
+      irrigationCost: 2500,
+      machineryCost: 2500,
+      otherCosts: 1800,
+      waterRequirement: "Medium",
+      durationDays: 100,
+      rainMin: 200,
+      rainMax: 500,
+      tempMin: 16,
+      tempMax: 28
+    },
+    Zaid: {
+      typicalYieldMin: 50,
+      typicalYieldMax: 80,
+      seedCost: 5000,
+      fertilizerCost: 4500,
+      pesticideCost: 3500,
+      labourCost: 6000,
+      irrigationCost: 4000,
+      machineryCost: 2000,
+      otherCosts: 1200,
+      waterRequirement: "Medium",
+      durationDays: 85,
+      rainMin: 50,
+      rainMax: 300,
+      tempMin: 24,
+      tempMax: 38
+    }
+  },
+  Wheat: {
+    Kharif: null,
+    Rabi: {
+      typicalYieldMin: 16,
+      typicalYieldMax: 22,
+      seedCost: 2200,
+      fertilizerCost: 3200,
+      pesticideCost: 1500,
+      labourCost: 4500,
+      irrigationCost: 2000,
+      machineryCost: 2800,
+      otherCosts: 1000,
+      waterRequirement: "Medium",
+      durationDays: 120,
+      rainMin: 400,
+      rainMax: 700,
+      tempMin: 12,
+      tempMax: 25
+    },
+    Zaid: null
+  },
+  Chilli: {
+    Kharif: {
+      typicalYieldMin: 12,
+      typicalYieldMax: 16,
+      seedCost: 6000,
+      fertilizerCost: 6000,
+      pesticideCost: 5000,
+      labourCost: 8000,
+      irrigationCost: 2000,
+      machineryCost: 3000,
+      otherCosts: 2000,
+      waterRequirement: "Medium",
+      durationDays: 140,
+      rainMin: 600,
+      rainMax: 1100,
+      tempMin: 20,
+      tempMax: 35
+    },
+    Rabi: {
+      typicalYieldMin: 14,
+      typicalYieldMax: 18,
+      seedCost: 6500,
+      fertilizerCost: 6500,
+      pesticideCost: 5200,
+      labourCost: 8500,
+      irrigationCost: 3500,
+      machineryCost: 3000,
+      otherCosts: 2200,
+      waterRequirement: "Medium",
+      durationDays: 150,
+      rainMin: 300,
+      rainMax: 700,
+      tempMin: 18,
+      tempMax: 30
+    },
+    Zaid: null
+  },
+  Chickpea: {
+    Kharif: null,
+    Rabi: {
+      typicalYieldMin: 6,
+      typicalYieldMax: 10,
+      seedCost: 2000,
+      fertilizerCost: 2000,
+      pesticideCost: 1200,
+      labourCost: 3500,
+      irrigationCost: 1000,
+      machineryCost: 2000,
+      otherCosts: 800,
+      waterRequirement: "Low",
+      durationDays: 110,
+      rainMin: 350,
+      rainMax: 500,
+      tempMin: 15,
+      tempMax: 25
+    },
+    Zaid: null
+  },
+  Mustard: {
+    Kharif: null,
+    Rabi: {
+      typicalYieldMin: 5,
+      typicalYieldMax: 8,
+      seedCost: 1000,
+      fertilizerCost: 2200,
+      pesticideCost: 1200,
+      labourCost: 3000,
+      irrigationCost: 1000,
+      machineryCost: 1800,
+      otherCosts: 800,
+      waterRequirement: "Low",
+      durationDays: 110,
+      rainMin: 300,
+      rainMax: 500,
+      tempMin: 10,
+      tempMax: 25
+    },
+    Zaid: null
+  },
+  Potato: {
+    Kharif: null,
+    Rabi: {
+      typicalYieldMin: 80,
+      typicalYieldMax: 120,
+      seedCost: 8000,
+      fertilizerCost: 6000,
+      pesticideCost: 3000,
+      labourCost: 7000,
+      irrigationCost: 3000,
+      machineryCost: 2500,
+      otherCosts: 1500,
+      waterRequirement: "Medium",
+      durationDays: 100,
+      rainMin: 500,
+      rainMax: 800,
+      tempMin: 15,
+      tempMax: 22
+    },
+    Zaid: null
+  }
+};
+
 const CropEngine = {
   calculateSuitability(cropName, profile, weather) {
     const crop = CROP_KNOWLEDGE_BASE[cropName];
     if (!crop) return null;
+
+    const activeSeason = document.getElementById("calc-season")?.value || "kharif";
+    const activeSeasonNorm = activeSeason.charAt(0).toUpperCase() + activeSeason.slice(1).toLowerCase();
+    const seasonal = CROP_SEASONAL_DATA[cropName]?.[activeSeasonNorm];
 
     // Soil compatibility
     const cropSoil = crop.soil;
@@ -1063,49 +1424,49 @@ const CropEngine = {
       phScore = Math.max(40, Math.round(100 - diff * 40));
     }
 
-    // Temperature suitability
-    const temp = weather?.temp || 28;
-    let tempScore = 100;
-    if (temp < crop.tempMin) {
-      const diff = crop.tempMin - temp;
-      tempScore = Math.max(45, Math.round(100 - diff * 8));
-    } else if (temp > crop.tempMax) {
-      const diff = temp - crop.tempMax;
-      tempScore = Math.max(45, Math.round(100 - diff * 8));
-    }
+    // Temperature & Rainfall suitability (derived from seasonal profile if suitable)
+    let tempScore = 10;
+    let rainScore = 10;
+    let seasonScore = 10;
+    let waterScore = 50;
 
-    // Rainfall suitability
-    const rain = weather?.rainfall || 800;
-    let rainScore = 100;
-    if (rain < crop.rainMin) {
-      const diff = crop.rainMin - rain;
-      rainScore = Math.max(40, Math.round(100 - (diff / crop.rainMin) * 80));
-    } else if (rain > crop.rainMax) {
-      const diff = rain - crop.rainMax;
-      rainScore = Math.max(40, Math.round(100 - (diff / crop.rainMax) * 50));
-    }
+    if (seasonal) {
+      seasonScore = 100;
+      
+      const temp = weather?.temp || 28;
+      if (temp >= seasonal.tempMin && temp <= seasonal.tempMax) {
+        tempScore = 100;
+      } else {
+        const mid = (seasonal.tempMin + seasonal.tempMax) / 2;
+        const diff = Math.abs(temp - mid);
+        tempScore = Math.max(40, Math.round(100 - diff * 8));
+      }
 
-    // Water suitability
-    const waterAvail = (profile.water_availability || "Medium").toLowerCase();
-    let waterScore = 80;
-    if (crop.waterRequirement === "High") {
-      if (waterAvail === "high") waterScore = 100;
-      else if (waterAvail === "medium") waterScore = 70;
-      else waterScore = 40;
-    } else if (crop.waterRequirement === "Medium") {
-      if (waterAvail === "high") waterScore = 90;
-      else if (waterAvail === "medium") waterScore = 100;
-      else waterScore = 60;
-    } else {
-      if (waterAvail === "high") waterScore = 70;
-      else if (waterAvail === "medium") waterScore = 90;
-      else waterScore = 100;
-    }
+      const rain = weather?.rainfall || 800;
+      if (rain >= seasonal.rainMin && rain <= seasonal.rainMax) {
+        rainScore = 100;
+      } else {
+        const mid = (seasonal.rainMin + seasonal.rainMax) / 2;
+        const diff = Math.abs(rain - mid);
+        rainScore = Math.max(40, Math.round(100 - (diff / mid) * 80));
+      }
 
-    // Season suitability
-    const activeSeason = document.getElementById("calc-season")?.value || "Kharif";
-    const activeSeasonNorm = activeSeason.charAt(0).toUpperCase() + activeSeason.slice(1).toLowerCase();
-    const seasonScore = crop.seasons.includes(activeSeasonNorm) ? 100 : 25;
+      // Water suitability matching water requirement of this season
+      const waterAvail = (profile.water_availability || "Medium").toLowerCase();
+      if (seasonal.waterRequirement === "High") {
+        if (waterAvail === "high") waterScore = 100;
+        else if (waterAvail === "medium") waterScore = 60;
+        else waterScore = 20;
+      } else if (seasonal.waterRequirement === "Medium") {
+        if (waterAvail === "high") waterScore = 90;
+        else if (waterAvail === "medium") waterScore = 100;
+        else waterScore = 50;
+      } else {
+        if (waterAvail === "high") waterScore = 70;
+        else if (waterAvail === "medium") waterScore = 90;
+        else waterScore = 100;
+      }
+    }
 
     // Market score
     let marketScore = 80;
@@ -1128,9 +1489,8 @@ const CropEngine = {
       (phScore * 0.1) +
       (tempScore * 0.15) +
       (rainScore * 0.15) +
-      (waterScore * 0.15) +
-      (seasonScore * 0.15) +
-      (marketScore * 0.1)
+      (waterScore * 0.2) +
+      (seasonScore * 0.2)
     );
 
     return {
@@ -1148,9 +1508,24 @@ const CropEngine = {
 
   estimateYieldRange(cropName, suitabilityScore, landSize) {
     const crop = CROP_KNOWLEDGE_BASE[cropName];
-    const suitabilityFactor = 0.6 + (suitabilityScore / 100) * 0.4;
-    const yieldPerAcreMin = parseFloat((crop.typicalYieldMin * suitabilityFactor).toFixed(1));
-    const yieldPerAcreMax = parseFloat((crop.typicalYieldMax * suitabilityFactor).toFixed(1));
+    const activeSeason = document.getElementById("calc-season")?.value || "kharif";
+    const activeSeasonNorm = activeSeason.charAt(0).toUpperCase() + activeSeason.slice(1).toLowerCase();
+    const seasonal = CROP_SEASONAL_DATA[cropName]?.[activeSeasonNorm];
+
+    let baseMin = crop.typicalYieldMin;
+    let baseMax = crop.typicalYieldMax;
+    let seasonalPenalty = 1.0;
+
+    if (seasonal) {
+      baseMin = seasonal.typicalYieldMin;
+      baseMax = seasonal.typicalYieldMax;
+    } else {
+      seasonalPenalty = 0.2; // off-season penalty
+    }
+
+    const suitabilityFactor = 0.5 + (suitabilityScore / 100) * 0.5;
+    const yieldPerAcreMin = parseFloat((baseMin * suitabilityFactor * seasonalPenalty).toFixed(1));
+    const yieldPerAcreMax = parseFloat((baseMax * suitabilityFactor * seasonalPenalty).toFixed(1));
     
     return {
       yieldPerAcreMin,
@@ -1162,7 +1537,17 @@ const CropEngine = {
 
   calculateFinancials(cropName, yieldRange, landSize, mandiPrice) {
     const crop = CROP_KNOWLEDGE_BASE[cropName];
-    const costPerAcre = crop.cultivationCostPerAcre;
+    const activeSeason = document.getElementById("calc-season")?.value || "kharif";
+    const activeSeasonNorm = activeSeason.charAt(0).toUpperCase() + activeSeason.slice(1).toLowerCase();
+    const seasonal = CROP_SEASONAL_DATA[cropName]?.[activeSeasonNorm];
+
+    let costPerAcre = crop.cultivationCostPerAcre;
+    if (seasonal) {
+      costPerAcre = seasonal.seedCost + seasonal.fertilizerCost + seasonal.pesticideCost +
+                    seasonal.labourCost + seasonal.irrigationCost + seasonal.machineryCost +
+                    seasonal.otherCosts;
+    }
+
     const totalCost = Math.round(costPerAcre * landSize);
     
     const revenueMin = Math.round(yieldRange.expectedYieldMin * mandiPrice);
@@ -1171,9 +1556,18 @@ const CropEngine = {
     const profitMin = revenueMin - totalCost;
     const profitMax = revenueMax - totalCost;
     
-    const profitMarginMin = parseFloat(((profitMin / revenueMin) * 100).toFixed(1));
-    const profitMarginMax = parseFloat(((profitMax / revenueMax) * 100).toFixed(1));
+    const profitMarginMin = revenueMin > 0 ? parseFloat(((profitMin / revenueMin) * 100).toFixed(1)) : 0;
+    const profitMarginMax = revenueMax > 0 ? parseFloat(((profitMax / revenueMax) * 100).toFixed(1)) : 0;
     
+    // Deterministic ranges (+/-10% yield variance, +/-5% price variance, +/-5% cost variance)
+    const lowRev = Math.round((yieldRange.expectedYieldMin * 0.9) * (mandiPrice * 0.95));
+    const highRev = Math.round((yieldRange.expectedYieldMax * 1.1) * (mandiPrice * 1.1));
+    const lowCost = Math.round(totalCost * 0.95);
+    const highCost = Math.round(totalCost * 1.05);
+
+    const profitRangeMin = Math.round(lowRev - highCost);
+    const profitRangeMax = Math.round(highRev - lowCost);
+
     return {
       costPerAcre,
       totalCost,
@@ -1182,7 +1576,9 @@ const CropEngine = {
       profitMin,
       profitMax,
       profitMarginMin,
-      profitMarginMax
+      profitMarginMax,
+      profitRangeMin,
+      profitRangeMax
     };
   },
 
@@ -1302,10 +1698,163 @@ function getMandiPriceForCrop(cropName) {
   try {
     const marketSelect = document.getElementById("filter-mandi-market");
     const activeMarket = marketSelect ? marketSelect.value : "Nellore";
-    return getDemoMarketPrice(cropName, activeMarket);
+    const res = getDemoMarketPrice(cropName, activeMarket);
+    return res && typeof res === "object" ? res.modal : res;
   } catch (e) {
     return getDemoBasePriceForCrop(cropName);
   }
+}
+
+// Bind compareCropsBtn click event
+const compareCropsBtn = document.getElementById("compareCropsBtn");
+if (compareCropsBtn) {
+  compareCropsBtn.addEventListener("click", () => {
+    const checkedBoxes = document.querySelectorAll("input[name='crop_compare_pref']:checked");
+    const selectedCrops = Array.from(checkedBoxes).map(cb => cb.value);
+    
+    if (selectedCrops.length < 3 || selectedCrops.length > 5) {
+      alert("Please select between 3 and 5 crops to compare.");
+      return;
+    }
+    
+    const loading = document.getElementById("compareCropsLoading");
+    const resultBox = document.getElementById("advisorComparisonResultBox");
+    const tbody = document.getElementById("cropComparisonTableBody");
+    
+    if (loading) loading.style.display = "block";
+    if (resultBox) resultBox.style.display = "block";
+    tbody.innerHTML = "";
+
+    const profile = registeredFarmer || {
+      location: detectedLocationName || "Andhra Pradesh",
+      land_size_acres: 5.0,
+      soil_type: "Loamy",
+      soil_ph: 6.5,
+      water_availability: "Medium",
+      irrigation_method: "borewell"
+    };
+
+    const landSize = parseFloat(profile.land_size_acres) || 5.0;
+    const weather = latestWeatherState || {
+      temp: 28,
+      humidity: 75,
+      rainfall: 850,
+      status: "reference"
+    };
+
+    // Update Environmental Data Used Display
+    const usedLoc = document.getElementById("used-location");
+    const usedSoil = document.getElementById("used-soil");
+    const usedPh = document.getElementById("used-ph");
+    const usedWater = document.getElementById("used-water");
+    const usedSeason = document.getElementById("used-season");
+    const usedRain = document.getElementById("used-rainfall");
+    const usedTemp = document.getElementById("used-temp");
+    const usedMandi = document.getElementById("used-mandi");
+    const usedUpdated = document.getElementById("used-last-updated");
+
+    if (usedLoc) usedLoc.textContent = profile.location || "Not provided";
+    if (usedSoil) usedSoil.textContent = profile.soil_type || "Not provided";
+    if (usedPh) usedPh.textContent = profile.soil_ph || "Not provided";
+    if (usedWater) usedWater.textContent = profile.water_availability ? `${profile.water_availability} (${profile.irrigation_method || "None"})` : "Not provided";
+    if (usedSeason) usedSeason.textContent = document.getElementById("calc-season")?.value || "Kharif";
+    if (usedRain) usedRain.textContent = weather.rainfall ? `${weather.rainfall} mm` : "Not provided";
+    if (usedTemp) usedTemp.textContent = weather.temp ? `${weather.temp}°C` : "Not provided";
+    if (usedMandi) usedMandi.textContent = activeMandiData && !activeMandiData.isDemo ? "AGMARKNET (Live)" : "Reference/Demo Data";
+    if (usedUpdated) usedUpdated.textContent = new Date().toLocaleTimeString();
+
+    // Data Status Badge update
+    const statusBadge = document.getElementById("advisor-data-status-badge");
+    if (statusBadge) {
+      if (weather.status === "live" && activeMandiData && !activeMandiData.isDemo) {
+        statusBadge.textContent = "🟢 Live Weather & Market Data";
+        statusBadge.style.background = "#dcfce7";
+        statusBadge.style.color = "#166534";
+      } else if (weather.status === "live" || (activeMandiData && !activeMandiData.isDemo)) {
+        statusBadge.textContent = "🟡 Cached Environmental Records";
+        statusBadge.style.background = "#fef3c7";
+        statusBadge.style.color = "#92400e";
+      } else {
+        statusBadge.textContent = "🔵 Agricultural Reference Data";
+        statusBadge.style.background = "rgba(100, 116, 139, 0.1)";
+        statusBadge.style.color = "#64748b";
+      }
+    }
+
+    setTimeout(() => {
+      if (loading) loading.style.display = "none";
+      
+      const evaluationList = [];
+      selectedCrops.forEach(cropName => {
+        let price = getMandiPriceForCrop(cropName);
+        const evaluation = CropEngine.evaluateCrop(cropName, profile, weather, price, landSize);
+        evaluationList.push(evaluation);
+      });
+
+      tbody.innerHTML = "";
+      evaluationList.forEach(e => {
+        const tr = document.createElement("tr");
+        
+        const isTe = currentLang === "te";
+        const cropVal = `${e.icon} ${isTe ? translateMandiTerm(e.crop) : e.crop}`;
+        const scoreVal = `${e.suitability}%`;
+        const soilVal = `${e.scores.soilScore}%`;
+        const waterVal = isTe ? translateMandiTerm(CROP_KNOWLEDGE_BASE[e.crop].waterRequirement) : CROP_KNOWLEDGE_BASE[e.crop].waterRequirement;
+        const climateVal = `${e.scores.tempScore}%`;
+        const investVal = `₹${e.financials.totalCost.toLocaleString()}`;
+        const yieldVal = `${e.yieldRange.expectedYieldMin}–${e.yieldRange.expectedYieldMax} ${isTe ? "క్వింటాళ్ళు" : "Quintals"}`;
+        const revVal = `₹${e.financials.revenueMin.toLocaleString()}–₹${e.financials.revenueMax.toLocaleString()}`;
+        const profitVal = `₹${e.financials.profitMin.toLocaleString()}–₹${e.financials.profitMax.toLocaleString()}`;
+        const marginVal = `${e.financials.profitMarginMin}%–${e.financials.profitMarginMax}%`;
+        const riskVal = isTe ? translateMandiTerm(e.diseaseRisk) : e.diseaseRisk;
+        const demandVal = isTe ? translateMandiTerm(e.marketDemand) : e.marketDemand;
+        const priceVal = `₹${e.mandiPrice.toLocaleString()} / Qtl`;
+        const confVal = isTe ? translateMandiTerm(e.confidence) : e.confidence;
+
+        tr.innerHTML = `
+          <td><strong>${cropVal}</strong></td>
+          <td style="font-weight:600; color:var(--primary);">${scoreVal}</td>
+          <td>${soilVal}</td>
+          <td>${waterVal}</td>
+          <td>${climateVal}</td>
+          <td>${investVal}</td>
+          <td>${yieldVal}</td>
+          <td>${revVal}</td>
+          <td class="net-profit-val" style="font-weight:600;">${profitVal}</td>
+          <td>${marginVal}</td>
+          <td style="color:#eab308; font-size:11px;">${riskVal}</td>
+          <td>${demandVal}</td>
+          <td>${priceVal}</td>
+          <td style="font-size:11px; font-weight:600;">${confVal}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      const recs = CropRecommendation.findBestRecommendations(evaluationList);
+      if (recs) {
+        const isTe = currentLang === "te";
+        const bestNameEl = document.getElementById("bestCropNameText");
+        const bestExpEl = document.getElementById("bestCropExplanationText");
+        const bannerEl = document.getElementById("bestCropRecommendationBanner");
+        
+        if (bestNameEl) bestNameEl.textContent = isTe ? translateMandiTerm(recs.bestOverall.crop) : recs.bestOverall.crop;
+        
+        const explanationText = generateAIAdvisoryExplanation(recs.bestOverall);
+        
+        let choicesHtml = explanationText;
+        choicesHtml += `
+          <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(200, 200, 200, 0.1); display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; font-size: 11px; color:var(--text-main);">
+            <div>💎 <strong>${isTe ? "గరిష్ట లాభం:" : "Highest Profit:"}</strong> ${isTe ? translateMandiTerm(recs.highestProfit.crop) : recs.highestProfit.crop}</div>
+            <div>🤎 <strong>${isTe ? "మట్టికి అనుకూలం:" : "Best Soil Match:"}</strong> ${isTe ? translateMandiTerm(recs.bestSoil.crop) : recs.bestSoil.crop}</div>
+            <div>💧 <strong>${isTe ? "తక్కువ నీటి వాడకం:" : "Lowest Water:"}</strong> ${isTe ? translateMandiTerm(recs.lowestWater.crop) : recs.lowestWater.crop}</div>
+            <div>🛡️ <strong>${isTe ? "అతి తక్కువ ప్రమాదం:" : "Lowest Risk:"}</strong> ${isTe ? translateMandiTerm(recs.lowestRisk.crop) : recs.lowestRisk.crop}</div>
+          </div>
+        `;
+        if (bestExpEl) bestExpEl.innerHTML = choicesHtml;
+        if (bannerEl) bannerEl.style.display = "flex";
+      }
+    }, 500);
+  });
 }
 
 async function loadFarmRiskAssessment(profile, lat, lon) {
@@ -1993,39 +2542,110 @@ if (retryMandiPricesBtn) {
 document.getElementById("calculateProfitBtn").addEventListener("click", () => {
   const acres = parseFloat(document.getElementById("calc-acres").value) || 1;
   const body = document.getElementById("calc-results-body");
-  
-  const riceCost = Math.round(9000 * acres);
-  const riceRev = Math.round(52000 * acres);
-  const riceProfit = riceRev - riceCost;
-  
-  const nutsCost = Math.round(11000 * acres);
-  const nutsRev = Math.round(54800 * acres);
-  const nutsProfit = nutsRev - nutsCost;
-  
-  const isTe = currentLang === "te";
-  const riceLabel = isTe ? "వరి (ప్యాడీ)" : "Rice (Paddy)";
-  const groundnutLabel = isTe ? "వేరుశనగ" : "Groundnut";
-  const quintalsLabel = isTe ? "క్వింటాళ్లు" : "Quintals";
-  const winnerSuffix = isTe ? " 🏆 (ఉత్తమ ఎంపిక)" : " 🏆";
+  if (!body) return;
 
-  body.innerHTML = `
-    <tr class="best-performer" style="background-color: var(--primary-glow); border-left: 4px solid var(--primary);">
-      <td>🌾 ${riceLabel}${winnerSuffix}</td>
-      <td>₹${riceCost.toLocaleString()}</td>
-      <td>${Math.round(24 * acres)} ${quintalsLabel}</td>
-      <td>₹${riceRev.toLocaleString()}</td>
-      <td class="net-profit-val">₹${riceProfit.toLocaleString()}</td>
-      <td>${((riceProfit / riceRev)*100).toFixed(1)}%</td>
-    </tr>
-    <tr>
-      <td>🥜 ${groundnutLabel}</td>
-      <td>₹${nutsCost.toLocaleString()}</td>
-      <td>${Math.round(8 * acres)} ${quintalsLabel}</td>
-      <td>₹${nutsRev.toLocaleString()}</td>
-      <td class="net-profit-val">₹${nutsProfit.toLocaleString()}</td>
-      <td>${((nutsProfit / nutsRev)*100).toFixed(1)}%</td>
-    </tr>
-  `;
+  const profile = registeredFarmer || {
+    location: detectedLocationName || "Andhra Pradesh",
+    land_size_acres: acres,
+    soil_type: "Loamy",
+    soil_ph: 6.5,
+    water_availability: "Medium",
+    irrigation_method: "borewell"
+  };
+
+  // Temporarily override land size in profile to match user input
+  profile.land_size_acres = acres;
+
+  const weather = latestWeatherState || {
+    temp: 28,
+    humidity: 75,
+    rainfall: 850,
+    status: "reference"
+  };
+
+  const activeSeason = document.getElementById("calc-season")?.value || "kharif";
+  const activeSeasonNorm = activeSeason.charAt(0).toUpperCase() + activeSeason.slice(1).toLowerCase();
+
+  // Evaluate all crops in the knowledge base
+  const evaluationList = [];
+  Object.keys(CROP_KNOWLEDGE_BASE).forEach(cropName => {
+    let price = getMandiPriceForCrop(cropName);
+    const evaluation = CropEngine.evaluateCrop(cropName, profile, weather, price, acres);
+    if (evaluation) {
+      evaluationList.push(evaluation);
+    }
+  });
+
+  // Sort by suitability descending
+  evaluationList.sort((a, b) => b.suitability - a.suitability);
+
+  if (evaluationList.length === 0) return;
+
+  const isTe = currentLang === "te";
+  const winnerCrop = evaluationList[0];
+
+  body.innerHTML = "";
+  evaluationList.forEach((e, idx) => {
+    const tr = document.createElement("tr");
+    
+    // Highlight the best crop
+    if (idx === 0) {
+      tr.className = "best-performer";
+      tr.style.cssText = "background-color: var(--primary-glow); border-left: 4px solid var(--primary);";
+    }
+
+    const cropNameTranslated = isTe ? translateMandiTerm(e.crop) : e.crop;
+    const winnerSuffix = isTe ? " 🏆 (ఉత్తమ ఎంపిక)" : " 🏆 (Best choice)";
+    const cropLabel = `${e.icon} ${cropNameTranslated}${idx === 0 ? winnerSuffix : ""}`;
+    
+    const costText = `₹${e.financials.totalCost.toLocaleString()}`;
+    const yieldText = `${e.yieldRange.expectedYieldMin}–${e.yieldRange.expectedYieldMax} ${isTe ? "క్వింటాళ్ళు" : "Quintals"}`;
+    const revenueText = `₹${e.financials.revenueMin.toLocaleString()}–₹${e.financials.revenueMax.toLocaleString()}`;
+    const profitText = `₹${e.financials.profitMin.toLocaleString()}–₹${e.financials.profitMax.toLocaleString()}`;
+    const rangeText = `₹${e.financials.profitRangeMin.toLocaleString()} – ₹${e.financials.profitRangeMax.toLocaleString()}`;
+    const marginText = `${e.financials.profitMarginMin}%–${e.financials.profitMarginMax}%`;
+
+    tr.innerHTML = `
+      <td><strong>${cropLabel}</strong></td>
+      <td>${costText}</td>
+      <td>${yieldText}</td>
+      <td>${revenueText}</td>
+      <td class="net-profit-val" style="font-weight:600;">${profitText}</td>
+      <td style="font-weight:600; color: var(--primary);">${rangeText}</td>
+      <td>${marginText}</td>
+    `;
+    body.appendChild(tr);
+  });
+
+  // Populate "How was this estimate calculated?" details dynamically for the best crop choice
+  const breakdownLand = document.getElementById("breakdown-land");
+  const breakdownSeason = document.getElementById("breakdown-season");
+  const breakdownCrop = document.getElementById("breakdown-crop");
+  const breakdownYield = document.getElementById("breakdown-yield");
+  const breakdownPrice = document.getElementById("breakdown-price");
+  const breakdownCost = document.getElementById("breakdown-cost");
+  const breakdownRevenue = document.getElementById("breakdown-revenue");
+  const breakdownProfit = document.getElementById("breakdown-profit");
+  const breakdownRange = document.getElementById("breakdown-range");
+  const breakdownSource = document.getElementById("breakdown-source");
+
+  if (breakdownLand) breakdownLand.textContent = `${acres} ${isTe ? "ఎకరాలు" : "acres"}`;
+  if (breakdownSeason) breakdownSeason.textContent = activeSeasonNorm;
+  if (breakdownCrop) breakdownCrop.textContent = isTe ? translateMandiTerm(winnerCrop.crop) : winnerCrop.crop;
+  if (breakdownYield) breakdownYield.textContent = `${winnerCrop.yieldRange.yieldPerAcreMin}–${winnerCrop.yieldRange.yieldPerAcreMax} Qtl/acre`;
+  if (breakdownPrice) breakdownPrice.textContent = `₹${winnerCrop.mandiPrice.toLocaleString()} / Qtl`;
+  if (breakdownCost) breakdownCost.textContent = `₹${winnerCrop.financials.costPerAcre.toLocaleString()} / acre (Total: ₹${winnerCrop.financials.totalCost.toLocaleString()})`;
+  if (breakdownRevenue) breakdownRevenue.textContent = `₹${winnerCrop.financials.revenueMin.toLocaleString()} – ₹${winnerCrop.financials.revenueMax.toLocaleString()}`;
+  if (breakdownProfit) breakdownProfit.textContent = `₹${winnerCrop.financials.profitMin.toLocaleString()} – ₹${winnerCrop.financials.profitMax.toLocaleString()}`;
+  if (breakdownRange) breakdownRange.textContent = `₹${winnerCrop.financials.profitRangeMin.toLocaleString()} – ₹${winnerCrop.financials.profitRangeMax.toLocaleString()}`;
+  
+  if (breakdownSource) {
+    if (activeMandiData && !activeMandiData.isDemo) {
+      breakdownSource.textContent = "AGMARKNET / Gov India Daily Mandi Prices";
+    } else {
+      breakdownSource.textContent = "Reference Agricultural Data (Historical/Demo)";
+    }
+  }
 });
 
 // ---------- DOCTOR CROP & MULTIMODAL REMEDIES ----------
@@ -3844,9 +4464,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   
   // Restore the active session from localStorage.  Profiles are intentionally
   // not fetched from the server because Vercel has no persistent filesystem.
-  } catch (err) {
-    console.log("Auto-login error on reload:", err);
-  }
 
   // Bind Extension Services search inputs
   const schemeSearchInput = document.getElementById("scheme-search-input");
