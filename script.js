@@ -107,7 +107,9 @@ function translateMandiTerm(term) {
   
   let translated = String(term);
   for (const [en, te] of Object.entries(mappings)) {
-    const regex = new RegExp(en.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'gi');
+    const escaped = en.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const pattern = /^[a-z0-9\s]+$/i.test(en) ? `\\b${escaped}\\b` : escaped;
+    const regex = new RegExp(pattern, 'gi');
     translated = translated.replace(regex, te);
   }
   return translated;
