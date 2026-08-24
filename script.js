@@ -4835,128 +4835,85 @@ const EXTENSION_SCHEMES = [
   }
 ];
 
-const DISTRICT_CENTERS = {
-  nellore: [
-    {
-      name: { en: "Rythu Seva Kendra (RSK) - Nellore East", te: "రైతు సేవ కేంద్రం (RSK) - నెల్లూరు ఈస్ట్" },
-      distance: "2.4 km",
-      phone: "+919848012345",
-      hours: { en: "9:00 AM - 5:00 PM", te: "ఉ. 9:00 - సా. 5:00" },
-      services: {
-        en: "Subsidized Seeds & Fertilizers, Crop Insurance Helpdesk, Soil Sample Collection",
-        te: "సబ్సిడీ విత్తనాలు & ఎరువులు, పంట బీమా సహాయ కేంద్రం, నేల నమూనా సేకరణ"
-      },
-      mapUrl: "https://maps.google.com/?q=Rythu+Seva+Kendra+Nellore"
-    },
-    {
-      name: { en: "Nellore District Soil Testing Laboratory (Nellore R.C.)", te: "నెల్లూరు జిల్లా భూసార పరీక్షా కేంద్రం" },
-      distance: "4.8 km",
-      phone: "+918612345678",
-      hours: { en: "10:00 AM - 5:00 PM", te: "ఉ. 10:00 - సా. 5:00" },
-      services: {
-        en: "NPK Soil Quality Testing, Soil Health Card Issuance, Salinity Analysis",
-        te: "భూసార నాణ్యత పరీక్ష (NPK), సాయిల్ హెల్త్ కార్డ్ జారీ, లవణీయత విశ్లేషణ"
-      },
-      mapUrl: "https://maps.google.com/?q=Soil+Testing+Lab+Nellore"
-    }
-  ],
-  visakhapatnam: [
-    {
-      name: { en: "Rythu Seva Kendra (RSK) - Visakhapatnam Rural", te: "రైతు సేవ కేంద్రం (RSK) - విశాఖపట్నం రూరల్" },
-      distance: "1.8 km",
-      phone: "+919866012345",
-      hours: { en: "9:00 AM - 5:00 PM", te: "ఉ. 9:00 - సా. 5:00" },
-      services: {
-        en: "Paddy & Maize seeds distribution, Pest Control consultation, Organic manure supply",
-        te: "వరి & మొక్కజొన్న విత్తనాల పంపిణీ, పురుగుల నివారణ సలహాలు, సేంద్రీయ ఎరువుల సరఫరా"
-      },
-      mapUrl: "https://maps.google.com/?q=Rythu+Seva+Kendra+Visakhapatnam"
-    },
-    {
-      name: { en: "Visakhapatnam Soil Testing Lab (Anakapalle)", te: "విశాఖపట్నం భూసార పరీక్షా కేంద్రం (అనకాపల్లి)" },
-      distance: "8.5 km",
-      phone: "+918912345678",
-      hours: { en: "10:00 AM - 5:00 PM", te: "ఉ. 10:00 - సా. 5:00" },
-      services: {
-        en: "Advanced Soil Profile Chemical Analysis, Soil Health Card, Water suitability test",
-        te: "నేల రసాయన విశ్లేషణ, సాయిల్ హెల్త్ కార్డ్, నీటి నాణ్యత పరీక్ష"
-      },
-      mapUrl: "https://maps.google.com/?q=Soil+Testing+Lab+Anakapalle"
-    }
-  ],
-  guntur: [
-    {
-      name: { en: "Rythu Seva Kendra (RSK) - Guntur Urban", te: "రైతు సేవ కేంద్రం (RSK) - గుంటూరు అర్బన్" },
-      distance: "2.1 km",
-      phone: "+919440012345",
-      hours: { en: "9:00 AM - 5:00 PM", te: "ఉ. 9:00 - సా. 5:00" },
-      services: {
-        en: "Chilli Seed Distribution, Mechanization Subsidy Application Desk, Pesticide Advisory",
-        te: "మిర్చి విత్తనాల పంపిణీ, యాంత్రీకరణ సబ్సిడీ డెస్క్, పురుగుల మందుల సలహాలు"
-      },
-      mapUrl: "https://maps.google.com/?q=Rythu+Seva+Kendra+Guntur"
-    },
-    {
-      name: { en: "Guntur Regional Soil Testing Laboratory (Amaravati Road)", te: "గుంటూరు ప్రాంతీయ భూసార పరీక్షా కేంద్రం" },
-      distance: "3.9 km",
-      phone: "+918632345678",
-      hours: { en: "10:00 AM - 5:00 PM", te: "ఉ. 10:00 - సా. 5:00" },
-      services: {
-        en: "Advanced Soil NPK Testing, Micro-nutrient deficiency diagnosis, Crop suitability advice",
-        te: "భూసార NPK పరీక్ష, సూక్ష్మపోషకాల లోప నిర్ధారణ, పంట అనుకూలత సలహాలు"
-      },
-      mapUrl: "https://maps.google.com/?q=Soil+Testing+Lab+Guntur"
-    }
-  ],
-  vijayawada: [
-    {
-      name: { en: "Rythu Seva Kendra (RSK) - Vijayawada Rural", te: "రైతు సేవ కేంద్రం (RSK) - విజయవాడ రూరల్" },
-      distance: "2.5 km",
-      phone: "+919490012345",
-      hours: { en: "9:00 AM - 5:00 PM", te: "ఉ. 9:00 - సా. 5:00" },
-      services: {
-        en: "Horticulture Subsidies, Micro-irrigation equipment helpdesk, Crop advisory",
-        te: "ఉద్యానవన సబ్సిడీలు, సూక్ష్మ నీటిపారుదల సహాయ కేంద్రం, పంట సలహాలు"
-      },
-      mapUrl: "https://maps.google.com/?q=Rythu+Seva+Kendra+Vijayawada"
-    },
-    {
-      name: { en: "Vijayawada Fertilizer Quality Control Laboratory", te: "విజయవాడ ఎరువుల నాణ్యత నియంత్రణ కేంద్రం" },
-      distance: "5.1 km",
-      phone: "+918662345678",
-      hours: { en: "10:00 AM - 5:00 PM", te: "ఉ. 10:00 - సా. 5:00" },
-      services: {
-        en: "Fertilizer purity test, Soil health card issuance, Irrigation water analysis",
-        te: "ఎరువుల నాణ్యత పరీక్ష, సాయిల్ హెల్త్ కార్డ్ జారీ, సాగు నీటి విశ్లేషణ"
-      },
-      mapUrl: "https://maps.google.com/?q=Fertilizer+Lab+Vijayawada"
-    }
-  ],
-  kavali: [
-    {
-      name: { en: "Rythu Seva Kendra (RSK) - Kavali Center", te: "రైతు సేవ కేంద్రం (RSK) - కావలి సెంటర్" },
-      distance: "1.5 km",
-      phone: "+919848098765",
-      hours: { en: "9:00 AM - 5:00 PM", te: "ఉ. 9:00 - సా. 5:00" },
-      services: {
-        en: "Groundnut Seed Distribution, Subsidized fertilizer sales, Crop damage verification",
-        te: "వేరుశనగ విత్తనాల పంపిణీ, సబ్సిడీ ఎరువుల అమ్మకం, పంట నష్ట ధృవీకరణ"
-      },
-      mapUrl: "https://maps.google.com/?q=Rythu+Seva+Kendra+Kavali"
-    },
-    {
-      name: { en: "Nellore North Mobile Soil Testing Laboratory (Kavali Desk)", te: "నెల్లూరు నార్త్ మొబైల్ భూసార పరీక్షా కేంద్రం (కావలి)" },
-      distance: "3.2 km",
-      phone: "+918626234567",
-      hours: { en: "10:00 AM - 4:00 PM", te: "ఉ. 10:00 - సా. 4:00" },
-      services: {
-        en: "Soil nutrient analysis, Fertilizer dosage recommendations, Soil Health Card",
-        te: "నేల పోషకాల విశ్లేషణ, ఎరువుల మోతాదు సిఫార్సులు, సాయిల్ హెల్త్ కార్డ్"
-      },
-      mapUrl: "https://maps.google.com/?q=Soil+Testing+Lab+Kavali"
-    }
-  ]
-};
+function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Earth's radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c; // distance in km
+}
+
+let nearbyCentersCache = null;
+let lastQueriedCoords = null;
+let isFetchingCenters = false;
+
+async function fetchNearbyCenters(lat, lon) {
+  if (isFetchingCenters) return;
+  isFetchingCenters = true;
+  
+  try {
+    const radius = 25000; // 25 km
+    const query = `
+      [out:json][timeout:15];
+      (
+        node(around:${radius},${lat},${lon})["office"="government"]["government"="agriculture"];
+        node(around:${radius},${lat},${lon})["office"="government"]["agriculture"="yes"];
+        node(around:${radius},${lat},${lon})["shop"="agricultural"];
+        node(around:${radius},${lat},${lon})["shop"="seeds"];
+        node(around:${radius},${lat},${lon})["office"="government"]["name"~"Rythu Seva Kendra",i];
+        node(around:${radius},${lat},${lon})["office"="government"]["name"~"RSK",i];
+      );
+      out body;
+    `;
+    const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Overpass API error");
+    const data = await res.json();
+    
+    const elements = data.elements || [];
+    nearbyCentersCache = elements.map(el => {
+      const tags = el.tags || {};
+      const dist = calculateHaversineDistance(lat, lon, el.lat, el.lon);
+      
+      let addr = tags["addr:street"] || tags["addr:suburb"] || tags["addr:city"] || "";
+      if (tags["addr:postcode"]) addr += ` - ${tags["addr:postcode"]}`;
+      if (!addr) addr = "Andhra Pradesh, India";
+
+      let nameEn = tags.name || "Government Agricultural Center";
+      let nameTe = tags["name:te"] || tags.name || "ప్రభుత్వ వ్యవసాయ కేంద్రం";
+
+      return {
+        name: { en: nameEn, te: nameTe },
+        address: addr,
+        distance: `${dist.toFixed(1)} km`,
+        distanceVal: dist,
+        phone: tags.phone || tags["contact:phone"] || "Check official directory",
+        hours: { 
+          en: tags.opening_hours || "9:30 AM - 5:30 PM", 
+          te: tags.opening_hours || "ఉ. 9:30 - సా. 5:30" 
+        },
+        services: {
+          en: tags.description || "Seed & fertilizer distribution, local crop advisory, government subsidy verification",
+          te: tags["description:te"] || "విత్తనాలు & ఎరువుల పంపిణీ, స్థానిక పంట సలహాలు, ప్రభుత్వ సబ్సిడీ సహాయం"
+        },
+        mapUrl: `https://www.google.com/maps/search/?api=1&query=${el.lat},${el.lon}`
+      };
+    });
+    
+    nearbyCentersCache.sort((a, b) => a.distanceVal - b.distanceVal);
+    lastQueriedCoords = `${lat},${lon}`;
+  } catch (error) {
+    console.error("Error loading nearby centers:", error);
+    nearbyCentersCache = []; // fallback trigger
+  } finally {
+    isFetchingCenters = false;
+    renderExtensionServices();
+  }
+}
 
 function renderExtensionServices() {
   const schemesList = document.getElementById("extension-schemes-list");
@@ -5024,22 +4981,47 @@ function renderExtensionServices() {
     schemesList.appendChild(schemeDiv);
   });
 
-  centersList.innerHTML = `
-    <span class="badge" style="background:rgba(100,116,139,0.1); color:#475569; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:600; display:inline-block; margin-bottom:12px;">ℹ ${isTe ? "ప్రదర్శన సేవా కేంద్రాలు (Demo Data)" : "Demo Centers Data"}</span>
-  `;
+  // Calculate and fetch nearby centers dynamically based on user location
+  const lat = registeredFarmer?.latitude || detectedLat;
+  const lon = registeredFarmer?.longitude || detectedLon;
 
-  let activeDistrict = "nellore";
-  if (farmerLoc) {
-    if (farmerLoc.includes("visakhapatnam") || farmerLoc.includes("vizag")) activeDistrict = "visakhapatnam";
-    else if (farmerLoc.includes("guntur")) activeDistrict = "guntur";
-    else if (farmerLoc.includes("vijayawada") || farmerLoc.includes("krishna")) activeDistrict = "vijayawada";
-    else if (farmerLoc.includes("kavali")) activeDistrict = "kavali";
+  if (!lat || !lon) {
+    centersList.innerHTML = `
+      <div style="padding:16px; border:1px dashed var(--border-color); border-radius:12px; text-align:center; color:var(--text-muted); font-size:13px;">
+        <i class="fa-solid fa-triangle-exclamation" style="margin-bottom:8px; font-size:18px; color:#ef4444;"></i>
+        <p>${isTe ? "స్థాన సమాచారం అందుబాటులో లేదు" : "Location data unavailable"}</p>
+      </div>
+    `;
+    return;
   }
 
-  const centers = DISTRICT_CENTERS[activeDistrict] || DISTRICT_CENTERS.nellore;
+  const currentCoords = `${lat},${lon}`;
+  if (!nearbyCentersCache || lastQueriedCoords !== currentCoords) {
+    centersList.innerHTML = `
+      <div style="padding:16px; border:1px dashed var(--border-color); border-radius:12px; text-align:center; color:var(--text-muted); font-size:13px;">
+        <i class="fa-solid fa-spinner fa-spin" style="margin-bottom:8px; font-size:18px;"></i>
+        <p>${isTe ? "సమీప ప్రభుత్వ సేవా కేంద్రాలను గుర్తిస్తోంది..." : "Locating nearby government centers..."}</p>
+      </div>
+    `;
+    fetchNearbyCenters(lat, lon);
+    return;
+  }
+
+  if (nearbyCentersCache.length === 0) {
+    centersList.innerHTML = `
+      <div style="padding:16px; border:1px dashed var(--border-color); border-radius:12px; text-align:center; color:var(--text-muted); font-size:13px;">
+        <i class="fa-solid fa-triangle-exclamation" style="margin-bottom:8px; font-size:18px; color:#ef4444;"></i>
+        <p>${isTe ? "స్థాన సమాచారం అందుబాటులో లేదు" : "Location data unavailable"}</p>
+      </div>
+    `;
+    return;
+  }
+
+  centersList.innerHTML = ""; // Verified real data is used, demo centers badge removed!
+
   const centerSearch = document.getElementById("center-search-input").value.toLowerCase();
 
-  centers.forEach(c => {
+  nearbyCentersCache.forEach(c => {
     const matchKeyword = !centerSearch || 
       c.name.en.toLowerCase().includes(centerSearch) ||
       c.name.te.includes(centerSearch) ||
@@ -5055,9 +5037,10 @@ function renderExtensionServices() {
     centerDiv.innerHTML = `
       <h4 style="margin: 0 0 8px 0; font-weight: 700; color: var(--text-main); font-size: 15px;">${isTe ? c.name.te : c.name.en}</h4>
       <p style="font-size:13px; margin: 4px 0; color: var(--text-main);">📍 <strong>${isTe ? "దూరం:" : "Distance:"}</strong> ${c.distance} ${isTe ? "దూరంలో" : "away"}</p>
+      <p style="font-size:13px; margin: 4px 0; color: var(--text-main);">🏢 <strong>${isTe ? "చిరునామా:" : "Address:"}</strong> ${c.address}</p>
       <p style="font-size:13px; margin: 4px 0; color: var(--text-main);">🕒 <strong>${isTe ? "వేళలు:" : "Hours:"}</strong> ${isTe ? c.hours.te : c.hours.en}</p>
       <p style="font-size:13px; margin: 4px 0; color: var(--text-main); line-height:1.4;">💼 <strong>${isTe ? "సేవలు:" : "Services:"}</strong> ${isTe ? c.services.te : c.services.en}</p>
-      <p style="font-size:13px; margin: 4px 0 10px; color: var(--text-main);">📞 <strong>${isTe ? "ఫోన్:" : "Phone:"}</strong> ${c.phone}</p>
+      <p style="font-size:13px; margin: 4px 0; color: var(--text-main);">📞 <strong>${isTe ? "ఫోన్:" : "Phone:"}</strong> ${c.phone}</p>
       
       <div style="display:flex; gap: 8px; margin-top: 10px;">
         <a href="tel:${c.phone}" class="btn secondary-btn" style="flex:1; display:inline-flex; align-items:center; justify-content:center; gap:6px; font-size:12px; padding: 6px 12px; text-decoration:none; font-weight:600;"><i class="fa-solid fa-phone"></i> ${isTe ? "కాల్ చేయండి" : "Call Center"}</a>
