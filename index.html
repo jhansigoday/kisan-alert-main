@@ -849,31 +849,121 @@
             <p style="color: var(--text-muted); max-width: 450px; font-size: 14px; line-height: 1.5;">Your analytics will become available after your farm information and farming activity have been recorded.</p>
           </div>
 
-          <!-- Active Analytics Content -->
-          <div class="analytics-grid" id="analyticsChartsBox" style="display: none; margin-top: 16px;">
-            <div class="analytics-chart-card">
-              <h3>Net Profit Yield Trends</h3>
-              <div class="chart-container-medium">
-                <canvas id="profitTrendChart"></canvas>
+          <!-- Active Analytics Content Wrapper -->
+          <div id="analyticsChartsBox" style="display: none; margin-top: 16px;">
+            <!-- Analytics Filters -->
+            <div class="analytics-filters-row" style="display: flex; flex-wrap: wrap; gap: 12px; padding: 12px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 16px;">
+              <div class="filter-group" style="display: flex; align-items: center; gap: 8px;">
+                <label for="filter-year" style="font-weight: 600; font-size: 13px; color: var(--text-main);">Year:</label>
+                <select id="filter-year" style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main); font-size: 13px; cursor: pointer;"></select>
+              </div>
+              <div class="filter-group" style="display: flex; align-items: center; gap: 8px;">
+                <label for="filter-season" style="font-weight: 600; font-size: 13px; color: var(--text-main);">Season:</label>
+                <select id="filter-season" style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main); font-size: 13px; cursor: pointer;"></select>
+              </div>
+              <div class="filter-group" style="display: flex; align-items: center; gap: 8px;">
+                <label for="filter-crop" style="font-weight: 600; font-size: 13px; color: var(--text-main);">Crop:</label>
+                <select id="filter-crop" style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main); font-size: 13px; cursor: pointer;"></select>
+              </div>
+              <div class="filter-group" style="display: flex; align-items: center; gap: 8px;">
+                <label for="filter-location" style="font-weight: 600; font-size: 13px; color: var(--text-main);">Location:</label>
+                <select id="filter-location" style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main); font-size: 13px; cursor: pointer;"></select>
+              </div>
+              <div style="margin-left: auto; display: flex; align-items: center;">
+                <span id="data-source-badge" style="font-size: 11px; font-weight: 600; padding: 4px 8px; border-radius: 4px; background: rgba(16, 185, 129, 0.1); color: var(--primary);">Demo historical data</span>
               </div>
             </div>
-            
-            <div class="analytics-chart-card">
-              <h3>Rainfall History (mm)</h3>
-              <div class="chart-container-medium">
-                <canvas id="rainHistoryChart"></canvas>
+
+            <!-- Quick Statistics Cards Grid -->
+            <div class="analytics-stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 16px;">
+              <!-- Net Profit Card -->
+              <div class="analytics-stat-card" style="padding: 16px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 13px; color: var(--text-muted); font-weight: 600;">Net Profit</span>
+                  <i class="fa-solid fa-indian-rupee-sign" style="color: var(--primary);"></i>
+                </div>
+                <div id="stat-net-profit" style="font-size: 24px; font-weight: 700; margin-top: 8px; color: var(--text-main);">₹0.00</div>
+                <div id="stat-net-profit-change" style="font-size: 12px; margin-top: 6px; font-weight: 600; color: #10b981;">↑ 0% vs previous season</div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px; display: flex; justify-content: space-between;">
+                  <span>Rev: <span id="stat-revenue">₹0.00</span></span>
+                  <span>Cost: <span id="stat-cost">₹0.00</span></span>
+                </div>
+              </div>
+              
+              <!-- Yield Card -->
+              <div class="analytics-stat-card" style="padding: 16px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 13px; color: var(--text-muted); font-weight: 600;">Average Yield</span>
+                  <i class="fa-solid fa-wheat-awn" style="color: #eab308;"></i>
+                </div>
+                <div id="stat-yield" style="font-size: 20px; font-weight: 700; margin-top: 8px; color: var(--text-main);">0.0 quintals/acre</div>
+                <div id="stat-yield-change" style="font-size: 12px; margin-top: 6px; font-weight: 600; color: #10b981;">↑ 0% vs previous season</div>
+              </div>
+              
+              <!-- Rainfall Card -->
+              <div class="analytics-stat-card" style="padding: 16px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 13px; color: var(--text-muted); font-weight: 600;">Rainfall</span>
+                  <i class="fa-solid fa-cloud-showers-water" style="color: #3b82f6;"></i>
+                </div>
+                <div id="stat-rainfall" style="font-size: 24px; font-weight: 700; margin-top: 8px; color: var(--text-main);">0 mm</div>
+                <div id="stat-rainfall-compare" style="font-size: 12px; margin-top: 6px; font-weight: 600; color: #ef4444;">0% below average</div>
+              </div>
+              
+              <!-- Water Efficiency Card -->
+              <div class="analytics-stat-card" style="padding: 16px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 13px; color: var(--text-muted); font-weight: 600;">Water Efficiency</span>
+                  <i class="fa-solid fa-droplet" style="color: #0ea5e9;"></i>
+                </div>
+                <div id="stat-water-efficiency" style="font-size: 14px; font-weight: 700; margin-top: 8px; color: var(--text-main); line-height: 1.4;">Water Used: 0 L/acre</div>
+                <div id="stat-water-savings" style="font-size: 12px; margin-top: 6px; font-weight: 600; color: var(--primary);">Potential Saving: N/A</div>
               </div>
             </div>
-            
-            <div class="analytics-summary-box">
-              <h3>Quick Statistics</h3>
-              <div class="stat-bubble">
-                <span class="label">Total Profit (2025)</span>
-                <span class="value" id="analytics-total-profit">₹3,42,000</span>
+
+            <!-- Charts Container Grid -->
+            <div class="analytics-charts-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-bottom: 16px;">
+              <!-- Net Profit by Season Card -->
+              <div class="analytics-chart-card" style="padding: 16px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px;">
+                <h3 style="font-size: 15px; font-weight: 600; color: var(--text-main); margin-bottom: 12px;">Net Profit by Season</h3>
+                <div class="chart-container-medium" style="position: relative; height: 260px;">
+                  <canvas id="profitTrendChart"></canvas>
+                </div>
               </div>
-              <div class="stat-bubble">
-                <span class="label">Water Savings (Drip)</span>
-                <span class="value" id="analytics-water-savings">+35% efficiency</span>
+              
+              <!-- Crop Yield Trends Card -->
+              <div class="analytics-chart-card" style="padding: 16px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px;">
+                <h3 style="font-size: 15px; font-weight: 600; color: var(--text-main); margin-bottom: 12px;">Crop Yield Trends</h3>
+                <div class="chart-container-medium" style="position: relative; height: 260px;">
+                  <canvas id="yieldTrendChart"></canvas>
+                </div>
+              </div>
+              
+              <!-- Rainfall vs Historical Average Card -->
+              <div class="analytics-chart-card" style="padding: 16px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px;">
+                <h3 style="font-size: 15px; font-weight: 600; color: var(--text-main); margin-bottom: 12px;">Rainfall vs Historical Average</h3>
+                <div class="chart-container-medium" style="position: relative; height: 260px;">
+                  <canvas id="rainHistoryChart"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <!-- Insights & Profit Change Grid -->
+            <div class="analytics-insights-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
+              <!-- AI Insights Card -->
+              <div class="analytics-insights-card" style="padding: 16px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px;">
+                <h3 style="font-size: 15px; font-weight: 600; color: var(--text-main); margin-bottom: 12px;"><i class="fa-solid fa-robot" style="color: var(--primary); margin-right: 6px;"></i>🤖 AI Farm Insights</h3>
+                <div id="ai-insights-list" style="display: flex; flex-direction: column; gap: 10px; font-size: 13.5px; line-height: 1.5; color: var(--text-main);">
+                  <!-- Dynamic Insights Bullet List -->
+                </div>
+              </div>
+              
+              <!-- Why did my profit change Card -->
+              <div class="analytics-profit-change-card" style="padding: 16px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px;">
+                <h3 style="font-size: 15px; font-weight: 600; color: var(--text-main); margin-bottom: 12px;"><i class="fa-solid fa-arrow-trend-up" style="color: var(--primary); margin-right: 6px;"></i>Why did my profit change?</h3>
+                <div id="profit-factors-container" style="display: flex; flex-direction: column; gap: 8px; font-size: 13px; line-height: 1.4; color: var(--text-main);">
+                  <!-- Dynamic Profit Factor Breakdown -->
+                </div>
               </div>
             </div>
           </div>
