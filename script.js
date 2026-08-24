@@ -1694,15 +1694,38 @@ function generateAIAdvisoryExplanation(evalItem) {
   return explanation;
 }
 
-function getMandiPriceForCrop(cropName) {
+function getMandiPriceForCrop(crop) {
+  if (!crop) return 2000;
+  
+  // 1. Try to get cached official mandi price
+  try {
+    const cacheKey = `krushakseva_mandi_cache_${crop.toLowerCase().replace(/\s+/g, "_")}`;
+    const cached = JSON.parse(localStorage.getItem(cacheKey) || "null");
+    if (cached && cached.data && cached.data.nearest_markets && cached.data.nearest_markets.length) {
+      const prices = cached.data.nearest_markets.map(m => Number(m.price ?? m.modal_price)).filter(Number.isFinite);
+      if (prices.length) {
+        return Math.round(prices.reduce((a, b) => a + b, 0) / prices.length);
+      }
+    }
+  } catch (err) {
+    console.log("Could not read mandi price from cache:", err);
+  }
+
+  // 2. Try to get demo market price for the selected market
   try {
     const marketSelect = document.getElementById("filter-mandi-market");
     const activeMarket = marketSelect ? marketSelect.value : "Nellore";
-    const res = getDemoMarketPrice(cropName, activeMarket);
-    return res && typeof res === "object" ? res.modal : res;
-  } catch (e) {
-    return getDemoBasePriceForCrop(cropName);
-  }
+    const res = getDemoMarketPrice(crop, activeMarket);
+    if (res && typeof res === "object" && res.modal) {
+      return res.modal;
+    }
+    if (typeof res === "number") {
+      return res;
+    }
+  } catch (e) {}
+
+  // 3. Fallback to base reference crop price
+  return getDemoBasePriceForCrop(crop);
 }
 
 // Bind compareCropsBtn click event
@@ -1712,8 +1735,8 @@ if (compareCropsBtn) {
     const checkedBoxes = document.querySelectorAll("input[name='crop_compare_pref']:checked");
     const selectedCrops = Array.from(checkedBoxes).map(cb => cb.value);
     
-    if (selectedCrops.length < 3 || selectedCrops.length > 5) {
-      alert("Please select between 3 and 5 crops to compare.");
+    if (selectedCrops.length < 3) {
+      alert("Please select at least 3 crops to compare.");
       return;
     }
     
@@ -1782,76 +1805,91 @@ if (compareCropsBtn) {
     }
 
     setTimeout(() => {
-      if (loading) loading.style.display = "none";
-      
-      const evaluationList = [];
-      selectedCrops.forEach(cropName => {
-        let price = getMandiPriceForCrop(cropName);
-        const evaluation = CropEngine.evaluateCrop(cropName, profile, weather, price, landSize);
-        evaluationList.push(evaluation);
-      });
-
-      tbody.innerHTML = "";
-      evaluationList.forEach(e => {
-        const tr = document.createElement("tr");
+      try {
+        if (loading) loading.style.display = "none";
         
-        const isTe = currentLang === "te";
-        const cropVal = `${e.icon} ${isTe ? translateMandiTerm(e.crop) : e.crop}`;
-        const scoreVal = `${e.suitability}%`;
-        const soilVal = `${e.scores.soilScore}%`;
-        const waterVal = isTe ? translateMandiTerm(CROP_KNOWLEDGE_BASE[e.crop].waterRequirement) : CROP_KNOWLEDGE_BASE[e.crop].waterRequirement;
-        const climateVal = `${e.scores.tempScore}%`;
-        const investVal = `₹${e.financials.totalCost.toLocaleString()}`;
-        const yieldVal = `${e.yieldRange.expectedYieldMin}–${e.yieldRange.expectedYieldMax} ${isTe ? "క్వింటాళ్ళు" : "Quintals"}`;
-        const revVal = `₹${e.financials.revenueMin.toLocaleString()}–₹${e.financials.revenueMax.toLocaleString()}`;
-        const profitVal = `₹${e.financials.profitMin.toLocaleString()}–₹${e.financials.profitMax.toLocaleString()}`;
-        const marginVal = `${e.financials.profitMarginMin}%–${e.financials.profitMarginMax}%`;
-        const riskVal = isTe ? translateMandiTerm(e.diseaseRisk) : e.diseaseRisk;
-        const demandVal = isTe ? translateMandiTerm(e.marketDemand) : e.marketDemand;
-        const priceVal = `₹${e.mandiPrice.toLocaleString()} / Qtl`;
-        const confVal = isTe ? translateMandiTerm(e.confidence) : e.confidence;
+        const evaluationList = [];
+        selectedCrops.forEach(cropName => {
+          let price = getMandiPriceForCrop(cropName);
+          const evaluation = CropEngine.evaluateCrop(cropName, profile, weather, price, landSize);
+          evaluationList.push(evaluation);
+        });
 
-        tr.innerHTML = `
-          <td><strong>${cropVal}</strong></td>
-          <td style="font-weight:600; color:var(--primary);">${scoreVal}</td>
-          <td>${soilVal}</td>
-          <td>${waterVal}</td>
-          <td>${climateVal}</td>
-          <td>${investVal}</td>
-          <td>${yieldVal}</td>
-          <td>${revVal}</td>
-          <td class="net-profit-val" style="font-weight:600;">${profitVal}</td>
-          <td>${marginVal}</td>
-          <td style="color:#eab308; font-size:11px;">${riskVal}</td>
-          <td>${demandVal}</td>
-          <td>${priceVal}</td>
-          <td style="font-size:11px; font-weight:600;">${confVal}</td>
+        tbody.innerHTML = "";
+        evaluationList.forEach(e => {
+          const tr = document.createElement("tr");
+          
+          const isTe = currentLang === "te";
+          const cropVal = `${e.icon} ${isTe ? translateMandiTerm(e.crop) : e.crop}`;
+          const scoreVal = `${e.suitability}%`;
+          const soilVal = `${e.scores.soilScore}%`;
+          const waterVal = isTe ? translateMandiTerm(CROP_KNOWLEDGE_BASE[e.crop].waterRequirement) : CROP_KNOWLEDGE_BASE[e.crop].waterRequirement;
+          const climateVal = `${e.scores.tempScore}%`;
+          const investVal = `₹${e.financials.totalCost.toLocaleString()}`;
+          const yieldVal = `${e.yieldRange.expectedYieldMin}–${e.yieldRange.expectedYieldMax} ${isTe ? "క్వింటాళ్ళు" : "Quintals"}`;
+          const revVal = `₹${e.financials.revenueMin.toLocaleString()}–₹${e.financials.revenueMax.toLocaleString()}`;
+          const profitVal = `₹${e.financials.profitMin.toLocaleString()}–₹${e.financials.profitMax.toLocaleString()}`;
+          const marginVal = `${e.financials.profitMarginMin}%–${e.financials.profitMarginMax}%`;
+          const riskVal = isTe ? translateMandiTerm(CROP_KNOWLEDGE_BASE[e.crop].diseaseRisk) : CROP_KNOWLEDGE_BASE[e.crop].diseaseRisk;
+          const demandVal = isTe ? translateMandiTerm(CROP_KNOWLEDGE_BASE[e.crop].marketDemand) : CROP_KNOWLEDGE_BASE[e.crop].marketDemand;
+          const priceVal = `₹${e.mandiPrice.toLocaleString()} / Qtl`;
+          const confVal = isTe ? translateMandiTerm(e.confidence) : e.confidence;
+
+          tr.innerHTML = `
+            <td><strong>${cropVal}</strong></td>
+            <td style="font-weight:600; color:var(--primary);">${scoreVal}</td>
+            <td>${soilVal}</td>
+            <td>${waterVal}</td>
+            <td>${climateVal}</td>
+            <td>${investVal}</td>
+            <td>${yieldVal}</td>
+            <td>${revVal}</td>
+            <td class="net-profit-val" style="font-weight:600;">${profitVal}</td>
+            <td>${marginVal}</td>
+            <td style="color:#eab308; font-size:11px;">${riskVal}</td>
+            <td>${demandVal}</td>
+            <td>${priceVal}</td>
+            <td style="font-size:11px; font-weight:600;">${confVal}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        const recs = CropRecommendation.findBestRecommendations(evaluationList);
+        if (recs) {
+          const isTe = currentLang === "te";
+          const bestNameEl = document.getElementById("bestCropNameText");
+          const bestExpEl = document.getElementById("bestCropExplanationText");
+          const bannerEl = document.getElementById("bestCropRecommendationBanner");
+          
+          if (bestNameEl) bestNameEl.textContent = isTe ? translateMandiTerm(recs.bestOverall.crop) : recs.bestOverall.crop;
+          
+          const explanationText = generateAIAdvisoryExplanation(recs.bestOverall);
+          
+          let choicesHtml = explanationText;
+          choicesHtml += `
+            <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(200, 200, 200, 0.1); display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; font-size: 11px; color:var(--text-main);">
+              <div>💎 <strong>${isTe ? "గరిష్ట లాభం:" : "Highest Profit:"}</strong> ${isTe ? translateMandiTerm(recs.highestProfit.crop) : recs.highestProfit.crop}</div>
+              <div>🤎 <strong>${isTe ? "మట్టికి అనుకూలం:" : "Best Soil Match:"}</strong> ${isTe ? translateMandiTerm(recs.bestSoil.crop) : recs.bestSoil.crop}</div>
+              <div>💧 <strong>${isTe ? "తక్కువ నీటి వాడకం:" : "Lowest Water:"}</strong> ${isTe ? translateMandiTerm(recs.lowestWater.crop) : recs.lowestWater.crop}</div>
+              <div>🛡️ <strong>${isTe ? "అతి తక్కువ ప్రమాదం:" : "Lowest Risk:"}</strong> ${isTe ? translateMandiTerm(recs.lowestRisk.crop) : recs.lowestRisk.crop}</div>
+            </div>
+          `;
+          if (bestExpEl) bestExpEl.innerHTML = choicesHtml;
+          if (bannerEl) bannerEl.style.display = "flex";
+        }
+      } catch (err) {
+        console.error("Comparison execution error:", err);
+        if (loading) loading.style.display = "none";
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="14" style="text-align: center; color: var(--text-muted); padding: 20px;">
+              <span style="color: #ef4444; font-weight: 600;"><i class="fa-solid fa-circle-exclamation"></i> Unable to calculate crop comparison. Please check your farm inputs and try again.</span>
+              <br><small style="font-size: 11px;">Error details: ${err.message}</small>
+            </td>
+          </tr>
         `;
-        tbody.appendChild(tr);
-      });
-
-      const recs = CropRecommendation.findBestRecommendations(evaluationList);
-      if (recs) {
-        const isTe = currentLang === "te";
-        const bestNameEl = document.getElementById("bestCropNameText");
-        const bestExpEl = document.getElementById("bestCropExplanationText");
         const bannerEl = document.getElementById("bestCropRecommendationBanner");
-        
-        if (bestNameEl) bestNameEl.textContent = isTe ? translateMandiTerm(recs.bestOverall.crop) : recs.bestOverall.crop;
-        
-        const explanationText = generateAIAdvisoryExplanation(recs.bestOverall);
-        
-        let choicesHtml = explanationText;
-        choicesHtml += `
-          <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(200, 200, 200, 0.1); display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; font-size: 11px; color:var(--text-main);">
-            <div>💎 <strong>${isTe ? "గరిష్ట లాభం:" : "Highest Profit:"}</strong> ${isTe ? translateMandiTerm(recs.highestProfit.crop) : recs.highestProfit.crop}</div>
-            <div>🤎 <strong>${isTe ? "మట్టికి అనుకూలం:" : "Best Soil Match:"}</strong> ${isTe ? translateMandiTerm(recs.bestSoil.crop) : recs.bestSoil.crop}</div>
-            <div>💧 <strong>${isTe ? "తక్కువ నీటి వాడకం:" : "Lowest Water:"}</strong> ${isTe ? translateMandiTerm(recs.lowestWater.crop) : recs.lowestWater.crop}</div>
-            <div>🛡️ <strong>${isTe ? "అతి తక్కువ ప్రమాదం:" : "Lowest Risk:"}</strong> ${isTe ? translateMandiTerm(recs.lowestRisk.crop) : recs.lowestRisk.crop}</div>
-          </div>
-        `;
-        if (bestExpEl) bestExpEl.innerHTML = choicesHtml;
-        if (bannerEl) bannerEl.style.display = "flex";
+        if (bannerEl) bannerEl.style.display = "none";
       }
     }, 500);
   });
@@ -3301,22 +3339,6 @@ function calculateWaterUsage(irrigationType) {
     return 16000;
   }
   return null; 
-}
-
-function getMandiPriceForCrop(crop) {
-  try {
-    const cacheKey = `krushakseva_mandi_cache_${crop.toLowerCase().replace(/\s+/g, "_")}`;
-    const cached = JSON.parse(localStorage.getItem(cacheKey) || "null");
-    if (cached && cached.data && cached.data.nearest_markets && cached.data.nearest_markets.length) {
-      const prices = cached.data.nearest_markets.map(m => Number(m.price ?? m.modal_price)).filter(Number.isFinite);
-      if (prices.length) {
-        return Math.round(prices.reduce((a, b) => a + b, 0) / prices.length);
-      }
-    }
-  } catch (err) {
-    console.log("Could not read mandi price from cache:", err);
-  }
-  return null;
 }
 
 function getFarmAnalyticsRecord(crop, season, year, location) {
