@@ -3564,34 +3564,50 @@ function getPreviousSeason(crop, season, year) {
   }
 }
 
-function getMonthlyRainfallData(crop, season, year, location) {
-  const rand = getSeededRandom(`${crop}_${season}_${year}_${location}_rain`);
-  let baseRainVal = season === "Kharif" ? [110, 190, 240, 150, 80, 20] : [15, 10, 20, 15, 30, 45];
+function getRainfallMonthsForYear(year) {
+  const isTe = currentLang === "te";
+  const allMonthsEn = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const allMonthsTe = ['జనవరి', 'ఫిబ్రవరి', 'మార్చి', 'ఏప్రిల్', 'మే', 'జూన్', 'జూలై', 'ఆగస్టు', 'సెప్టెంబరు', 'అక్టోబరు', 'నవంబరు', 'డిసెంబరు'];
   
-  // Scale base rainfall based on the location's total seasonal normal rainfall
-  const locLower = location.toLowerCase();
+  const isCurrentYear = (year === 2026);
+  const endMonth = isCurrentYear ? 8 : 12; // August is month 8
+  
+  return isTe ? allMonthsTe.slice(0, endMonth) : allMonthsEn.slice(0, endMonth);
+}
+
+function getMonthlyRainfallData(crop, season, year, location) {
+  const isCurrentYear = (year === 2026);
+  const endMonth = isCurrentYear ? 8 : 12;
+  
+  const rand = getSeededRandom(`${crop}_${year}_${location}_rain_yearly`);
+  
+  // Base normal rainfall for each month: Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec
+  const baseRainVal = [15, 10, 20, 15, 30, 110, 190, 240, 150, 80, 20, 10];
+  
+  const locLower = String(location || "").toLowerCase();
   let scale = 1.0;
   if (locLower.includes("visakhapatnam")) {
-    scale = season === "Kharif" ? 1.2 : 1.3;
+    scale = 1.25;
   } else if (locLower.includes("nellore")) {
-    scale = season === "Kharif" ? 1.05 : 1.1;
+    scale = 1.1;
   } else if (locLower.includes("guntur")) {
-    scale = season === "Kharif" ? 0.9 : 0.7;
+    scale = 0.85;
   } else if (locLower.includes("vijayawada")) {
-    scale = season === "Kharif" ? 0.95 : 0.8;
+    scale = 0.9;
   } else if (locLower.includes("kavali")) {
-    scale = season === "Kharif" ? 0.85 : 0.6;
+    scale = 0.75;
   }
-  
+
   const normalRain = [];
   const actualRain = [];
-  
-  for (let i = 0; i < 6; i++) {
+
+  for (let i = 0; i < endMonth; i++) {
     const factor = (0.85 + rand() * 0.3) * scale;
     normalRain.push(Math.round(baseRainVal[i] * factor));
     const rainYearMult = year === 2026 ? 1.02 : year === 2025 ? 0.88 : 1.06;
     actualRain.push(Math.round(baseRainVal[i] * factor * rainYearMult * (0.9 + rand() * 0.2)));
   }
+
   return { normalRain, actualRain };
 }
 
@@ -3864,13 +3880,17 @@ function renderDynamicDashboard() {
   }
 
   // 3. Rainfall Card
+  const rainObj = getMonthlyRainfallData(crop, season, year, location);
+  const totalActualRain = rainObj.actualRain.reduce((a, b) => a + b, 0);
+  const totalNormalRain = rainObj.normalRain.reduce((a, b) => a + b, 0);
+
   const rainValEl = document.getElementById("stat-rainfall");
   if (rainValEl) {
-    rainValEl.textContent = `${current.actualRainfallMm.toLocaleString("en-IN")} mm`;
+    rainValEl.textContent = `${totalActualRain.toLocaleString("en-IN")} mm`;
   }
   const rainCompareEl = document.getElementById("stat-rainfall-compare");
   if (rainCompareEl) {
-    const diffPercent = Math.round(((current.actualRainfallMm - current.normalRainfallMm) / current.normalRainfallMm) * 100);
+    const diffPercent = Math.round(((totalActualRain - totalNormalRain) / totalNormalRain) * 100);
     if (diffPercent >= 0) {
       rainCompareEl.textContent = `${diffPercent}% ${currentLang === "te" ? "సగటు కంటే ఎక్కువ" : "above average"}`;
       rainCompareEl.style.color = "#10b981";
@@ -4009,11 +4029,7 @@ function renderDynamicDashboard() {
     }
   });
 
-  const rainMonths = season === "Kharif"
-    ? (currentLang === "te" ? ['జూన్', 'జూలై', 'ఆగస్టు', 'సెప్టెంబరు', 'అక్టోబరు', 'నవంబరు'] : ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'])
-    : (currentLang === "te" ? ['డిసెంబరు', 'జనవరి', 'ఫిబ్రవరి', 'మార్చి', 'ఏప్రిల్', 'మే'] : ['Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May']);
-
-  const rainObj = getMonthlyRainfallData(crop, season, year, location);
+  const rainMonths = getRainfallMonthsForYear(year);
 
   rainHistoryChartInstance = new Chart(ctxRain, {
     type: 'line',
