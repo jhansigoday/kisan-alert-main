@@ -186,12 +186,16 @@ def generate_crop_doctor_report(disease_label: str, confidence: float, lang: str
                     {"role": "user", "content": user_prompt}
                 ],
                 max_tokens=800,
-                response_format={"type": "json_object"},
                 temperature=0.3
             )
             content = res.choices[0].message.content.strip()
             import re
             content = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL).strip()
+            if content.startswith("```json"):
+                content = content[7:]
+            if content.endswith("```"):
+                content = content[:-3]
+            content = content.strip()
             report_data = json.loads(content)
             return {
                 "crop_name": crop_name,

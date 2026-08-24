@@ -251,8 +251,7 @@ Do not return any markdown formatting or text outside the JSON. Return only a ra
                         ]
                     }
                 ],
-                temperature=0.1,
-                response_format={"type": "json_object"}
+                temperature=0.1
             )
             
             import json
