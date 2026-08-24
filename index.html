@@ -852,7 +852,7 @@
           <!-- Active Analytics Content Wrapper -->
           <div id="analyticsChartsBox" style="display: none; margin-top: 16px;">
             <!-- Analytics Filters -->
-            <div class="analytics-filters-row" style="display: flex; flex-wrap: wrap; gap: 12px; padding: 12px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 16px;">
+            <div class="analytics-filters-row" style="display: flex; flex-wrap: wrap; gap: 12px; padding: 12px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 16px; align-items: center;">
               <div class="filter-group" style="display: flex; align-items: center; gap: 8px;">
                 <label for="filter-year" style="font-weight: 600; font-size: 13px; color: var(--text-main);">Year:</label>
                 <select id="filter-year" style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main); font-size: 13px; cursor: pointer;"></select>
@@ -869,8 +869,9 @@
                 <label for="filter-location" style="font-weight: 600; font-size: 13px; color: var(--text-main);">Location:</label>
                 <select id="filter-location" style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main); font-size: 13px; cursor: pointer;"></select>
               </div>
-              <div style="margin-left: auto; display: flex; align-items: center;">
-                <span id="data-source-badge" style="font-size: 11px; font-weight: 600; padding: 4px 8px; border-radius: 4px; background: rgba(16, 185, 129, 0.1); color: var(--primary);">Demo historical data</span>
+              <div style="margin-left: auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span id="analytics-farm-area" style="font-size: 11px; font-weight: 600; padding: 4px 8px; border-radius: 4px; background: rgba(59, 130, 246, 0.1); color: #3b82f6;">Farm Area: 0.0 acres</span>
+                <span id="data-source-badge" title="These values are from a demonstration historical dataset and are not live farm records." style="font-size: 11px; font-weight: 600; padding: 4px 8px; border-radius: 4px; background: rgba(100, 116, 139, 0.1); color: #64748b; cursor: help; border-bottom: 1px dashed #64748b;">Demo historical data ℹ</span>
               </div>
             </div>
 
@@ -882,7 +883,8 @@
                   <span style="font-size: 13px; color: var(--text-muted); font-weight: 600;">Net Profit</span>
                   <i class="fa-solid fa-indian-rupee-sign" style="color: var(--primary);"></i>
                 </div>
-                <div id="stat-net-profit" style="font-size: 24px; font-weight: 700; margin-top: 8px; color: var(--text-main);">₹0.00</div>
+                <div id="stat-net-profit" style="font-size: 20px; font-weight: 700; margin-top: 8px; color: var(--text-main);">Total: ₹0.00</div>
+                <div id="stat-net-profit-per-acre" style="font-size: 14px; font-weight: 600; margin-top: 4px; color: var(--text-muted);">₹0.00 / acre</div>
                 <div id="stat-net-profit-change" style="font-size: 12px; margin-top: 6px; font-weight: 600; color: #10b981;">↑ 0% vs previous season</div>
                 <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px; display: flex; justify-content: space-between;">
                   <span>Rev: <span id="stat-revenue">₹0.00</span></span>
@@ -893,7 +895,7 @@
               <!-- Yield Card -->
               <div class="analytics-stat-card" style="padding: 16px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                  <span style="font-size: 13px; color: var(--text-muted); font-weight: 600;">Average Yield</span>
+                  <span style="font-size: 13px; color: var(--text-muted); font-weight: 600;">Farm Yield</span>
                   <i class="fa-solid fa-wheat-awn" style="color: #eab308;"></i>
                 </div>
                 <div id="stat-yield" style="font-size: 20px; font-weight: 700; margin-top: 8px; color: var(--text-main);">0.0 quintals/acre</div>

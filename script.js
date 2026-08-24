@@ -1973,86 +1973,203 @@ function getMandiPriceForCrop(crop) {
 
 function getFarmAnalyticsRecord(crop, season, year, location) {
   const rand = getSeededRandom(`${crop}_${season}_${year}_${location}`);
-  const area = registeredFarmer && registeredFarmer.crop_type === crop ? parseFloat(registeredFarmer.land_size_acres || 5) : 5;
-  const irrigation = registeredFarmer && registeredFarmer.crop_type === crop ? (registeredFarmer.irrigation_method || "Flood") : "Flood";
+  const area = registeredFarmer && registeredFarmer.crop_type === crop ? parseFloat(registeredFarmer.land_size_acres || 5) : 5.0;
   
+  // Try to use profile irrigation if active and crop matches
+  let irrigation = null;
+  if (registeredFarmer && registeredFarmer.crop_type === crop && registeredFarmer.irrigation_method) {
+    irrigation = registeredFarmer.irrigation_method;
+  }
+
+  // Base yields, prices, and costs per acre
   let baseYield = 20; 
-  let baseCost = 24000; 
   let defaultPrice = 2200; 
-  
+  let seedCostBase = 3000;
+  let fertilizerCostBase = 5000;
+  let pesticideCostBase = 4000;
+  let labourCostBase = 8000;
+  let irrigationCostBase = 3000;
+  let otherCostBase = 2000;
+
   const cLower = crop.toLowerCase();
   if (cLower.includes("rice") || cLower.includes("paddy")) {
-    baseYield = 22;
-    baseCost = 25000;
+    baseYield = 22; 
     defaultPrice = 2300;
+    seedCostBase = 2500;
+    fertilizerCostBase = 5000;
+    pesticideCostBase = 4500;
+    labourCostBase = 9000;
+    irrigationCostBase = 3500;
+    otherCostBase = 1500;
+  } else if (cLower.includes("wheat")) {
+    baseYield = 18; 
+    defaultPrice = 2400;
+    seedCostBase = 3000;
+    fertilizerCostBase = 4500;
+    pesticideCostBase = 3500;
+    labourCostBase = 8000;
+    irrigationCostBase = 3000;
+    otherCostBase = 1500;
   } else if (cLower.includes("maize") || cLower.includes("corn")) {
-    baseYield = 25;
-    baseCost = 20000;
+    baseYield = 25; 
     defaultPrice = 2100;
+    seedCostBase = 2800;
+    fertilizerCostBase = 6000;
+    pesticideCostBase = 4000;
+    labourCostBase = 7500;
+    irrigationCostBase = 2500;
+    otherCostBase = 1200;
   } else if (cLower.includes("groundnut")) {
-    baseYield = 10;
-    baseCost = 28000;
+    baseYield = 11; 
     defaultPrice = 6500;
+    seedCostBase = 5000;
+    fertilizerCostBase = 4000;
+    pesticideCostBase = 3500;
+    labourCostBase = 8500;
+    irrigationCostBase = 2500;
+    otherCostBase = 1500;
   } else if (cLower.includes("cotton")) {
-    baseYield = 8;
-    baseCost = 30000;
+    baseYield = 9; 
     defaultPrice = 7000;
-  } else if (cLower.includes("tomato")) {
-    baseYield = 140;
-    baseCost = 40000;
+    seedCostBase = 4000;
+    fertilizerCostBase = 7000;
+    pesticideCostBase = 6000;
+    labourCostBase = 9500;
+    irrigationCostBase = 2000;
+    otherCostBase = 2000;
+  } else if (cLower.includes("chickpea")) {
+    baseYield = 8; 
+    defaultPrice = 5300;
+    seedCostBase = 3500;
+    fertilizerCostBase = 3000;
+    pesticideCostBase = 2500;
+    labourCostBase = 7000;
+    irrigationCostBase = 1500;
+    otherCostBase = 1000;
+  } else if (cLower.includes("mustard")) {
+    baseYield = 6; 
+    defaultPrice = 5450;
+    seedCostBase = 1500;
+    fertilizerCostBase = 3500;
+    pesticideCostBase = 2000;
+    labourCostBase = 6500;
+    irrigationCostBase = 1500;
+    otherCostBase = 1000;
+  } else if (cLower.includes("potato")) {
+    baseYield = 100; 
     defaultPrice = 1200;
+    seedCostBase = 15000;
+    fertilizerCostBase = 8000;
+    pesticideCostBase = 5000;
+    labourCostBase = 12000;
+    irrigationCostBase = 4000;
+    otherCostBase = 3000;
+  } else if (cLower.includes("tomato")) {
+    baseYield = 150; 
+    defaultPrice = 1000;
+    seedCostBase = 8000;
+    fertilizerCostBase = 12000;
+    pesticideCostBase = 9500;
+    labourCostBase = 14000;
+    irrigationCostBase = 4500;
+    otherCostBase = 4000;
+  } else if (cLower.includes("chilli")) {
+    baseYield = 18; 
+    defaultPrice = 15000;
+    seedCostBase = 12000;
+    fertilizerCostBase = 10000;
+    pesticideCostBase = 14000;
+    labourCostBase = 18000;
+    irrigationCostBase = 6000;
+    otherCostBase = 5000;
   }
+
+  // Location parameters
+  let locationYieldMult = 1.0;
+  let locationCostMult = 1.0;
+  let locationPriceMult = 1.0;
+  let normalRainfall = 950;
   
-  const livePrice = getMandiPriceForCrop(crop);
-  const finalPrice = livePrice || defaultPrice;
-  
+  const locLower = location.toLowerCase();
+  if (locLower.includes("visakhapatnam")) {
+    normalRainfall = season === "Kharif" ? 1200 : 450;
+    locationYieldMult = 1.05;
+    locationPriceMult = 0.98;
+  } else if (locLower.includes("nellore")) {
+    normalRainfall = season === "Kharif" ? 1050 : 380;
+    locationYieldMult = 1.12;
+    locationPriceMult = 1.05;
+  } else if (locLower.includes("guntur")) {
+    normalRainfall = season === "Kharif" ? 900 : 250;
+    locationYieldMult = 1.08;
+    locationCostMult = 1.05;
+  } else if (locLower.includes("vijayawada")) {
+    normalRainfall = season === "Kharif" ? 950 : 280;
+    locationYieldMult = 1.02;
+    locationPriceMult = 1.02;
+  } else if (locLower.includes("kavali")) {
+    normalRainfall = season === "Kharif" ? 850 : 220;
+    locationYieldMult = 0.90;
+    locationCostMult = 0.95;
+  }
+
+  // Variations based on year and season
   const yearMult = year === 2026 ? 1.15 : year === 2025 ? 1.08 : 0.95;
   const seasonMult = season === "Kharif" ? 1.0 : 0.8;
   
+  const livePrice = getMandiPriceForCrop(crop);
+  const finalPrice = Math.round((livePrice || defaultPrice) * locationPriceMult);
+
   let irrigationMult = 1.0;
-  if (irrigation.toLowerCase().includes("drip")) {
-    irrigationMult = 0.85; 
-  } else if (irrigation.toLowerCase().includes("sprinkler")) {
-    irrigationMult = 0.92;
+  if (irrigation) {
+    const irrLower = irrigation.toLowerCase();
+    if (irrLower.includes("drip")) {
+      irrigationMult = 0.85; 
+    } else if (irrLower.includes("sprinkler")) {
+      irrigationMult = 0.92;
+    }
   }
+
+  const yieldPerAcre = parseFloat((baseYield * locationYieldMult * yearMult * seasonMult * (0.96 + rand() * 0.08)).toFixed(1));
   
-  const yieldPerAcre = parseFloat((baseYield * yearMult * seasonMult * (0.96 + rand() * 0.08)).toFixed(1));
+  const seedCost = Math.round(seedCostBase * locationCostMult * yearMult * seasonMult);
+  const fertilizerCost = Math.round(fertilizerCostBase * locationCostMult * yearMult * seasonMult);
+  const pesticideCost = Math.round(pesticideCostBase * locationCostMult * yearMult * seasonMult);
+  const labourCost = Math.round(labourCostBase * locationCostMult * yearMult * seasonMult);
+  const irrigationCost = irrigation ? Math.round(irrigationCostBase * locationCostMult * yearMult * seasonMult * irrigationMult) : 0;
+  const otherCost = Math.round(otherCostBase * locationCostMult * yearMult * seasonMult);
+  
+  const totalCostPerAcre = seedCost + fertilizerCost + pesticideCost + labourCost + irrigationCost + otherCost;
+  
   const revenue = calculateRevenue(yieldPerAcre, area, finalPrice);
-  const totalCost = calculateTotalCost(baseCost, area, yearMult, seasonMult, irrigationMult) * (0.97 + rand() * 0.06);
-  const netProfit = calculateNetProfit(revenue, Math.round(totalCost));
+  const totalCost = Math.round(totalCostPerAcre * area);
+  const netProfit = calculateNetProfit(revenue, totalCost);
   
-  let normalRainfall = 950;
-  if (season === "Kharif") {
-    const locLower = location.toLowerCase();
-    if (locLower.includes("visakhapatnam")) normalRainfall = 1200;
-    else if (locLower.includes("nellore")) normalRainfall = 1050;
-    else if (locLower.includes("guntur")) normalRainfall = 900;
-  } else {
-    normalRainfall = 350;
-    const locLower = location.toLowerCase();
-    if (locLower.includes("visakhapatnam")) normalRainfall = 450;
-    else if (locLower.includes("nellore")) normalRainfall = 380;
-  }
   const rainYearMult = year === 2026 ? 1.02 : year === 2025 ? 0.88 : 1.06;
   const rainfall = Math.round(normalRainfall * rainYearMult * (0.95 + rand() * 0.1));
-  
-  const waterUsageVal = calculateWaterUsage(irrigation);
+  const waterUsageVal = irrigation ? calculateWaterUsage(irrigation) : null;
   
   return {
     crop,
     season,
     year,
     location,
-    area,
-    yieldPerAcre,
+    areaAcres: area,
+    yieldQuintalsPerAcre: yieldPerAcre,
+    marketPricePerQuintal: finalPrice,
+    seedCost,
+    fertilizerCost,
+    pesticideCost,
+    labourCost,
+    irrigationCost,
+    otherCost,
     revenue,
-    totalCost: Math.round(totalCost),
+    totalCost,
     netProfit,
-    rainfall,
-    historicalRainfall: normalRainfall,
-    irrigationType: irrigation,
+    actualRainfallMm: rainfall,
+    normalRainfallMm: normalRainfall,
+    irrigationType: irrigation || undefined,
     waterUsage: waterUsageVal ? waterUsageVal * area : null,
-    pricePerQuintal: finalPrice,
     isLivePrice: Boolean(livePrice)
   };
 }
@@ -2082,6 +2199,50 @@ function getMonthlyRainfallData(crop, season, year, location) {
 }
 
 let analyticsFiltersInitialized = false;
+
+const CROP_SEASON_COMPATIBILITY = {
+  "rice": ["Kharif", "Rabi"],
+  "maize": ["Kharif", "Rabi"],
+  "groundnut": ["Kharif", "Rabi"],
+  "cotton": ["Kharif"],
+  "tomato": ["Kharif", "Rabi"],
+  "wheat": ["Rabi"],
+  "chickpea": ["Rabi"],
+  "mustard": ["Rabi"],
+  "potato": ["Rabi"],
+  "chilli": ["Kharif", "Rabi"]
+};
+
+function getCompatibleSeasons(crop) {
+  const norm = String(crop || "").toLowerCase();
+  for (const [key, seasons] of Object.entries(CROP_SEASON_COMPATIBILITY)) {
+    if (norm.includes(key)) {
+      return seasons;
+    }
+  }
+  return ["Kharif", "Rabi"]; // default fallback
+}
+
+function updateSeasonFilterForCrop(cropVal, seasonSelect) {
+  const validSeasons = getCompatibleSeasons(cropVal);
+  const currentSelection = seasonSelect.value;
+  
+  seasonSelect.innerHTML = "";
+  validSeasons.forEach(s => {
+    const opt = document.createElement("option");
+    opt.value = s;
+    opt.textContent = currentLang === "te"
+      ? (s === "Kharif" ? "ఖరీఫ్ (Kharif)" : "రబీ (Rabi)")
+      : s;
+    seasonSelect.appendChild(opt);
+  });
+  
+  if (currentSelection && validSeasons.includes(currentSelection)) {
+    seasonSelect.value = currentSelection;
+  } else if (validSeasons.length > 0) {
+    seasonSelect.value = validSeasons[0];
+  }
+}
 
 function initAnalyticsFilters() {
   const yearSelect = document.getElementById("filter-year");
@@ -2116,26 +2277,18 @@ function initAnalyticsFilters() {
     yearSelect.value = "2026";
   }
 
-  // 2. Seasons
-  const seasons = [
-    { value: "Kharif", label: currentLang === "te" ? "ఖరీఫ్ (Kharif)" : "Kharif" },
-    { value: "Rabi", label: currentLang === "te" ? "రబీ (Rabi)" : "Rabi" }
-  ];
-  seasons.forEach(s => {
-    const opt = document.createElement("option");
-    opt.value = s.value;
-    opt.textContent = s.label;
-    seasonSelect.appendChild(opt);
-  });
-  if (currentSeason) seasonSelect.value = currentSeason;
-
-  // 3. Crops
+  // 2. Crops (10 standard crops)
   const crops = [
     { value: "Rice", label: currentLang === "te" ? "వరి (Rice)" : "Rice" },
+    { value: "Wheat", label: currentLang === "te" ? "గోధుమ (Wheat)" : "Wheat" },
     { value: "Maize", label: currentLang === "te" ? "మొక్కజొన్న (Maize)" : "Maize" },
     { value: "Groundnut", label: currentLang === "te" ? "వేరుశనగ (Groundnut)" : "Groundnut" },
     { value: "Cotton", label: currentLang === "te" ? "పత్తి (Cotton)" : "Cotton" },
-    { value: "Tomato", label: currentLang === "te" ? "టమోటా (Tomato)" : "Tomato" }
+    { value: "Chickpea", label: currentLang === "te" ? "శనగలు (Chickpea)" : "Chickpea" },
+    { value: "Mustard", label: currentLang === "te" ? "ఆవాలు (Mustard)" : "Mustard" },
+    { value: "Potato", label: currentLang === "te" ? "బంగాళాదుంప (Potato)" : "Potato" },
+    { value: "Tomato", label: currentLang === "te" ? "టమోటా (Tomato)" : "Tomato" },
+    { value: "Chilli", label: currentLang === "te" ? "మిరపకాయ (Chilli)" : "Chilli" }
   ];
   
   const farmerCrop = registeredFarmer ? registeredFarmer.crop_type : null;
@@ -2155,6 +2308,12 @@ function initAnalyticsFilters() {
   } else if (farmerCrop) {
     const found = Array.from(cropSelect.options).find(opt => opt.value.toLowerCase() === farmerCrop.toLowerCase());
     if (found) cropSelect.value = found.value;
+  }
+
+  // 3. Seasons (rebuild dynamically based on current crop selection)
+  updateSeasonFilterForCrop(cropSelect.value, seasonSelect);
+  if (currentSeason && getCompatibleSeasons(cropSelect.value).includes(currentSeason)) {
+    seasonSelect.value = currentSeason;
   }
 
   // 4. Locations (Autodetected + Profile + Fallbacks)
@@ -2194,11 +2353,17 @@ function initAnalyticsFilters() {
   }
 
   if (!analyticsFiltersInitialized) {
-    [yearSelect, seasonSelect, cropSelect, locationSelect].forEach(selectEl => {
+    cropSelect.addEventListener("change", () => {
+      updateSeasonFilterForCrop(cropSelect.value, seasonSelect);
+      renderDynamicDashboard();
+    });
+    
+    [yearSelect, seasonSelect, locationSelect].forEach(selectEl => {
       selectEl.addEventListener("change", () => {
         renderDynamicDashboard();
       });
     });
+    
     analyticsFiltersInitialized = true;
   }
 }
@@ -2220,9 +2385,16 @@ function renderDynamicDashboard() {
   const prevSeasonObj = getPreviousSeason(season, year);
   
   let prev = null;
-  // Make sure we only attempt to read previous if it fits in 2024-2025
   if (prevSeasonObj.year >= 2024) {
     prev = getFarmAnalyticsRecord(crop, prevSeasonObj.season, prevSeasonObj.year, location);
+  }
+
+  // Update Farm Area Badge
+  const areaBadge = document.getElementById("analytics-farm-area");
+  if (areaBadge) {
+    areaBadge.textContent = currentLang === "te" 
+      ? `వ్యవసాయ క్షేత్రం: ${current.areaAcres.toFixed(1)} ఎకరాలు`
+      : `Farm Area: ${current.areaAcres.toFixed(1)} acres`;
   }
 
   // Update Data Source Badge
@@ -2232,18 +2404,35 @@ function renderDynamicDashboard() {
       badge.textContent = currentLang === "te" ? "ప్రత్యక్ష మండి డేటా" : "Live Mandi Data";
       badge.style.background = "#dcfce7";
       badge.style.color = "#166534";
+      badge.title = "";
+      badge.style.cursor = "default";
+      badge.style.borderBottom = "none";
     } else {
-      badge.textContent = currentLang === "te" ? "నమూనా చారిత్రక డేటా" : "Demo historical data";
+      badge.textContent = currentLang === "te" ? "నమూనా చారిత్రక డేటా ℹ" : "Demo historical data ℹ";
       badge.style.background = "rgba(100, 116, 139, 0.1)";
       badge.style.color = "#64748b";
+      badge.title = "These values are from a demonstration historical dataset and are not live farm records.";
+      badge.style.cursor = "help";
+      badge.style.borderBottom = "1px dashed #64748b";
     }
   }
 
   // 1. Net Profit Card
   const profitValEl = document.getElementById("stat-net-profit");
   if (profitValEl) {
-    profitValEl.textContent = `₹${(current.netProfit / 100000).toFixed(2)} L`;
+    const totalProfitText = currentLang === "te" 
+      ? `మొత్తం: ₹${(current.netProfit / 100000).toFixed(2)} లక్షలు`
+      : `Total: ₹${(current.netProfit / 100000).toFixed(2)} L`;
+    profitValEl.textContent = totalProfitText;
   }
+  const profitPerAcreEl = document.getElementById("stat-net-profit-per-acre");
+  if (profitPerAcreEl) {
+    const profitPerAcre = Math.round(current.netProfit / current.areaAcres);
+    profitPerAcreEl.textContent = currentLang === "te"
+      ? `లాభం: ₹${profitPerAcre.toLocaleString("en-IN")} / ఎకరం`
+      : `Profit: ₹${profitPerAcre.toLocaleString("en-IN")} / acre`;
+  }
+
   const profitChangeEl = document.getElementById("stat-net-profit-change");
   if (profitChangeEl) {
     if (prev) {
@@ -2263,12 +2452,12 @@ function renderDynamicDashboard() {
   // 2. Yield Card
   const yieldValEl = document.getElementById("stat-yield");
   if (yieldValEl) {
-    yieldValEl.textContent = `${current.yieldPerAcre} ${currentLang === "te" ? "క్వింటాళ్ళు/ఎకరం" : "quintals/acre"}`;
+    yieldValEl.textContent = `${current.yieldQuintalsPerAcre} ${currentLang === "te" ? "క్వింటాళ్ళు/ఎకరం" : "quintals/acre"}`;
   }
   const yieldChangeEl = document.getElementById("stat-yield-change");
   if (yieldChangeEl) {
     if (prev) {
-      const yieldChange = ((current.yieldPerAcre - prev.yieldPerAcre) / prev.yieldPerAcre) * 100;
+      const yieldChange = ((current.yieldQuintalsPerAcre - prev.yieldQuintalsPerAcre) / prev.yieldQuintalsPerAcre) * 100;
       yieldChangeEl.textContent = `${yieldChange >= 0 ? "↑" : "↓"} ${Math.abs(yieldChange).toFixed(0)}% vs ${currentLang === "te" ? "గత కాలం" : "previous season"}`;
       yieldChangeEl.style.color = yieldChange >= 0 ? "#10b981" : "#ef4444";
     } else {
@@ -2280,18 +2469,17 @@ function renderDynamicDashboard() {
   // 3. Rainfall Card
   const rainValEl = document.getElementById("stat-rainfall");
   if (rainValEl) {
-    rainValEl.textContent = `${current.rainfall.toLocaleString("en-IN")} mm`;
+    rainValEl.textContent = `${current.actualRainfallMm.toLocaleString("en-IN")} mm`;
   }
   const rainCompareEl = document.getElementById("stat-rainfall-compare");
   if (rainCompareEl) {
-    const diff = current.historicalRainfall - current.rainfall;
-    const diffPercent = Math.round((diff / current.historicalRainfall) * 100);
+    const diffPercent = Math.round(((current.actualRainfallMm - current.normalRainfallMm) / current.normalRainfallMm) * 100);
     if (diffPercent >= 0) {
-      rainCompareEl.textContent = `${diffPercent}% ${currentLang === "te" ? "సగటు కంటే తక్కువ" : "below average"}`;
-      rainCompareEl.style.color = diffPercent > 5 ? "#ef4444" : "#eab308";
-    } else {
-      rainCompareEl.textContent = `${Math.abs(diffPercent)}% ${currentLang === "te" ? "సగటు కంటే ఎక్కువ" : "above average"}`;
+      rainCompareEl.textContent = `${diffPercent}% ${currentLang === "te" ? "సగటు కంటే ఎక్కువ" : "above average"}`;
       rainCompareEl.style.color = "#10b981";
+    } else {
+      rainCompareEl.textContent = `${Math.abs(diffPercent)}% ${currentLang === "te" ? "సగటు కంటే తక్కువ" : "below average"}`;
+      rainCompareEl.style.color = Math.abs(diffPercent) > 7 ? "#ef4444" : "#eab308";
     }
   }
 
@@ -2300,7 +2488,7 @@ function renderDynamicDashboard() {
   const waterSavingsEl = document.getElementById("stat-water-savings");
   if (current.waterUsage) {
     if (waterEfficiencyValEl) {
-      waterEfficiencyValEl.textContent = `${currentLang === "te" ? "నీటి వినియోగం" : "Water Used"}: ${(current.waterUsage / current.area).toLocaleString("en-IN")} L/acre`;
+      waterEfficiencyValEl.textContent = `${currentLang === "te" ? "నీటి వినియోగం" : "Water Used"}: ${(current.waterUsage / current.areaAcres).toLocaleString("en-IN")} L/acre`;
     }
     if (waterSavingsEl) {
       const irr = current.irrigationType.toLowerCase();
@@ -2382,11 +2570,11 @@ function renderDynamicDashboard() {
     }
   });
 
-  const yields = chartRecords.map(r => r.yieldPerAcre);
+  const yields = chartRecords.map(r => r.yieldQuintalsPerAcre);
   const yieldChanges = chartRecords.map((r, i) => {
     if (i === 0) return 0;
-    const prevVal = chartRecords[i - 1].yieldPerAcre;
-    return ((r.yieldPerAcre - prevVal) / prevVal) * 100;
+    const prevVal = chartRecords[i - 1].yieldQuintalsPerAcre;
+    return ((r.yieldQuintalsPerAcre - prevVal) / prevVal) * 100;
   });
 
   yieldTrendChartInstance = new Chart(ctxYield, {
@@ -2394,7 +2582,7 @@ function renderDynamicDashboard() {
     data: {
       labels: seasonLabels,
       datasets: [{
-        label: currentLang === "te" ? 'దిగుబడి (క్వింటాళ్ళు/ఎకరం)' : 'Yield (quintals/acre)',
+        label: currentLang === "te" ? 'दिगुबडी (क्विंटाళ్ళు/ఎకరం)' : 'Yield (quintals/acre)',
         data: yields,
         backgroundColor: '#f59e0b'
       }]
@@ -2461,48 +2649,101 @@ function renderDynamicDashboard() {
   if (insightsContainer) {
     insightsContainer.innerHTML = "";
     
-    // Insight 1: Rainfall compare
-    const rainDiffPercent = Math.round((1 - current.rainfall / current.historicalRainfall) * 100);
-    const rainInsightText = rainDiffPercent > 0
-      ? (currentLang === "te" ? `⚠ వర్షపాతం కాలానుగుణ సగటు కంటే ${rainDiffPercent}% తక్కువగా ఉంది.` : `⚠ Rainfall is ${rainDiffPercent}% below the seasonal average.`)
-      : (currentLang === "te" ? `🌧 వర్షపాతం కాలానుగుణ సగటు కంటే ${Math.abs(rainDiffPercent)}% ఎక్కువగా ఉంది.` : `🌧 Rainfall is ${Math.abs(rainDiffPercent)}% above the seasonal average.`);
+    // Insights lists
+    const bullets = [];
+
+    // Profit changes & factors calculations
+    let biggestPositive = null;
+    let yieldEffect = 0;
+    let priceEffect = 0;
+    let costDiff = 0;
     
-    // Insight 2: Yield compare
+    if (prev) {
+      const netDiff = current.netProfit - prev.netProfit;
+      yieldEffect = Math.round((current.yieldQuintalsPerAcre - prev.yieldQuintalsPerAcre) * current.areaAcres * current.marketPricePerQuintal);
+      priceEffect = Math.round((current.marketPricePerQuintal - prev.marketPricePerQuintal) * prev.yieldQuintalsPerAcre * current.areaAcres);
+      costDiff = current.totalCost - prev.totalCost;
+      
+      const contributors = [
+        { name: "yield", val: yieldEffect },
+        { name: "price", val: priceEffect }
+      ];
+      const positiveContribs = contributors.filter(c => c.val > 0).sort((a, b) => b.val - a.val);
+      biggestPositive = positiveContribs.length > 0 ? positiveContribs[0].name : null;
+
+      let profitInsightText = "";
+      const pDiff = ((current.netProfit - prev.netProfit) / Math.abs(prev.netProfit)) * 100;
+      if (netDiff >= 0) {
+        if (biggestPositive === "yield") {
+          profitInsightText = costDiff > 0
+            ? (currentLang === "te" ? `💰 నికర లాభం పెరిగింది ప్రధానంగా మెరుగైన దిగుబడి వల్ల, పెరిగిన ఖర్చులు ఉన్నప్పటికీ.` : `💰 Net profit increased mainly due to higher yield, while higher input and labour costs reduced the improvement.`)
+            : (currentLang === "te" ? `💰 నికర లాభం పెరిగింది ప్రధానంగా మెరుగైన దిగుబడి మరియు తక్కువ ఖర్చుల వల్ల.` : `💰 Net profit increased mainly due to higher yield and optimized expenses.`);
+        } else if (biggestPositive === "price") {
+          profitInsightText = currentLang === "te"
+            ? `💰 నికర లాభం పెరిగింది ప్రధానంగా మండి ధరలు పెరగడం వల్ల.`
+            : `💰 Net profit increased mainly due to higher mandi prices.`;
+        } else {
+          profitInsightText = currentLang === "te"
+            ? `💰 నికర లాభం పెరిగింది స్థిరమైన సీజన్ అనుకూలత కారణంగా.`
+            : `💰 Net profit increased by ${pDiff.toFixed(0)}% due to seasonal optimization.`;
+        }
+      } else {
+        profitInsightText = currentLang === "te"
+          ? `💰 పెరిగిన ఉత్పత్తి ఖర్చులు లేదా తగ్గిన దిగుబడి కారణంగా నికర లాభం ${Math.abs(pDiff).toFixed(0)}% తగ్గింది.`
+          : `💰 Net profit decreased by ${Math.abs(pDiff).toFixed(0)}%, mainly due to lower yields or increased cultivation expenses.`;
+      }
+      bullets.push(profitInsightText);
+    } else {
+      bullets.push(currentLang === "te" 
+        ? `💰 ఈ కాలంలో ఆశించిన నికర లాభం సుమారు ₹${(current.netProfit / 100000).toFixed(2)} లక్షలు.`
+        : `💰 Estimated net profit for this period is ₹${(current.netProfit / 100000).toFixed(2)} L.`);
+    }
+
+    // Yield compare
     let yieldInsightText = "";
     if (prev) {
-      const yDiff = ((current.yieldPerAcre - prev.yieldPerAcre) / prev.yieldPerAcre) * 100;
+      const yDiff = ((current.yieldQuintalsPerAcre - prev.yieldQuintalsPerAcre) / prev.yieldQuintalsPerAcre) * 100;
       yieldInsightText = yDiff >= 0
         ? (currentLang === "te" ? `📈 గత కాలంతో పోలిస్తే దిగుబడి ${yDiff.toFixed(0)}% పెరిగింది.` : `📈 Yield increased by ${yDiff.toFixed(0)}% compared with the previous season.`)
         : (currentLang === "te" ? `📉 గత కాలంతో పోలిస్తే దిగుబడి ${Math.abs(yDiff).toFixed(0)}% తగ్గింది.` : `📉 Yield decreased by ${Math.abs(yDiff).toFixed(0)}% compared with the previous season.`);
     } else {
-      yieldInsightText = currentLang === "te" ? `🌾 ప్రస్తుత అంచనా వేసిన దిగుబడి: ఎకరానికి ${current.yieldPerAcre} క్వింటాళ్ళు.` : `🌾 Current estimated yield is ${current.yieldPerAcre} quintals per acre.`;
+      yieldInsightText = currentLang === "te" 
+        ? `🌾 ప్రస్తుత అంచనా వేసిన దిగుబడి: ఎకరానికి ${current.yieldQuintalsPerAcre} క్వింటాళ్ళు.`
+        : `🌾 Current estimated yield is ${current.yieldQuintalsPerAcre} quintals per acre.`;
+    }
+    bullets.push(yieldInsightText);
+
+    // Rainfall warning/info
+    const rainDiffPercent = Math.round(((current.actualRainfallMm - current.normalRainfallMm) / current.normalRainfallMm) * 100);
+    if (rainDiffPercent <= -8) {
+      bullets.push(currentLang === "te"
+        ? `⚠ వర్షపాతం కాలానుగుణ సగటు కంటే ${Math.abs(rainDiffPercent)}% తక్కువగా ఉంది.`
+        : `⚠ Rainfall is ${Math.abs(rainDiffPercent)}% below the seasonal average.`);
+    } else if (rainDiffPercent >= 8) {
+      bullets.push(currentLang === "te"
+        ? `🌧 వర్షపాతం కాలానుగుణ సగటు కంటే ${rainDiffPercent}% ఎక్కువగా ఉంది.`
+        : `🌧 Rainfall is ${rainDiffPercent}% above the seasonal average.`);
     }
 
-    // Insight 3: Profit compare
-    let profitInsightText = "";
-    if (prev) {
-      const pDiff = ((current.netProfit - prev.netProfit) / Math.abs(prev.netProfit)) * 100;
-      profitInsightText = pDiff >= 0
-        ? (currentLang === "te" ? `💰 నికర లాభం ${pDiff.toFixed(0)}% పెరిగింది, ప్రధానంగా మెరుగైన దిగుబడి మరియు ధరల కారణంగా.` : `💰 Net profit increased by ${pDiff.toFixed(0)}%, mainly due to higher yield and mandi prices.`)
-        : (currentLang === "te" ? `💰 మార్కెట్ హెచ్చుతగ్గులు లేదా ఉత్పత్తి వ్యయం కారణంగా నికర లాభం ${Math.abs(pDiff).toFixed(0)}% తగ్గింది.` : `💰 Net profit decreased by ${Math.abs(pDiff).toFixed(0)}%, mainly due to market price fluctuations or cultivation costs.`);
+    // Irrigation insight (do NOT fabricate current irrigation method if unavailable)
+    if (current.irrigationType) {
+      const irr = current.irrigationType.toLowerCase();
+      if (irr.includes("drip")) {
+        bullets.push(currentLang === "te"
+          ? `💧 డ్రిప్ నీటి పారుదల అందుబాటులో ఉంది, ఇది ఎకరానికి సుమారు 35% నీటిని ఆదా చేస్తోంది.`
+          : `💧 Drip irrigation is active, saving approximately 35% water per acre compared to regional flood methods.`);
+      } else {
+        bullets.push(currentLang === "te"
+          ? `💧 వరద పద్ధతి నుండి డ్రిప్ నీటి పారుదలకు మారడం ద్వారా నీటి వినియోగాన్ని 40% వరకు తగ్గించవచ్చు.`
+          : `💧 Switching from flood irrigation to drip could potentially reduce water usage by 40% and increase profit by 25%.`);
+      }
     } else {
-      profitInsightText = currentLang === "te" ? `💰 ఈ కాలంలో ఆశించిన నికర లాభం సుమారు ₹${(current.netProfit / 100000).toFixed(2)} లక్షలు.` : `💰 Estimated net profit for this period is ₹${(current.netProfit / 100000).toFixed(2)} L.`;
+      bullets.push(currentLang === "te"
+        ? `💧 డ్రిప్ నీటి పారుదల వరద పారుదలతో పోలిస్తే నీటి వాడకాన్ని తగ్గించగలదు.`
+        : `💧 Drip irrigation can reduce water use compared with flood irrigation, depending on crop and field conditions.`);
     }
 
-    // Insight 4: Drip saving tip
-    let dripInsightText = "";
-    const irr = current.irrigationType.toLowerCase();
-    if (irr.includes("drip")) {
-      dripInsightText = currentLang === "te"
-        ? `💧 మీరు డ్రిప్ పద్ధతిని ఉపయోగిస్తున్నారు, ఇది సంప్రదాయ పద్ధతుల కంటే 35% నీటిని పొదుపు చేస్తోంది.`
-        : `💧 Switching to drip irrigation is active, saving approximately 35% water compared to regional flood methods.`;
-    } else {
-      dripInsightText = currentLang === "te"
-        ? `💧 వరద నీటి పారుదల నుండి డ్రిప్ పద్ధతికి మారడం ద్వారా నీటి వినియోగాన్ని 40% వరకు తగ్గించవచ్చు.`
-        : `💧 Switching from flood irrigation to drip could potentially reduce water usage by 40% and boost margins.`;
-    }
-
-    // Insight 5: Crop Doctor Disease Integration
+    // Crop Doctor disease history
     let diseaseInsight = "";
     try {
       const history = JSON.parse(localStorage.getItem("krushakseva_diagnosis_history") || "[]");
@@ -2519,19 +2760,21 @@ function renderDynamicDashboard() {
           }
         }
         diseaseInsight = currentLang === "te"
-          ? `🐛 పంట వైద్యుడు ఇటీవలే ${cropIncidents.length} తెగులు సంఘటనలను రికార్డ్ చేసారు. సాధారణంగా కనుగొన్నది: ${mostCommon}.`
-          : `🐛 Crop Doctor recorded ${cropIncidents.length} disease incident(s) for ${crop} recently. Most common: ${mostCommon}.`;
+          ? `🐛 పంట వైద్యుడు ఈ సీజన్‌లో ${cropIncidents.length} తెగులు సంఘటనలను రికార్డ్ చేసారు. సాధారణంగా కనుగొన్నది: ${mostCommon}.`
+          : `🌱 ${cropIncidents.length} disease incident(s) were recorded this season, with ${mostCommon} being the most common.`;
       } else {
         diseaseInsight = currentLang === "te"
-          ? `✅ ఈ కాలంలో ${translateMandiTerm(crop)} పంటకు ఎటువంటి తెగుళ్లు రికార్డు కాలేదు.`
-          : `✅ No major disease outbreaks recorded for ${crop} in this period.`;
+          ? `🌱 ఈ కాలంలో తెగుళ్ల రికార్డు అందుబాటులో లేదు.`
+          : `🌱 No crop disease history is available for this period.`;
       }
     } catch (e) {
-      console.log("Could not load diagnosis history:", e);
-      diseaseInsight = currentLang === "te" ? "✅ ఎటువంటి తెగుళ్లు రికార్డు కాలేదు." : "✅ No major disease outbreaks recorded.";
+      diseaseInsight = currentLang === "te" 
+        ? `🌱 ఈ కాలంలో తెగుళ్ల రికార్డు అందుబాటులో లేదు.`
+        : `🌱 No crop disease history is available for this period.`;
     }
+    bullets.push(diseaseInsight);
 
-    const bullets = [rainInsightText, yieldInsightText, profitInsightText, dripInsightText, diseaseInsight];
+    // Render bullets list
     bullets.forEach(txt => {
       const div = document.createElement("div");
       div.style.display = "flex";
@@ -2548,18 +2791,19 @@ function renderDynamicDashboard() {
     factorsContainer.innerHTML = "";
     if (prev) {
       const netDiff = current.netProfit - prev.netProfit;
-      const yieldEffect = Math.round((current.yieldPerAcre - prev.yieldPerAcre) * current.area * current.pricePerQuintal);
-      const priceEffect = Math.round((current.pricePerQuintal - prev.pricePerQuintal) * prev.yieldPerAcre * current.area);
       
-      const costDiff = current.totalCost - prev.totalCost;
-      const fertilizerEffect = Math.round(-costDiff * 0.65);
-      const irrigationEffect = netDiff - (yieldEffect + priceEffect + fertilizerEffect); // ensure math matches exactly
+      const yieldEffect = Math.round((current.yieldQuintalsPerAcre - prev.yieldQuintalsPerAcre) * current.areaAcres * current.marketPricePerQuintal);
+      const priceEffect = Math.round((current.marketPricePerQuintal - prev.marketPricePerQuintal) * prev.yieldQuintalsPerAcre * current.areaAcres);
+      const irrLabourEffect = Math.round(-( (current.irrigationCost + current.labourCost) - (prev.irrigationCost + prev.labourCost) ) * current.areaAcres);
+      
+      // Fertilizer & inputs gets the exact mathematical remainder to ensure final sum reconciles with profit change exactly!
+      const fertInputsEffect = netDiff - (yieldEffect + priceEffect + irrLabourEffect); 
 
       const factors = [
         { label: currentLang === "te" ? "దిగుబడి మార్పు" : "Yield improvement", value: yieldEffect },
         { label: currentLang === "te" ? "మండి ధర వ్యత్యాసం" : "Market price change", value: priceEffect },
-        { label: currentLang === "te" ? "ఎరువులు/విత్తనాల వ్యయం" : "Fertilizer & inputs cost", value: fertilizerEffect },
-        { label: currentLang === "te" ? "నీరు/కార్మికుల వ్యయం" : "Irrigation & labour cost", value: irrigationEffect }
+        { label: currentLang === "te" ? "ఎరువులు/విత్తనాల వ్యయం" : "Fertilizer & inputs cost", value: fertInputsEffect },
+        { label: currentLang === "te" ? "నీరు/కార్మికుల వ్యయం" : "Irrigation & labour cost", value: irrLabourEffect }
       ];
 
       factors.forEach(f => {
