@@ -102,7 +102,7 @@ def generate_advisory(transcript: str = "", disease_label: str = "", disease_con
         }
 
     response = _client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+        model="qwen/qwen3.6-27b",
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
@@ -171,7 +171,7 @@ def generate_crop_doctor_report(disease_label: str, confidence: float, lang: str
     try:
         if _client:
             res = _client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
+                model="qwen/qwen3.6-27b",
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}

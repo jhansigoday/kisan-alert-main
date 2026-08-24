@@ -91,7 +91,7 @@ def voice_query():
         advisory_result = generate_advisory(transcript=transcript, lang=lang)
         advisory_text = advisory_result["advisory_text"]
 
-        audio_reply_url = synthesize_speech(advisory_text, language=lang)
+        audio_reply_url = synthesize_speech_data_url(advisory_text, language=lang)
 
         return jsonify({
             "transcript": transcript,
@@ -458,9 +458,9 @@ def sos_web_start():
     session_id = request.json.get("session_id") or "web_sos_session"
     twiml = start_sos_call(session_id)
     
-    from tts import synthesize_speech
+    from tts import synthesize_speech_data_url
     welcome_text = "Welcome to KrushakSeva Emergency Assistance. Press 1 for English. తెలుగు కోసం 2 నొక్కండి."
-    audio_url = synthesize_speech(welcome_text, "en")
+    audio_url = synthesize_speech_data_url(welcome_text, "en")
     
     return jsonify({
         "session_sid": session_id,
@@ -491,8 +491,8 @@ def sos_web_step():
             if lang == "te" else
             "Please select the emergency you are facing. Press 1 for Flood, Press 2 for Cyclone, Press 3 for Drought, Press 4 for Heavy Rain, Press 5 for Heat Wave, Press 6 for Pest Attack, Press 7 for Other Emergency."
         )
-        from tts import synthesize_speech
-        audio_url = synthesize_speech(prompt_text, lang)
+        from tts import synthesize_speech_data_url
+        audio_url = synthesize_speech_data_url(prompt_text, lang)
         
         return jsonify({
             "session_sid": session_id,
@@ -624,7 +624,7 @@ def crop_recommendation_detailed():
         if groq_key:
             client = Groq(api_key=groq_key)
             res = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
+                model="qwen/qwen3.6-27b",
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
@@ -921,7 +921,7 @@ def chat_query():
         if groq_key:
             client = Groq(api_key=groq_key)
             res = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
+                model="qwen/qwen3.6-27b",
                 messages=messages,
                 max_tokens=500,
                 temperature=0.3,

@@ -327,7 +327,7 @@ def _generate_ai_remedy(session: dict) -> str:
     try:
         if _client:
             res = _client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
+                model="qwen/qwen3.6-27b",
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
