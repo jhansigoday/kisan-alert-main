@@ -294,14 +294,18 @@ Write all text field values (disease_label, crop_name, symptoms, causes, treatme
             print("Groq Vision classification failed:", groq_error)
             error_str = str(groq_error).lower()
             if "rate" in error_str or "limit" in error_str or "429" in error_str:
-                return _uncertain(
-                    "rate_limited",
+                msg = (
+                    "⚠️ మీరు తాత్కాలికంగా ఉచిత AI అభ్యర్థన పరిమితిని చేరుకున్నారు. దయచేసి 1 నిమిషం వేచి ఉండి మళ్లీ ప్రయత్నించండి."
+                    if lang == "te" else
                     "⚠️ You have temporarily reached the free AI request limit. Please wait 1 minute and try again."
                 )
-            return _uncertain(
-                "groq_error",
+                return _uncertain("rate_limited", msg)
+            msg = (
+                f"⚠️ మండి నిర్ధారణ లోపం: {str(groq_error)[:100]}. దయచేసి కాసేపటి తర్వాత మళ్ళీ ప్రయత్నించండి."
+                if lang == "te" else
                 f"⚠️ Groq Vision error: {str(groq_error)[:100]}. Please try again shortly."
             )
+            return _uncertain("groq_error", msg)
 
     headers = {}
     # Accept Hugging Face's standard variable name as well as the app's

@@ -1925,8 +1925,12 @@ function toggleAnalyticsState() {
   const labels = document.querySelectorAll(".stat-bubble .label");
   const valueSavings = document.getElementById("analytics-water-savings");
   const chartHeadings = document.querySelectorAll(".analytics-chart-card h3");
+  const analyticsHeader = document.querySelector("#panel-analytics .panel-header h2");
+  const analyticsSubtitle = document.querySelector("#panel-analytics .panel-header p");
 
   if (currentLang === "te") {
+    if (analyticsHeader) analyticsHeader.textContent = "వ్యవసాయ చారిత్రక విశ్లేషణలు";
+    if (analyticsSubtitle) analyticsSubtitle.textContent = "వర్షపాత కొలమానాలు, కాలానుగుణ నికర లాభాలు మరియు పంట దిగుబడి చారిత్రక పోకడలను దృశ్యమానం చేయండి.";
     if (headingStat) headingStat.textContent = "త్వరిత గణాంకాలు";
     if (labels[0]) labels[0].textContent = "మొత్తం లాభం (2025)";
     if (labels[1]) labels[1].textContent = "నీటి పొదుపు (డ్రిప్)";
@@ -1934,6 +1938,8 @@ function toggleAnalyticsState() {
     if (chartHeadings[0]) chartHeadings[0].textContent = "నికర లాభం పంట దిగుబడి పోకడలు";
     if (chartHeadings[1]) chartHeadings[1].textContent = "వర్షపాత చరిత్ర (మిమీ)";
   } else {
+    if (analyticsHeader) analyticsHeader.textContent = "Farm Historical Analytics";
+    if (analyticsSubtitle) analyticsSubtitle.textContent = "Visualize rainfall metrics, seasonal net profits, and crop yields historical trends.";
     if (headingStat) headingStat.textContent = "Quick Statistics";
     if (labels[0]) labels[0].textContent = "Total Profit (2025)";
     if (labels[1]) labels[1].textContent = "Water Savings (Drip)";

@@ -157,19 +157,34 @@ def photo_query():
                 diagnosis_state=diagnosis_state,
             )
         else:
-            caution = diagnosis.get("message") or "⚠️ Unable to reliably diagnose this image. Please upload a clear image of the affected plant leaf."
-            report = {
-                "crop_name": "",
-                "disease_name": "Unable to reliably diagnose this image",
-                "symptoms": caution,
-                "causes": "A disease-specific cause cannot be confirmed from this image.",
-                "treatment": "Upload a clear close-up of the affected leaf and consult a local agricultural expert if symptoms are spreading.",
-                "organic_solution": "No disease-specific treatment is recommended until the diagnosis is confirmed.",
-                "chemical_solution": "No chemical recommendation is provided for an uncertain diagnosis.",
-                "preventive_measures": "Clean tools between plants and monitor nearby leaves for changes.",
-                "ai_recommendations": caution,
-                "spoken_explanation": caution,
-            }
+            if lang == "te":
+                caution = diagnosis.get("message") or "⚠️ ఈ చిత్రాన్ని నమ్మకంగా నిర్ధారించలేము. దయచేసి ప్రభావితమైన మొక్క ఆకు యొక్క స్పష్టమైన చిత్రాన్ని అప్‌లోడ్ చేయండి."
+                report = {
+                    "crop_name": "",
+                    "disease_name": "ఈ చిత్రాన్ని నమ్మకంగా నిర్ధారించలేము",
+                    "symptoms": caution,
+                    "causes": "ఈ చిత్రం నుండి వ్యాధి-నిర్దిష్ట కారణాన్ని నిర్ధారించలేము.",
+                    "treatment": "ప్రభావిత ఆకు యొక్క స్పష్టమైన క్లోజ్-అప్‌ను అప్‌లోడ్ చేయండి మరియు లక్షణాలు వ్యాపిస్తుంటే స్థానిక వ్యవసాయ నిపుణుడిని సంప్రదించండి.",
+                    "organic_solution": "నిర్ధారణ నిర్ధారించబడే వరకు ఎటువంటి వ్యాధి-నిర్దిష్ట చికిత్స సిఫార్సు చేయబడదు.",
+                    "chemical_solution": "అనిశ్చిత నిర్ధారణ కోసం ఎటువంటి రసాయన సిఫార్సు అందించబడదు.",
+                    "preventive_measures": "మొక్కల మధ్య పరికరాలను శుభ్రం చేయండి మరియు మార్పుల కోసం సమీపంలోని ఆకులను పర్యవేక్షించండి.",
+                    "ai_recommendations": caution,
+                    "spoken_explanation": caution,
+                }
+            else:
+                caution = diagnosis.get("message") or "⚠️ Unable to reliably diagnose this image. Please upload a clear image of the affected plant leaf."
+                report = {
+                    "crop_name": "",
+                    "disease_name": "Unable to reliably diagnose this image",
+                    "symptoms": caution,
+                    "causes": "A disease-specific cause cannot be confirmed from this image.",
+                    "treatment": "Upload a clear close-up of the affected leaf and consult a local agricultural expert if symptoms are spreading.",
+                    "organic_solution": "No disease-specific treatment is recommended until the diagnosis is confirmed.",
+                    "chemical_solution": "No chemical recommendation is provided for an uncertain diagnosis.",
+                    "preventive_measures": "Clean tools between plants and monitor nearby leaves for changes.",
+                    "ai_recommendations": caution,
+                    "spoken_explanation": caution,
+                }
         
         # Merge properties into result dictionary
         advisory_text = report.get("ai_recommendations", "")
