@@ -4281,6 +4281,19 @@ async function detectAnalyticsLocation() {
   if (!displayEl) return;
 
   const isTe = currentLang === "te";
+
+  // 1. Prioritize registered farmer profile location (typed by user, 100% accurate)
+  if (registeredFarmer && registeredFarmer.location) {
+    analyticsLocationDetected = true;
+    const locName = registeredFarmer.location;
+    displayEl.textContent = `📍 ${isTe ? "స్థానం" : "Location"}: ${locName}`;
+    displayEl.style.color = "#10b981";
+    displayEl.style.background = "rgba(16, 185, 129, 0.1)";
+    updateAnalyticsLocationValue(locName);
+    return;
+  }
+
+  // 2. Fallback to browser/device geolocation if not logged in
   displayEl.textContent = isTe ? "📍 స్థానం: స్థానాన్ని గుర్తిస్తోంది..." : "📍 Location: Detecting location...";
   displayEl.style.color = "#3b82f6";
   displayEl.style.background = "rgba(59, 130, 246, 0.1)";
@@ -4321,10 +4334,6 @@ async function detectAnalyticsLocation() {
       else if (error.code === error.POSITION_UNAVAILABLE) errorMsg = isTe ? "స్థానం అందుబాటులో లేదు" : "Position Unavailable";
       
       let fallbackLoc = "Nellore, Andhra Pradesh";
-      if (registeredFarmer && registeredFarmer.location) {
-        fallbackLoc = registeredFarmer.location;
-      }
-      
       displayEl.textContent = `📍 ${isTe ? "స్థానం" : "Location"}: ${fallbackLoc} (${errorMsg})`;
       displayEl.style.color = "#ef4444";
       displayEl.style.background = "rgba(239, 68, 68, 0.1)";
