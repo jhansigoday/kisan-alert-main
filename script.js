@@ -2145,8 +2145,9 @@ function getFarmAnalyticsRecord(crop, season, year, location) {
   const totalCost = Math.round(totalCostPerAcre * area);
   const netProfit = calculateNetProfit(revenue, totalCost);
   
-  const rainYearMult = year === 2026 ? 1.02 : year === 2025 ? 0.88 : 1.06;
-  const rainfall = Math.round(normalRainfall * rainYearMult * (0.95 + rand() * 0.1));
+  const rainObj = getMonthlyRainfallData(crop, season, year, location);
+  const rainfall = rainObj.actualRain.reduce((a, b) => a + b, 0);
+  const normalRainfallVal = rainObj.normalRain.reduce((a, b) => a + b, 0);
   const waterUsageVal = irrigation ? calculateWaterUsage(irrigation) : null;
   
   return {
@@ -2167,30 +2168,52 @@ function getFarmAnalyticsRecord(crop, season, year, location) {
     totalCost,
     netProfit,
     actualRainfallMm: rainfall,
-    normalRainfallMm: normalRainfall,
+    normalRainfallMm: normalRainfallVal,
     irrigationType: irrigation || undefined,
     waterUsage: waterUsageVal ? waterUsageVal * area : null,
     isLivePrice: Boolean(livePrice)
   };
 }
 
-function getPreviousSeason(season, year) {
-  if (season === "Rabi") {
-    return { season: "Kharif", year: year };
+function getPreviousSeason(crop, season, year) {
+  const validSeasons = getCompatibleSeasons(crop);
+  if (validSeasons.length === 1) {
+    // Single season crop, compare with the previous year's same season
+    return { season: season, year: year - 1 };
   } else {
-    return { season: "Rabi", year: year - 1 };
+    // Multi season crop, sequential comparison
+    if (season === "Rabi") {
+      return { season: "Kharif", year: year };
+    } else {
+      return { season: "Rabi", year: year - 1 };
+    }
   }
 }
 
 function getMonthlyRainfallData(crop, season, year, location) {
   const rand = getSeededRandom(`${crop}_${season}_${year}_${location}_rain`);
-  const baseRainVal = season === "Kharif" ? [110, 190, 240, 150, 80, 20] : [15, 10, 20, 15, 30, 45];
+  let baseRainVal = season === "Kharif" ? [110, 190, 240, 150, 80, 20] : [15, 10, 20, 15, 30, 45];
+  
+  // Scale base rainfall based on the location's total seasonal normal rainfall
+  const locLower = location.toLowerCase();
+  let scale = 1.0;
+  if (locLower.includes("visakhapatnam")) {
+    scale = season === "Kharif" ? 1.2 : 1.3;
+  } else if (locLower.includes("nellore")) {
+    scale = season === "Kharif" ? 1.05 : 1.1;
+  } else if (locLower.includes("guntur")) {
+    scale = season === "Kharif" ? 0.9 : 0.7;
+  } else if (locLower.includes("vijayawada")) {
+    scale = season === "Kharif" ? 0.95 : 0.8;
+  } else if (locLower.includes("kavali")) {
+    scale = season === "Kharif" ? 0.85 : 0.6;
+  }
   
   const normalRain = [];
   const actualRain = [];
   
   for (let i = 0; i < 6; i++) {
-    const factor = 0.85 + rand() * 0.3;
+    const factor = (0.85 + rand() * 0.3) * scale;
     normalRain.push(Math.round(baseRainVal[i] * factor));
     const rainYearMult = year === 2026 ? 1.02 : year === 2025 ? 0.88 : 1.06;
     actualRain.push(Math.round(baseRainVal[i] * factor * rainYearMult * (0.9 + rand() * 0.2)));
@@ -2382,7 +2405,7 @@ function renderDynamicDashboard() {
   const location = locationSelect.value;
 
   const current = getFarmAnalyticsRecord(crop, season, year, location);
-  const prevSeasonObj = getPreviousSeason(season, year);
+  const prevSeasonObj = getPreviousSeason(crop, season, year);
   
   let prev = null;
   if (prevSeasonObj.year >= 2024) {
@@ -2522,19 +2545,22 @@ function renderDynamicDashboard() {
   if (yieldTrendChartInstance) yieldTrendChartInstance.destroy();
   if (rainHistoryChartInstance) rainHistoryChartInstance.destroy();
 
-  const seasonsList = [
-    { season: "Kharif", year: 2024 },
-    { season: "Rabi", year: 2024 },
-    { season: "Kharif", year: 2025 },
-    { season: "Rabi", year: 2025 },
-    { season: "Kharif", year: 2026 },
-    { season: "Rabi", year: 2026 }
-  ];
+  const validSeasons = getCompatibleSeasons(crop);
+  const seasonsList = [];
+  const seasonLabels = [];
+  const yearsList = [2024, 2025, 2026];
+  yearsList.forEach(y => {
+    validSeasons.forEach(s => {
+      seasonsList.push({ season: s, year: y });
+      if (s === "Kharif") {
+        seasonLabels.push(currentLang === "te" ? `ఖరీఫ్ ${y}` : `Kharif ${y}`);
+      } else {
+        seasonLabels.push(currentLang === "te" ? `రబీ ${y}` : `Rabi ${y}`);
+      }
+    });
+  });
+
   const chartRecords = seasonsList.map(s => getFarmAnalyticsRecord(crop, s.season, s.year, location));
-  
-  const seasonLabels = currentLang === "te"
-    ? ['ఖరీఫ్ 2024', 'రబీ 2024', 'ఖరీఫ్ 2025', 'రబీ 2025', 'ఖరీఫ్ 2026', 'రబీ 2026']
-    : ['Kharif 2024', 'Rabi 2024', 'Kharif 2025', 'Rabi 2025', 'Kharif 2026', 'Rabi 2026'];
 
   const profits = chartRecords.map(r => r.netProfit);
   const revenues = chartRecords.map(r => r.revenue);
