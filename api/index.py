@@ -930,8 +930,8 @@ def chat_query():
             reply = res.choices[0].message.content.strip()
             import re
             reply = re.sub(r"<think>.*?</think>", "", reply, flags=re.DOTALL)
-            if "<think>" in reply:
-                reply = reply.split("<think>")[0]
+            reply = re.sub(r"(?i)^(thinking process|thought process|here's a thinking process):?.*?(?=\b[A-Za-z0-9]|$)", "", reply, flags=re.DOTALL)
+            reply = reply.strip()
             if not reply:
                 raise Exception("Empty response returned from model")
         else:

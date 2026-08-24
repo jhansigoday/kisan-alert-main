@@ -118,8 +118,10 @@ def generate_advisory(transcript: str = "", disease_label: str = "", disease_con
 
     advisory_text = response.choices[0].message.content.strip()
     import re
-    advisory_text = re.sub(r"(?i)here's a thinking process:.*?(?=\b(diagnosis|symptoms|likely cause|what to do|prevention|when to seek help)\b|$)", "", advisory_text, flags=re.DOTALL)
     advisory_text = re.sub(r"<think>.*?</think>", "", advisory_text, flags=re.DOTALL).strip()
+    diag_match = re.search(r"(?i)\bDIAGNOSIS\b", advisory_text)
+    if diag_match:
+        advisory_text = advisory_text[diag_match.start():].strip()
 
     if needs_escalation:
         if lang == "te":
