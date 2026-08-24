@@ -1073,6 +1073,131 @@ if (compareCropsBtn) {
   });
 }
 
+const MOCK_MANDI_DATA = [
+  { market: "Nellore", commodity: "Rice", min_price: 2100, max_price: 2400, modal_price: 2300, district: "Nellore", state: "Andhra Pradesh" },
+  { market: "Nellore", commodity: "Groundnut", min_price: 6100, max_price: 6700, modal_price: 6500, district: "Nellore", state: "Andhra Pradesh" },
+  { market: "Nellore", commodity: "Wheat", min_price: 2200, max_price: 2500, modal_price: 2400, district: "Nellore", state: "Andhra Pradesh" },
+  { market: "Visakhapatnam", commodity: "Rice", min_price: 2000, max_price: 2300, modal_price: 2150, district: "Visakhapatnam", state: "Andhra Pradesh" },
+  { market: "Visakhapatnam", commodity: "Maize", min_price: 1950, max_price: 2200, modal_price: 2100, district: "Visakhapatnam", state: "Andhra Pradesh" },
+  { market: "Visakhapatnam", commodity: "Cotton", min_price: 6800, max_price: 7200, modal_price: 7000, district: "Visakhapatnam", state: "Andhra Pradesh" },
+  { market: "Visakhapatnam", commodity: "Mustard", min_price: 5200, max_price: 5700, modal_price: 5500, district: "Visakhapatnam", state: "Andhra Pradesh" },
+  { market: "Guntur", commodity: "Chilli", min_price: 14000, max_price: 16500, modal_price: 15500, district: "Guntur", state: "Andhra Pradesh" },
+  { market: "Guntur", commodity: "Cotton", min_price: 6900, max_price: 7300, modal_price: 7100, district: "Guntur", state: "Andhra Pradesh" },
+  { market: "Guntur", commodity: "Chickpea", min_price: 5000, max_price: 5600, modal_price: 5300, district: "Guntur", state: "Andhra Pradesh" },
+  { market: "Vijayawada", commodity: "Tomato", min_price: 900, max_price: 1100, modal_price: 1000, district: "Krishna", state: "Andhra Pradesh" },
+  { market: "Vijayawada", commodity: "Maize", min_price: 2000, max_price: 2250, modal_price: 2150, district: "Krishna", state: "Andhra Pradesh" },
+  { market: "Vijayawada", commodity: "Potato", min_price: 1100, max_price: 1300, modal_price: 1200, district: "Krishna", state: "Andhra Pradesh" },
+  { market: "Kavali", commodity: "Groundnut", min_price: 6000, max_price: 6600, modal_price: 6300, district: "Nellore", state: "Andhra Pradesh" },
+  { market: "Kavali", commodity: "Rice", min_price: 2050, max_price: 2350, modal_price: 2200, district: "Nellore", state: "Andhra Pradesh" },
+  { market: "Kavali", commodity: "Tomato", min_price: 850, max_price: 1050, modal_price: 950, district: "Nellore", state: "Andhra Pradesh" }
+];
+
+let activeMandiData = null;
+
+function filterMandiData() {
+  const marketFilter = document.getElementById("filter-mandi-market").value;
+  const commodityFilter = document.getElementById("filter-mandi-commodity").value;
+  
+  if (!activeMandiData) return;
+
+  const filteredMarkets = activeMandiData.nearest_markets.filter(m => {
+    const matchMarket = marketFilter === "All" || String(m.market).toLowerCase().includes(marketFilter.toLowerCase());
+    const matchCommodity = commodityFilter === "All" || String(m.commodity || activeMandiData.crop).toLowerCase().includes(commodityFilter.toLowerCase());
+    return matchMarket && matchCommodity;
+  });
+
+  const marketBody = document.getElementById("market-prices-body");
+  if (marketBody) {
+    marketBody.innerHTML = "";
+    if (filteredMarkets.length === 0) {
+      marketBody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:16px;">${currentLang === "te" ? "ఫలితాలు లేవు" : "No matching market records found."}</td></tr>`;
+    } else {
+      filteredMarkets.forEach(m => {
+        const tr = document.createElement("tr");
+        const area = [m.district, m.state].filter(Boolean).join(", ");
+        const modal = Number(m.price ?? m.modal_price);
+        const minimum = Number(m.min_price);
+        const maximum = Number(m.max_price);
+        
+        const priceSuffix = currentLang === "te" ? " / క్వింటాల్" : " / Quintal";
+        const reportedDate = activeMandiData.isDemo ? "Demo" : (m.reported_date || "Not supplied");
+        const source = activeMandiData.isDemo ? "Demo data" : (m.source || activeMandiData.source || "Government market data");
+        
+        tr.innerHTML = `
+          <td>${translateMandiTerm(m.market)}${area ? `<br><small>${area}</small>` : ""}</td>
+          <td>${translateMandiTerm(m.commodity || activeMandiData.crop)}</td>
+          <td>${Number.isFinite(minimum) ? `₹${minimum.toLocaleString()} ${priceSuffix}` : "—"}</td>
+          <td>${Number.isFinite(maximum) ? `₹${maximum.toLocaleString()} ${priceSuffix}` : "—"}</td>
+          <td>₹${modal.toLocaleString()} ${priceSuffix}</td>
+          <td>${reportedDate}</td>
+          <td>${source}</td>
+        `;
+        marketBody.appendChild(tr);
+      });
+    }
+  }
+
+  const notice = document.getElementById("marketChartNotice");
+  const comparisonTitle = document.getElementById("marketComparisonTitle");
+  
+  if (activeMandiData.isDemo) {
+    const selectedCrop = commodityFilter === "All" ? activeMandiData.crop : commodityFilter;
+    updateDemoMarketTrendChart(selectedCrop);
+  } else {
+    if (activeMandiData.history && activeMandiData.history.length >= 2 && commodityFilter === "All") {
+      if (comparisonTitle) comparisonTitle.textContent = "30-Day Historical Mandi Price Trend";
+      if (notice) notice.style.display = "none";
+      updateMarketTrendChart(activeMandiData.crop, activeMandiData.history.map(item => item.price), activeMandiData.history.map(item => item.date));
+    } else if (filteredMarkets.length) {
+      if (comparisonTitle) comparisonTitle.textContent = "Nearby Market Price Comparison";
+      if (notice) {
+        notice.textContent = "Reference records shown in the table are genuine reported market prices, not a 30-day trend.";
+        notice.style.display = "block";
+      }
+      updateMarketComparisonChart(activeMandiData.crop, filteredMarkets);
+    } else {
+      if (marketTrendChartInstance) {
+        marketTrendChartInstance.destroy();
+        marketTrendChartInstance = null;
+      }
+      if (notice) {
+        notice.textContent = "No trend data available for current filters.";
+        notice.style.display = "block";
+      }
+    }
+  }
+}
+
+function updateDemoMarketTrendChart(crop) {
+  const basePrice = getMandiPriceForCrop(crop) || 2200;
+  const historyData = [];
+  const labels = [];
+  const now = new Date();
+  
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(now.getDate() - i);
+    labels.push(d.toISOString().slice(0, 10));
+    
+    const rand = getSeededRandom(`${crop}_mandi_hist_${i}`)();
+    const price = Math.round(basePrice * (0.95 + rand * 0.1));
+    historyData.push(price);
+  }
+  
+  const comparisonTitle = document.getElementById("marketComparisonTitle");
+  if (comparisonTitle) comparisonTitle.textContent = currentLang === "te" ? "డెమో మార్కెట్ ధర ట్రెండ్" : "Demo Historical Mandi Price Trend";
+  
+  const notice = document.getElementById("marketChartNotice");
+  if (notice) {
+    notice.textContent = currentLang === "te"
+      ? "గమనిక: ఈ చారిత్రక ధరల ధోరణి కేవలం ప్రదర్శన కోసం మాత్రమే మరియు నిజమైనది కాదు."
+      : "Live official mandi prices are temporarily unavailable. The trend below is demonstration historical data and not live prices.";
+    notice.style.display = "block";
+  }
+  
+  updateMarketTrendChart(crop, historyData, labels);
+}
+
 async function loadMandiMarketData(crop = "Rice", lat = 14.4426, lon = 79.9865, location = "") {
   const cacheKey = getMandiCacheKey(crop, location);
   try {
@@ -1081,16 +1206,14 @@ async function loadMandiMarketData(crop = "Rice", lat = 14.4426, lon = 79.9865, 
     const data = await res.json();
     if (!res.ok || !data.available) {
       const message = getSafeMandiMessage(data.message);
-      renderCachedMandiOrUnavailable(cacheKey, message);
+      renderCachedMandiOrUnavailable(cacheKey, message, crop);
       return;
     }
-    // Only live responses are verified snapshots. Reference records must not
-    // later appear as if they were a live cache.
     const cacheRecord = data.data_mode === "live" ? saveMandiCache(cacheKey, data) : { history: [] };
     renderMandiPrices(data, null, cacheRecord.history);
   } catch (err) {
     console.log("Could not load mandi prices:", err);
-    renderCachedMandiOrUnavailable(cacheKey, "Official mandi prices are temporarily unavailable. Please try again shortly.");
+    renderCachedMandiOrUnavailable(cacheKey, "Official mandi prices are temporarily unavailable. Please try again shortly.", crop);
   }
 }
 
@@ -1117,7 +1240,7 @@ function saveMandiCache(cacheKey, data) {
   }
 }
 
-function renderCachedMandiOrUnavailable(cacheKey, message) {
+function renderCachedMandiOrUnavailable(cacheKey, message, crop) {
   try {
     const cached = JSON.parse(localStorage.getItem(cacheKey) || "null");
     const cacheAge = cached && Date.now() - new Date(cached.verifiedAt).getTime();
@@ -1128,95 +1251,121 @@ function renderCachedMandiOrUnavailable(cacheKey, message) {
   } catch (err) {
     console.log("Could not read cached mandi prices:", err);
   }
-  showMandiUnavailable(message);
+  showMandiFallbackDemoData(crop);
 }
 
 function renderMandiPrices(data, cachedAt = null, history = []) {
-  const markets = Array.isArray(data.nearest_markets) ? data.nearest_markets : [];
-  const isHistorical = data.data_mode === "historical" || Boolean(cachedAt);
+  const warningBanner = document.getElementById("mandiWarningBanner");
+  if (warningBanner) warningBanner.style.display = "none";
+
+  activeMandiData = {
+    ...data,
+    isDemo: false,
+    history: history
+  };
+
   const freshness = cachedAt
     ? `Live update delayed. Showing last verified official data from ${new Date(cachedAt).toLocaleString()}.`
-    : isHistorical ? "Live feed temporarily unavailable. Showing real historical market records." : "Live Government Data — latest official daily prices.";
+    : data.data_mode === "historical" ? "Live feed temporarily unavailable. Showing real historical market records." : "Live Government Data — latest official daily prices.";
+  
   const body = document.getElementById("dash-prices-body");
   if (body) {
     body.innerHTML = "";
+    const markets = Array.isArray(data.nearest_markets) ? data.nearest_markets : [];
     markets.forEach(m => {
       const tr = document.createElement("tr");
       const area = [m.district, m.state].filter(Boolean).join(", ");
       const price = Number(m.price ?? m.modal_price);
-      tr.innerHTML = `<td>${translateMandiTerm(data.crop)}</td><td>₹${price.toLocaleString()} / ${currentLang === "te" ? "క్వింటాల్" : "Quintal"}</td><td>${isHistorical ? "Latest available" : "Official daily price"}</td><td>${translateMandiTerm(m.market)}${area ? ` (${area})` : ""}</td>`;
+      tr.innerHTML = `<td>${translateMandiTerm(data.crop)}</td><td>₹${price.toLocaleString()} / ${currentLang === "te" ? "క్వింటాల్" : "Quintal"}</td><td>${data.data_mode === "historical" ? "Latest available" : "Official daily price"}</td><td>${translateMandiTerm(m.market)}${area ? ` (${area})` : ""}</td>`;
       body.appendChild(tr);
     });
   }
-  const marketBody = document.getElementById("market-prices-body");
-  if (marketBody) {
-    marketBody.innerHTML = "";
-    markets.forEach(m => {
-      const tr = document.createElement("tr");
-      const area = [m.district, m.state].filter(Boolean).join(", ");
-      const modal = Number(m.price ?? m.modal_price);
-      const minimum = Number(m.min_price);
-      const maximum = Number(m.max_price);
-      tr.innerHTML = `<td>${translateMandiTerm(m.market)}${area ? `<br><small>${area}</small>` : ""}</td><td>${m.commodity || data.crop}</td><td>${Number.isFinite(minimum) ? `₹${minimum.toLocaleString()} / Quintal` : "—"}</td><td>${Number.isFinite(maximum) ? `₹${maximum.toLocaleString()} / Quintal` : "—"}</td><td>₹${modal.toLocaleString()} / Quintal</td><td>${m.reported_date || "Not supplied"}</td><td>${m.source || data.source || "Government market data"}</td>`;
-      marketBody.appendChild(tr);
-    });
-  }
+
   const source = document.getElementById("marketDataSource");
   if (source) source.textContent = `${freshness} Source: ${data.source || "AGMARKNET official data"}`;
-  setMandiStatus(isHistorical ? "historical" : "live");
+  
+  setMandiStatus(data.data_mode === "historical" || Boolean(cachedAt) ? "historical" : "live");
+  
   const retryButton = document.getElementById("retryMandiPricesBtn");
-  if (retryButton) retryButton.style.display = isHistorical ? "inline-flex" : "none";
-  const notice = document.getElementById("marketChartNotice");
-  const comparisonTitle = document.getElementById("marketComparisonTitle");
-  if (isHistorical && markets.length) {
-    if (comparisonTitle) comparisonTitle.textContent = "Nearby Market Price Comparison";
-    if (notice) {
-      notice.textContent = "Reference records shown in the table are genuine reported market prices, not a 30-day trend.";
-      notice.style.display = "block";
-    }
-    updateMarketComparisonChart(data.crop, markets);
-  } else if (history.length >= 2) {
-    if (comparisonTitle) comparisonTitle.textContent = "30-Day Historical Mandi Price Trend";
-    if (notice) notice.style.display = "none";
-    updateMarketTrendChart(data.crop, history.map(item => item.price), history.map(item => item.date));
-  } else if (notice) {
-    if (comparisonTitle) comparisonTitle.textContent = "30-Day Historical Mandi Price Trend";
-    notice.textContent = "30-day history will build automatically from verified daily official price snapshots.";
-    notice.style.display = "block";
-  }
+  if (retryButton) retryButton.style.display = data.data_mode === "historical" || Boolean(cachedAt) ? "inline-flex" : "none";
+
   const insightsBox = document.querySelector(".price-insights-card");
   if (insightsBox) {
     insightsBox.innerHTML = `<h3>${currentLang === "te" ? "మండి మార్కెట్ విశ్లేషణ" : "Mandi Market Insights"}</h3><div class="insight-row"><div class="icon"><i class="fa-solid fa-circle-check"></i></div><div class="info"><strong>${cachedAt ? "Last verified official prices" : "Official daily prices loaded"}</strong><span>${freshness}</span></div></div>`;
   }
+
+  filterMandiData();
 }
 
-function showMandiUnavailable(message) {
-  const rawMessage = getSafeMandiMessage(message);
-  const safeMessage = translateMandiTerm(rawMessage);
-  const comparisonTitle = document.getElementById("marketComparisonTitle");
-  if (comparisonTitle) comparisonTitle.textContent = currentLang === "te" ? "మార్కెట్ సమాచారం అందుబాటులో లేదు" : "Market Data Unavailable";
-  if (marketTrendChartInstance) {
-    marketTrendChartInstance.destroy();
-    marketTrendChartInstance = null;
+function showMandiFallbackDemoData(crop) {
+  const warningBanner = document.getElementById("mandiWarningBanner");
+  if (warningBanner) {
+    warningBanner.style.display = "block";
+    warningBanner.textContent = currentLang === "te"
+      ? "అధికారిక మండి ధరలు తాత్కాలికంగా అందుబాటులో లేవు. దిగువ విలువలు డెమో సమాచారం మరియు ప్రత్యక్ష ధరలు కావు."
+      : "Live official mandi prices are temporarily unavailable. The values below are demonstration data and are not live prices.";
   }
-  const notice = document.getElementById("marketChartNotice");
-  if (notice) {
-    notice.textContent = safeMessage;
-    notice.style.display = "block";
+
+  activeMandiData = {
+    crop: crop,
+    source: "Demo data",
+    isDemo: true,
+    nearest_markets: MOCK_MANDI_DATA.map(m => ({
+      market: m.market,
+      commodity: m.commodity,
+      min_price: m.min_price,
+      max_price: m.max_price,
+      modal_price: m.modal_price,
+      district: m.district,
+      state: m.state,
+      reported_date: "Demo",
+      source: "Demo data"
+    }))
+  };
+
+  const body = document.getElementById("dash-prices-body");
+  if (body) {
+    body.innerHTML = "";
+    const relevantDemo = MOCK_MANDI_DATA.filter(m => m.commodity.toLowerCase() === crop.toLowerCase());
+    if (relevantDemo.length === 0) {
+      body.innerHTML = `<tr><td colspan="4" style="text-align:center;">${currentLang === "te" ? "మండి సమాచారం అందుబాటులో లేదు" : "No market records available."}</td></tr>`;
+    } else {
+      relevantDemo.forEach(m => {
+        const tr = document.createElement("tr");
+        const area = [m.district, m.state].filter(Boolean).join(", ");
+        tr.innerHTML = `<td>${translateMandiTerm(m.commodity)}</td><td>₹${m.modal_price.toLocaleString()} / ${currentLang === "te" ? "క్వింటాల్" : "Quintal"}</td><td>Demo price</td><td>${translateMandiTerm(m.market)}${area ? ` (${area})` : ""}</td>`;
+        body.appendChild(tr);
+      });
+    }
   }
-  const insightsBox = document.querySelector(".price-insights-card");
-  if (insightsBox) {
-    insightsBox.innerHTML = `<h3>${currentLang === "te" ? "మండి మార్కెట్ విశ్లేషణ" : "Mandi Market Insights"}</h3><div class="insight-row"><div class="icon"><i class="fa-solid fa-circle-info"></i></div><div class="info"><strong>${currentLang === "te" ? "అధికారిక డేటా అందుబాటులో లేదు" : "Official data unavailable"}</strong><span>${safeMessage}</span></div></div>`;
-  }
+
   const source = document.getElementById("marketDataSource");
-  if (source) source.textContent = safeMessage;
-  setMandiStatus("unavailable");
+  if (source) {
+    source.textContent = currentLang === "te"
+      ? "లైవ్ ప్రభుత్వ సమాచారం అందుబాటులో లేదు. ప్రదర్శన డేటా చూపబడుతోంది."
+      : "Live official mandi prices are temporarily unavailable. Showing demonstration market data.";
+  }
+
+  setMandiStatus("demo");
+
   const retryButton = document.getElementById("retryMandiPricesBtn");
   if (retryButton) retryButton.style.display = "inline-flex";
-  const body = document.getElementById("dash-prices-body");
-  if (body) body.innerHTML = `<tr><td colspan="4">${safeMessage}</td></tr>`;
-  const marketBody = document.getElementById("market-prices-body");
-  if (marketBody) marketBody.innerHTML = `<tr><td colspan="7">${safeMessage}</td></tr>`;
+
+  const insightsBox = document.querySelector(".price-insights-card");
+  if (insightsBox) {
+    insightsBox.innerHTML = `
+      <h3>${currentLang === "te" ? "మండి మార్కెట్ విశ్లేషణ" : "Mandi Market Insights"}</h3>
+      <div class="insight-row">
+        <div class="icon"><i class="fa-solid fa-circle-info" style="color:#eab308;"></i></div>
+        <div class="info">
+          <strong>${currentLang === "te" ? "ప్రదర్శన మార్కెట్ డేటా చూపబడుతోంది" : "Showing Demonstration Market Data"}</strong>
+          <span>${currentLang === "te" ? "అధికారిక ప్రభుత్వ మండి సర్వర్ కనెక్టివిటీ సమస్యలను ఎదుర్కొంటోంది." : "The official government mandi server is experiencing connectivity issues."}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  filterMandiData();
 }
 
 function setMandiStatus(status) {
@@ -1230,6 +1379,10 @@ function setMandiStatus(status) {
     badge.textContent = currentLang === "te" ? "🟡 సూచన మార్కెట్ డేటా · లైవ్ ఫీడ్ అందుబాటులో లేదు" : "🟡 Reference Market Data · Live feed unavailable";
     badge.style.background = "#fef3c7";
     badge.style.color = "#92400e";
+  } else if (status === "demo") {
+    badge.textContent = currentLang === "te" ? "🟡 ప్రదర్శన డేటా (Demo)" : "🟡 Demo Market Data";
+    badge.style.background = "rgba(100, 116, 139, 0.1)";
+    badge.style.color = "#64748b";
   } else {
     badge.textContent = currentLang === "te" ? "🔴 మండి సమాచారం అందుబాటులో లేదు" : "🔴 Mandi Data Temporarily Unavailable";
     badge.style.background = "#fee2e2";

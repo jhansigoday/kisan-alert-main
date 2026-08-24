@@ -555,12 +555,44 @@
             <p data-translate-key="market_subtitle">Track mandi prices, compare market rates, and monitor price trends.</p>
           </div>
           
+          <!-- Mandi Market Filters -->
+          <div class="mandi-filters-row" style="display: flex; flex-wrap: wrap; gap: 12px; padding: 12px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 16px; align-items: center;">
+            <div class="filter-group" style="display: flex; align-items: center; gap: 8px;">
+              <label for="filter-mandi-market" style="font-weight: 600; font-size: 13px; color: var(--text-main);">Market:</label>
+              <select id="filter-mandi-market" style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main); font-size: 13px; cursor: pointer;">
+                <option value="All">All Markets</option>
+                <option value="Nellore">Nellore</option>
+                <option value="Visakhapatnam">Visakhapatnam</option>
+                <option value="Guntur">Guntur</option>
+                <option value="Vijayawada">Vijayawada</option>
+                <option value="Kavali">Kavali</option>
+              </select>
+            </div>
+            <div class="filter-group" style="display: flex; align-items: center; gap: 8px;">
+              <label for="filter-mandi-commodity" style="font-weight: 600; font-size: 13px; color: var(--text-main);">Commodity:</label>
+              <select id="filter-mandi-commodity" style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main); font-size: 13px; cursor: pointer;">
+                <option value="All">All Commodities</option>
+                <option value="Rice">Rice</option>
+                <option value="Wheat">Wheat</option>
+                <option value="Maize">Maize</option>
+                <option value="Groundnut">Groundnut</option>
+                <option value="Cotton">Cotton</option>
+                <option value="Tomato">Tomato</option>
+                <option value="Chilli">Chilli</option>
+                <option value="Chickpea">Chickpea</option>
+                <option value="Mustard">Mustard</option>
+                <option value="Potato">Potato</option>
+              </select>
+            </div>
+          </div>
+
           <div class="market-grid">
             <div class="chart-card">
               <h3 data-translate-key="market_card_title">Latest Official Mandi Prices</h3>
               <p id="marketDataSource" style="margin: 8px 0 6px; color: var(--text-muted); font-size: 13px;">Loading official AGMARKNET prices for your crop and saved location…</p>
               <a href="https://www.data.gov.in/catalog/current-daily-price-various-commodities-various-markets-mandi" target="_blank" rel="noopener noreferrer" data-translate-key="market_live_link" style="display:inline-block; margin:0 0 12px; color:var(--primary); font-size:13px; font-weight:600;">🔗 View Official Live Mandi Data →</a>
               <button id="retryMandiPricesBtn" class="btn secondary-btn" style="display:none; margin-bottom:16px; font-size:12px; padding:7px 12px;"><i class="fa-solid fa-rotate"></i> Retry official prices</button>
+              <div id="mandiWarningBanner" class="alert-item warning-alert" style="display:none; margin-bottom: 12px; padding: 12px; font-size: 13px; font-weight: 600; color: #991b1b; background: #fee2e2; border: 1px solid #fecaca; border-radius: 6px;">Live mandi prices are temporarily unavailable. The values below are demonstration data and are not live prices.</div>
               <div class="table-container">
                 <table class="prices-table">
                   <thead><tr><th data-translate-key="th_market">Market</th><th data-translate-key="th_commodity">Commodity</th><th data-translate-key="th_min_price">Minimum Price</th><th data-translate-key="th_max_price">Maximum Price</th><th data-translate-key="th_modal_price">Modal Price</th><th data-translate-key="th_reported_date">Reported Date</th><th data-translate-key="th_source">Source</th></tr></thead>
