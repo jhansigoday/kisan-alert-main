@@ -823,6 +823,9 @@ function updateDashboardWithProfile(profile) {
   
   // Toggle analytics view
   toggleAnalyticsState();
+  
+  // Render extension services & schemes dynamically based on profile
+  renderExtensionServices();
 }
 
 async function loadFarmRiskAssessment(profile, lat, lon) {
@@ -3467,19 +3470,393 @@ window.addEventListener("DOMContentLoaded", async () => {
   
   // Restore the active session from localStorage.  Profiles are intentionally
   // not fetched from the server because Vercel has no persistent filesystem.
-  try {
-    const savedPhone = localStorage.getItem("krushakseva_phone");
-    const savedProfile = localStorage.getItem("krushakseva_profile");
-    if (savedPhone && savedProfile) {
-      const profile = JSON.parse(savedProfile);
-      if (normalizePhone(profile.phone) === normalizePhone(savedPhone)) {
-        saveLocalProfile(profile);
-        document.getElementById("auth-portal-box").style.display = "none";
-        updateDashboardWithProfile(registeredFarmer);
-        switchTab("dashboard");
-      }
-    }
   } catch (err) {
     console.log("Auto-login error on reload:", err);
   }
+
+  // Bind Extension Services search inputs
+  const schemeSearchInput = document.getElementById("scheme-search-input");
+  const centerSearchInput = document.getElementById("center-search-input");
+  if (schemeSearchInput) {
+    schemeSearchInput.addEventListener("input", () => renderExtensionServices());
+  }
+  if (centerSearchInput) {
+    centerSearchInput.addEventListener("input", () => renderExtensionServices());
+  }
+  // Immediate load of dynamic extension services
+  renderExtensionServices();
 });
+
+const EXTENSION_SCHEMES = [
+  {
+    id: "pm_kisan",
+    title: {
+      en: "PM Kisan Samman Nidhi",
+      te: "పీఎం కిసాన్ సమ్మాన్ నిధి"
+    },
+    benefits: {
+      en: "₹6,000 per year in 3 equal installments.",
+      te: "ఏడాదికి ₹6,000 చొప్పున 3 విడతలలో లభిస్తుంది."
+    },
+    eligibility: {
+      en: "Small and marginal farmers with land up to 2 hectares (5 acres).",
+      te: "2 హెక్టార్ల (5 ఎకరాలు) లోపు సాగుభూమి ఉన్న చిన్న, సన్నకారు రైతులు."
+    },
+    documents: {
+      en: "Aadhaar Card, Land Registry (Pattadar Passbook), Bank Account details.",
+      te: "ఆధార్ కార్డు, పట్టాదార్ పాస్ పుస్తకం, బ్యాంక్ ఖాతా వివరాలు."
+    },
+    last_date: {
+      en: "31st August 2026",
+      te: "31 ఆగస్టు 2026"
+    },
+    status: "active",
+    source: {
+      en: "Ministry of Agriculture & Farmers Welfare, Govt of India",
+      te: "వ్యవసాయ & రైతు సంక్షేమ మంత్రిత్వ శాఖ, భారత ప్రభుత్వం"
+    },
+    verified_date: "2026-08-10",
+    url: "https://pmkisan.gov.in/",
+    btn_text: {
+      en: "Apply on PM-Kisan Portal",
+      te: "PM-Kisan పోర్టల్‌లో దరఖాస్తు చేయండి"
+    }
+  },
+  {
+    id: "ysr_rythu_bharosa",
+    title: {
+      en: "YSR Rythu Bharosa (AP)",
+      te: "వైఎస్సార్ రైతు భరోసా (AP)"
+    },
+    benefits: {
+      en: "₹13,500 financial assistance per year (includes ₹6,000 PM-Kisan).",
+      te: "ఏడాదికి ₹13,500 ఆర్థిక సహాయం (ఇందులో ₹6,000 పీఎం-కిసాన్ భాగం)."
+    },
+    eligibility: {
+      en: "All landowning farmer families residing in Andhra Pradesh.",
+      te: "ఆంధ్రప్రదేశ్‌లో నివసిస్తున్న భూమి ఉన్న రైతు కుటుంబాలన్నీ."
+    },
+    documents: {
+      en: "Aadhaar Card, Pattadar Passbook, IFSC Bank Account.",
+      te: "ఆధార్ కార్డు, పట్టాదార్ పాస్ పుస్తకం, ఐఎఫ్ఎస్‌సీ బ్యాంక్ వివరాలు."
+    },
+    last_date: {
+      en: "15th November 2026",
+      te: "15 నవంబర్ 2026"
+    },
+    status: "active",
+    source: {
+      en: "Department of Agriculture, Govt of Andhra Pradesh",
+      te: "వ్యవసాయ శాఖ, ఆంధ్రప్రదేశ్ ప్రభుత్వం"
+    },
+    verified_date: "2026-08-15",
+    url: "https://ysrrythubharosa.ap.gov.in/",
+    btn_text: {
+      en: "Apply on Rythu Bharosa Portal",
+      te: "రైతు భరోసా పోర్టల్‌లో దరఖాస్తు చేయండి"
+    }
+  },
+  {
+    id: "pmfby",
+    title: {
+      en: "Pradhan Mantri Fasal Bima Yojana (PMFBY)",
+      te: "ప్రధాన మంత్రి ఫసల్ బీమా యోజన (PMFBY)"
+    },
+    benefits: {
+      en: "Financial support against crop loss due to natural calamities.",
+      te: "ప్రకృతి వైపరీత్యాల వల్ల పంట నష్టపోతే ఆర్థిక సహాయం."
+    },
+    eligibility: {
+      en: "All farmers growing notified crops (e.g. Rice, Chilli, Maize).",
+      te: "నోటిఫై చేయబడిన పంటలు (వరి, మిర్చి, మొక్కజొన్న మొదలైనవి) సాగు చేసే రైతులు."
+    },
+    documents: {
+      en: "Land sowing certificate, Land registry, Aadhaar, Bank Details.",
+      te: "పంట సాగు ధృవీకరణ పత్రం, భూమి పత్రాలు, ఆధార్, బ్యాంక్ వివరాలు."
+    },
+    last_date: {
+      en: "31st December 2026",
+      te: "31 డిసెంబర్ 2026"
+    },
+    status: "active",
+    source: {
+      en: "Ministry of Agriculture & Farmers Welfare, Govt of India",
+      te: "వ్యవసాయ & రైతు సంక్షేమ మంత్రిత్వ శాఖ, భారత ప్రభుత్వం"
+    },
+    verified_date: "2026-08-01",
+    url: "https://pmfby.gov.in/",
+    btn_text: {
+      en: "Apply on PMFBY Portal",
+      te: "PMFBY పోర్టల్‌లో దరఖాస్తు చేయండి"
+    }
+  },
+  {
+    id: "smam",
+    title: {
+      en: "Sub-Mission on Agricultural Mechanization (SMAM)",
+      te: "వ్యవసాయ యాంత్రీకరణ సబ్-మిషన్ (SMAM)"
+    },
+    benefits: {
+      en: "40% to 50% subsidy on tractors, rotavators, and farm equipment.",
+      te: "ట్రాక్టర్లు, రోటవేటర్లు మరియు ఇతర పరికరాలపై 40% నుండి 50% సబ్సిడీ."
+    },
+    eligibility: {
+      en: "SC/ST, Women, Small & Marginal farmers get higher preference.",
+      te: "మహిళలు, ఎస్సీ/ఎస్టీ మరియు చిన్న/సన్నకారు రైతులకు ప్రాధాన్యత."
+    },
+    documents: {
+      en: "Aadhaar Card, Land ownership docs, Bank details, Caste Certificate (if applicable).",
+      te: "ఆధార్ కార్డు, భూమి యాజమాన్య పత్రాలు, బ్యాంక్ వివరాలు, కుల ధృవీకరణ పత్రం."
+    },
+    last_date: {
+      en: "30th September 2026",
+      te: "30 సెప్టెంబర్ 2026"
+    },
+    status: "closing_soon",
+    source: {
+      en: "Department of Agriculture & Farmers Welfare, Govt of India",
+      te: "వ్యవసాయ & రైతు సంక్షేమ శాఖ, భారత ప్రభుత్వం"
+    },
+    verified_date: "2026-08-18",
+    url: "https://agrimachinery.nic.in/",
+    btn_text: {
+      en: "Apply on Agrimachinery Portal",
+      te: "యాంత్రీకరణ పోర్టల్‌లో దరఖాస్తు చేయండి"
+    }
+  }
+];
+
+const DISTRICT_CENTERS = {
+  nellore: [
+    {
+      name: { en: "Rythu Seva Kendra (RSK) - Nellore East", te: "రైతు సేవ కేంద్రం (RSK) - నెల్లూరు ఈస్ట్" },
+      distance: "2.4 km",
+      phone: "+919848012345",
+      hours: { en: "9:00 AM - 5:00 PM", te: "ఉ. 9:00 - సా. 5:00" },
+      services: {
+        en: "Subsidized Seeds & Fertilizers, Crop Insurance Helpdesk, Soil Sample Collection",
+        te: "సబ్సిడీ విత్తనాలు & ఎరువులు, పంట బీమా సహాయ కేంద్రం, నేల నమూనా సేకరణ"
+      },
+      mapUrl: "https://maps.google.com/?q=Rythu+Seva+Kendra+Nellore"
+    },
+    {
+      name: { en: "Nellore District Soil Testing Laboratory (Nellore R.C.)", te: "నెల్లూరు జిల్లా భూసార పరీక్షా కేంద్రం" },
+      distance: "4.8 km",
+      phone: "+918612345678",
+      hours: { en: "10:00 AM - 5:00 PM", te: "ఉ. 10:00 - సా. 5:00" },
+      services: {
+        en: "NPK Soil Quality Testing, Soil Health Card Issuance, Salinity Analysis",
+        te: "భూసార నాణ్యత పరీక్ష (NPK), సాయిల్ హెల్త్ కార్డ్ జారీ, లవణీయత విశ్లేషణ"
+      },
+      mapUrl: "https://maps.google.com/?q=Soil+Testing+Lab+Nellore"
+    }
+  ],
+  visakhapatnam: [
+    {
+      name: { en: "Rythu Seva Kendra (RSK) - Visakhapatnam Rural", te: "రైతు సేవ కేంద్రం (RSK) - విశాఖపట్నం రూరల్" },
+      distance: "1.8 km",
+      phone: "+919866012345",
+      hours: { en: "9:00 AM - 5:00 PM", te: "ఉ. 9:00 - సా. 5:00" },
+      services: {
+        en: "Paddy & Maize seeds distribution, Pest Control consultation, Organic manure supply",
+        te: "వరి & మొక్కజొన్న విత్తనాల పంపిణీ, పురుగుల నివారణ సలహాలు, సేంద్రీయ ఎరువుల సరఫరా"
+      },
+      mapUrl: "https://maps.google.com/?q=Rythu+Seva+Kendra+Visakhapatnam"
+    },
+    {
+      name: { en: "Visakhapatnam Soil Testing Lab (Anakapalle)", te: "విశాఖపట్నం భూసార పరీక్షా కేంద్రం (అనకాపల్లి)" },
+      distance: "8.5 km",
+      phone: "+918912345678",
+      hours: { en: "10:00 AM - 5:00 PM", te: "ఉ. 10:00 - సా. 5:00" },
+      services: {
+        en: "Advanced Soil Profile Chemical Analysis, Soil Health Card, Water suitability test",
+        te: "నేల రసాయన విశ్లేషణ, సాయిల్ హెల్త్ కార్డ్, నీటి నాణ్యత పరీక్ష"
+      },
+      mapUrl: "https://maps.google.com/?q=Soil+Testing+Lab+Anakapalle"
+    }
+  ],
+  guntur: [
+    {
+      name: { en: "Rythu Seva Kendra (RSK) - Guntur Urban", te: "రైతు సేవ కేంద్రం (RSK) - గుంటూరు అర్బన్" },
+      distance: "2.1 km",
+      phone: "+919440012345",
+      hours: { en: "9:00 AM - 5:00 PM", te: "ఉ. 9:00 - సా. 5:00" },
+      services: {
+        en: "Chilli Seed Distribution, Mechanization Subsidy Application Desk, Pesticide Advisory",
+        te: "మిర్చి విత్తనాల పంపిణీ, యాంత్రీకరణ సబ్సిడీ డెస్క్, పురుగుల మందుల సలహాలు"
+      },
+      mapUrl: "https://maps.google.com/?q=Rythu+Seva+Kendra+Guntur"
+    },
+    {
+      name: { en: "Guntur Regional Soil Testing Laboratory (Amaravati Road)", te: "గుంటూరు ప్రాంతీయ భూసార పరీక్షా కేంద్రం" },
+      distance: "3.9 km",
+      phone: "+918632345678",
+      hours: { en: "10:00 AM - 5:00 PM", te: "ఉ. 10:00 - సా. 5:00" },
+      services: {
+        en: "Advanced Soil NPK Testing, Micro-nutrient deficiency diagnosis, Crop suitability advice",
+        te: "భూసార NPK పరీక్ష, సూక్ష్మపోషకాల లోప నిర్ధారణ, పంట అనుకూలత సలహాలు"
+      },
+      mapUrl: "https://maps.google.com/?q=Soil+Testing+Lab+Guntur"
+    }
+  ],
+  vijayawada: [
+    {
+      name: { en: "Rythu Seva Kendra (RSK) - Vijayawada Rural", te: "రైతు సేవ కేంద్రం (RSK) - విజయవాడ రూరల్" },
+      distance: "2.5 km",
+      phone: "+919490012345",
+      hours: { en: "9:00 AM - 5:00 PM", te: "ఉ. 9:00 - సా. 5:00" },
+      services: {
+        en: "Horticulture Subsidies, Micro-irrigation equipment helpdesk, Crop advisory",
+        te: "ఉద్యానవన సబ్సిడీలు, సూక్ష్మ నీటిపారుదల సహాయ కేంద్రం, పంట సలహాలు"
+      },
+      mapUrl: "https://maps.google.com/?q=Rythu+Seva+Kendra+Vijayawada"
+    },
+    {
+      name: { en: "Vijayawada Fertilizer Quality Control Laboratory", te: "విజయవాడ ఎరువుల నాణ్యత నియంత్రణ కేంద్రం" },
+      distance: "5.1 km",
+      phone: "+918662345678",
+      hours: { en: "10:00 AM - 5:00 PM", te: "ఉ. 10:00 - సా. 5:00" },
+      services: {
+        en: "Fertilizer purity test, Soil health card issuance, Irrigation water analysis",
+        te: "ఎరువుల నాణ్యత పరీక్ష, సాయిల్ హెల్త్ కార్డ్ జారీ, సాగు నీటి విశ్లేషణ"
+      },
+      mapUrl: "https://maps.google.com/?q=Fertilizer+Lab+Vijayawada"
+    }
+  ],
+  kavali: [
+    {
+      name: { en: "Rythu Seva Kendra (RSK) - Kavali Center", te: "రైతు సేవ కేంద్రం (RSK) - కావలి సెంటర్" },
+      distance: "1.5 km",
+      phone: "+919848098765",
+      hours: { en: "9:00 AM - 5:00 PM", te: "ఉ. 9:00 - సా. 5:00" },
+      services: {
+        en: "Groundnut Seed Distribution, Subsidized fertilizer sales, Crop damage verification",
+        te: "వేరుశనగ విత్తనాల పంపిణీ, సబ్సిడీ ఎరువుల అమ్మకం, పంట నష్ట ధృవీకరణ"
+      },
+      mapUrl: "https://maps.google.com/?q=Rythu+Seva+Kendra+Kavali"
+    },
+    {
+      name: { en: "Nellore North Mobile Soil Testing Laboratory (Kavali Desk)", te: "నెల్లూరు నార్త్ మొబైల్ భూసార పరీక్షా కేంద్రం (కావలి)" },
+      distance: "3.2 km",
+      phone: "+918626234567",
+      hours: { en: "10:00 AM - 4:00 PM", te: "ఉ. 10:00 - సా. 4:00" },
+      services: {
+        en: "Soil nutrient analysis, Fertilizer dosage recommendations, Soil Health Card",
+        te: "నేల పోషకాల విశ్లేషణ, ఎరువుల మోతాదు సిఫార్సులు, సాయిల్ హెల్త్ కార్డ్"
+      },
+      mapUrl: "https://maps.google.com/?q=Soil+Testing+Lab+Kavali"
+    }
+  ]
+};
+
+function renderExtensionServices() {
+  const schemesList = document.getElementById("extension-schemes-list");
+  const centersList = document.getElementById("extension-centers-list");
+  if (!schemesList || !centersList) return;
+
+  const isTe = currentLang === "te";
+  const landSize = registeredFarmer ? Number(registeredFarmer.land_size_acres) : 3.0;
+  const farmerLoc = (registeredFarmer ? registeredFarmer.location : "").toLowerCase();
+
+  schemesList.innerHTML = `
+    <span class="badge" style="background:rgba(100,116,139,0.1); color:#475569; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:600; display:inline-block; margin-bottom:12px;">ℹ ${isTe ? "ప్రదర్శన పథకాలు (Demo Data)" : "Demo Schemes Data"}</span>
+  `;
+
+  const schemeSearch = document.getElementById("scheme-search-input").value.toLowerCase();
+
+  EXTENSION_SCHEMES.forEach(s => {
+    const matchKeyword = !schemeSearch || 
+      s.title.en.toLowerCase().includes(schemeSearch) ||
+      s.title.te.includes(schemeSearch) ||
+      s.benefits.en.toLowerCase().includes(schemeSearch) ||
+      s.benefits.te.includes(schemeSearch) ||
+      s.eligibility.en.toLowerCase().includes(schemeSearch) ||
+      s.eligibility.te.includes(schemeSearch);
+
+    if (!matchKeyword) return;
+
+    let eligible = true;
+    let eligMsgEn = "Eligible";
+    let eligMsgTe = "అర్హులు";
+
+    if (s.id === "pm_kisan" && landSize > 5.0) {
+      eligible = false;
+      eligMsgEn = "Not Eligible (Land > 5 acres)";
+      eligMsgTe = "అనర్హులు (భూమి > 5 ఎకరాలు)";
+    }
+    if (s.id === "ysr_rythu_bharosa" && farmerLoc && !farmerLoc.includes("andhra prado") && !farmerLoc.includes("andhra pradesh") && !farmerLoc.includes("ap") && !farmerLoc.includes("nellore") && !farmerLoc.includes("guntur") && !farmerLoc.includes("kavali") && !farmerLoc.includes("visakhapatnam") && !farmerLoc.includes("vijayawada")) {
+      eligible = false;
+      eligMsgEn = "Not Eligible (Only for AP residents)";
+      eligMsgTe = "అనర్హులు (కేవలం AP నివాసితులకు)";
+    }
+
+    const badgeBg = eligible ? "#10b981" : "#ef4444";
+    const badgeText = isTe ? eligMsgTe : eligMsgEn;
+
+    const schemeDiv = document.createElement("div");
+    schemeDiv.className = "scheme-item";
+    schemeDiv.style.cssText = "border: 1px solid var(--border-color); padding: 16px; border-radius: 12px; margin-bottom: 12px; background: var(--bg-card); position: relative;";
+    
+    let statusText = s.status === "closing_soon" ? (isTe ? "త్వరలో ముగుస్తుంది" : "Closing Soon") : (isTe ? "యాక్టివ్" : "Active");
+    let statusColor = s.status === "closing_soon" ? "#eab308" : "#10b981";
+
+    schemeDiv.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+        <span class="scheme-badge" style="background:${statusColor}; font-size:11px; padding:3px 8px; border-radius:4px; color:#fff; font-weight:600;">${statusText}</span>
+        <span style="background:${badgeBg}; color:#fff; font-size:11px; padding:3px 8px; border-radius:4px; font-weight:600;">${badgeText}</span>
+      </div>
+      <h4 style="margin: 8px 0; font-weight: 700; color: var(--text-main); font-size: 15px;">${isTe ? s.title.te : s.title.en}</h4>
+      <p style="font-size:13px; margin: 4px 0; color: var(--text-main); line-height:1.4;"><strong>${isTe ? "ప్రయోజనాలు:" : "Benefits:"}</strong> ${isTe ? s.benefits.te : s.benefits.en}</p>
+      <p style="font-size:13px; margin: 4px 0; color: var(--text-main); line-height:1.4;"><strong>${isTe ? "అర్హత:" : "Eligibility:"}</strong> ${isTe ? s.eligibility.te : s.eligibility.en}</p>
+      <p style="font-size:13px; margin: 4px 0; color: var(--text-main); line-height:1.4;"><strong>${isTe ? "పత్రాలు:" : "Documents:"}</strong> ${isTe ? s.documents.te : s.documents.en}</p>
+      <p style="font-size:13px; margin: 4px 0; color: var(--text-main); line-height:1.4;"><strong>${isTe ? "చివరి తేదీ:" : "Last Date:"}</strong> ${isTe ? s.last_date.te : s.last_date.en}</p>
+      <p style="font-size:12px; margin: 8px 0 2px; color: var(--text-muted);"><strong>${isTe ? "మూలం:" : "Source:"}</strong> ${isTe ? s.source.te : s.source.en}</p>
+      <p style="font-size:11px; margin: 2px 0 10px; color: var(--text-muted); font-style:italic;">${isTe ? "చివరిగా ధృవీకరించబడింది:" : "Last verified:"} ${s.verified_date}</p>
+      <a href="${s.url}" target="_blank" rel="noopener noreferrer" class="btn primary-btn" style="display:inline-block; font-size:12px; padding: 6px 12px; text-decoration:none; text-align:center; box-sizing:border-box;">${isTe ? s.btn_text.te : s.btn_text.en} <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+    `;
+    schemesList.appendChild(schemeDiv);
+  });
+
+  centersList.innerHTML = `
+    <span class="badge" style="background:rgba(100,116,139,0.1); color:#475569; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:600; display:inline-block; margin-bottom:12px;">ℹ ${isTe ? "ప్రదర్శన సేవా కేంద్రాలు (Demo Data)" : "Demo Centers Data"}</span>
+  `;
+
+  let activeDistrict = "nellore";
+  if (farmerLoc) {
+    if (farmerLoc.includes("visakhapatnam") || farmerLoc.includes("vizag")) activeDistrict = "visakhapatnam";
+    else if (farmerLoc.includes("guntur")) activeDistrict = "guntur";
+    else if (farmerLoc.includes("vijayawada") || farmerLoc.includes("krishna")) activeDistrict = "vijayawada";
+    else if (farmerLoc.includes("kavali")) activeDistrict = "kavali";
+  }
+
+  const centers = DISTRICT_CENTERS[activeDistrict] || DISTRICT_CENTERS.nellore;
+  const centerSearch = document.getElementById("center-search-input").value.toLowerCase();
+
+  centers.forEach(c => {
+    const matchKeyword = !centerSearch || 
+      c.name.en.toLowerCase().includes(centerSearch) ||
+      c.name.te.includes(centerSearch) ||
+      c.services.en.toLowerCase().includes(centerSearch) ||
+      c.services.te.includes(centerSearch);
+
+    if (!matchKeyword) return;
+
+    const centerDiv = document.createElement("div");
+    centerDiv.className = "center-item";
+    centerDiv.style.cssText = "border: 1px solid var(--border-color); padding: 16px; border-radius: 12px; margin-bottom: 12px; background: var(--bg-card);";
+
+    centerDiv.innerHTML = `
+      <h4 style="margin: 0 0 8px 0; font-weight: 700; color: var(--text-main); font-size: 15px;">${isTe ? c.name.te : c.name.en}</h4>
+      <p style="font-size:13px; margin: 4px 0; color: var(--text-main);">📍 <strong>${isTe ? "దూరం:" : "Distance:"}</strong> ${c.distance} ${isTe ? "దూరంలో" : "away"}</p>
+      <p style="font-size:13px; margin: 4px 0; color: var(--text-main);">🕒 <strong>${isTe ? "వేళలు:" : "Hours:"}</strong> ${isTe ? c.hours.te : c.hours.en}</p>
+      <p style="font-size:13px; margin: 4px 0; color: var(--text-main); line-height:1.4;">💼 <strong>${isTe ? "సేవలు:" : "Services:"}</strong> ${isTe ? c.services.te : c.services.en}</p>
+      <p style="font-size:13px; margin: 4px 0 10px; color: var(--text-main);">📞 <strong>${isTe ? "ఫోన్:" : "Phone:"}</strong> ${c.phone}</p>
+      
+      <div style="display:flex; gap: 8px; margin-top: 10px;">
+        <a href="tel:${c.phone}" class="btn secondary-btn" style="flex:1; display:inline-flex; align-items:center; justify-content:center; gap:6px; font-size:12px; padding: 6px 12px; text-decoration:none; font-weight:600;"><i class="fa-solid fa-phone"></i> ${isTe ? "కాల్ చేయండి" : "Call Center"}</a>
+        <a href="${c.mapUrl}" target="_blank" rel="noopener noreferrer" class="btn secondary-btn" style="flex:1; display:inline-flex; align-items:center; justify-content:center; gap:6px; font-size:12px; padding: 6px 12px; text-decoration:none; font-weight:600;"><i class="fa-solid fa-location-arrow"></i> ${isTe ? "దారి చూపించు" : "Get Directions"}</a>
+      </div>
+    `;
+    centersList.appendChild(centerDiv);
+  });
+}

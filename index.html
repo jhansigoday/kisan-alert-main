@@ -781,46 +781,26 @@
             <!-- Government Schemes -->
             <div class="services-block-half">
               <h3><i class="fa-solid fa-landmark"></i> Personalized Government Schemes</h3>
-              <div class="schemes-list">
-                <div class="scheme-item" style="border: 1px solid var(--border-color); padding: 16px; border-radius: 12px; margin-bottom: 12px; background: var(--bg-card);">
-                  <div class="scheme-badge">Active</div>
-                  <h4 style="margin-top: 8px; font-weight: 700; color: var(--text-main);">PM Kisan Samman Nidhi</h4>
-                  <p style="font-size:13px; margin: 4px 0; color: var(--text-main);"><strong>Benefits:</strong> ₹6,000 per year in 3 installments.</p>
-                  <p style="font-size:13px; margin: 4px 0; color: var(--text-main);"><strong>Eligibility:</strong> Land holding up to 2 hectares.</p>
-                  <p style="font-size:13px; margin: 4px 0; color: var(--text-main);"><strong>Documents:</strong> Aadhaar Card, Land Registry, Bank Passbook.</p>
-                  <p style="font-size:13px; margin: 4px 0; color: var(--text-main);"><strong>Last Date:</strong> 31st August 2026</p>
-                  <p style="font-size:13px; margin: 4px 0; color: var(--text-muted);"><strong>Source:</strong> Ministry of Agriculture & Farmers Welfare</p>
-                  <a href="https://pmkisan.gov.in/" target="_blank" class="btn primary-btn" style="display:inline-block; font-size:12px; padding: 6px 12px; margin-top:8px; text-decoration:none; text-align:center;">Apply on PM-Kisan Portal <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-                </div>
-                
-                <div class="scheme-item" style="border: 1px solid var(--border-color); padding: 16px; border-radius: 12px; background: var(--bg-card);">
-                  <div class="scheme-badge">Active</div>
-                  <h4 style="margin-top: 8px; font-weight: 700; color: var(--text-main);">YSR Rythu Bharosa (AP)</h4>
-                  <p style="font-size:13px; margin: 4px 0; color: var(--text-main);"><strong>Benefits:</strong> ₹13,500 financial assistance per year.</p>
-                  <p style="font-size:13px; margin: 4px 0; color: var(--text-main);"><strong>Eligibility:</strong> All landowning farmer families in AP.</p>
-                  <p style="font-size:13px; margin: 4px 0; color: var(--text-main);"><strong>Documents:</strong> Aadhaar Card, Pattadar Passbook, IFSC Bank details.</p>
-                  <p style="font-size:13px; margin: 4px 0; color: var(--text-main);"><strong>Last Date:</strong> 15th November 2026</p>
-                  <p style="font-size:13px; margin: 4px 0; color: var(--text-muted);"><strong>Source:</strong> Government of Andhra Pradesh</p>
-                  <a href="https://ysrrythubharosa.ap.gov.in/" target="_blank" class="btn primary-btn" style="display:inline-block; font-size:12px; padding: 6px 12px; margin-top:8px; text-decoration:none; text-align:center;">Apply on Rythu Bharosa Portal <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-                </div>
+              
+              <div style="margin-bottom: 12px;">
+                <input type="text" id="scheme-search-input" placeholder="Search schemes by keyword..." style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main); font-size: 13px; box-sizing: border-box;">
+              </div>
+              
+              <div id="extension-schemes-list" class="schemes-list">
+                <!-- Dynamically populated -->
               </div>
             </div>
             
             <!-- RSK Locations -->
             <div class="services-block-half">
               <h3><i class="fa-solid fa-map-location"></i> Nearby RSK & Seeds Centers</h3>
-              <div class="centers-list">
-                <div class="center-item">
-                  <h4>Rythu Seva Kendra (RSK) - Nellore East</h4>
-                  <p>📍 <strong>Distance:</strong> 2.4 km away</p>
-                  <p>📞 <strong>Phone:</strong> +919848012345</p>
-                  <p>🕒 <strong>Hours:</strong> 9:00 AM - 5:00 PM</p>
-                </div>
-                <div class="center-item">
-                  <h4>Venkata Soil Testing Laboratory</h4>
-                  <p>📍 <strong>Distance:</strong> 4.8 km away</p>
-                  <p>🕒 <strong>Hours:</strong> 10:00 AM - 4:00 PM</p>
-                </div>
+              
+              <div style="margin-bottom: 12px;">
+                <input type="text" id="center-search-input" placeholder="Search centers by name or service..." style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main); font-size: 13px; box-sizing: border-box;">
+              </div>
+              
+              <div id="extension-centers-list" class="centers-list">
+                <!-- Dynamically populated -->
               </div>
             </div>
           </div>
