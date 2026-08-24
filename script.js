@@ -4708,23 +4708,23 @@ const EXTENSION_SCHEMES = [
       te: "ఏడాదికి ₹6,000 చొప్పున 3 విడతలలో లభిస్తుంది."
     },
     eligibility: {
-      en: "Small and marginal farmers with land up to 2 hectares (5 acres).",
-      te: "2 హెక్టార్ల (5 ఎకరాలు) లోపు సాగుభూమి ఉన్న చిన్న, సన్నకారు రైతులు."
+      en: "Small and marginal landholder farmer families.",
+      te: "చిన్న మరియు సన్నకారు భూస్వామ్య రైతు కుటుంబాలు."
     },
     documents: {
       en: "Aadhaar Card, Land Registry (Pattadar Passbook), Bank Account details.",
       te: "ఆధార్ కార్డు, పట్టాదార్ పాస్ పుస్తకం, బ్యాంక్ ఖాతా వివరాలు."
     },
     last_date: {
-      en: "31st August 2026",
-      te: "31 ఆగస్టు 2026"
+      en: "Deadline: Check current official notification",
+      te: "చివరి తేదీ: ప్రస్తుత అధికారిక నోటిఫికేషన్‌ను చూడండి"
     },
     status: "active",
     source: {
       en: "Ministry of Agriculture & Farmers Welfare, Govt of India",
       te: "వ్యవసాయ & రైతు సంక్షేమ మంత్రిత్వ శాఖ, భారత ప్రభుత్వం"
     },
-    verified_date: "2026-08-10",
+    verified_date: "2026-08-24",
     url: "https://pmkisan.gov.in/",
     btn_text: {
       en: "Apply on PM-Kisan Portal",
@@ -4732,37 +4732,37 @@ const EXTENSION_SCHEMES = [
     }
   },
   {
-    id: "ysr_rythu_bharosa",
+    id: "ap_annadata_sukhibhava",
     title: {
-      en: "YSR Rythu Bharosa (AP)",
-      te: "వైఎస్సార్ రైతు భరోసా (AP)"
+      en: "AP Annadata Sukhibhava–PM-KISAN",
+      te: "ఏపీ అన్నదాత సుఖీభవ-పీఎం కిసాన్"
     },
     benefits: {
-      en: "₹13,500 financial assistance per year (includes ₹6,000 PM-Kisan).",
-      te: "ఏడాదికి ₹13,500 ఆర్థిక సహాయం (ఇందులో ₹6,000 పీఎం-కిసాన్ భాగం)."
+      en: "₹20,000 financial assistance per year (includes ₹6,000 PM-Kisan).",
+      te: "ఏడాదికి ₹20,000 ఆర్థిక సహాయం (ఇందులో ₹6,000 పీఎం-కిసాన్ భాగం)."
     },
     eligibility: {
-      en: "All landowning farmer families residing in Andhra Pradesh.",
+      en: "Landowning farmer families residing in Andhra Pradesh.",
       te: "ఆంధ్రప్రదేశ్‌లో నివసిస్తున్న భూమి ఉన్న రైతు కుటుంబాలన్నీ."
     },
     documents: {
-      en: "Aadhaar Card, Pattadar Passbook, IFSC Bank Account.",
-      te: "ఆధార్ కార్డు, పట్టాదార్ పాస్ పుస్తకం, ఐఎఫ్ఎస్‌సీ బ్యాంక్ వివరాలు."
+      en: "Aadhaar Card, Pattadar Passbook, Bank Account, e-crop registration.",
+      te: "ఆధార్ కార్డు, పట్టాదార్ పాస్ పుస్తకం, బ్యాంక్ ఖాతా, ఇ-పంట నమోదు వివరాలు."
     },
     last_date: {
-      en: "15th November 2026",
-      te: "15 నవంబర్ 2026"
+      en: "Deadline: Check current official notification",
+      te: "చివరి తేదీ: ప్రస్తుత అధికారిక నోటిఫికేషన్‌ను చూడండి"
     },
     status: "active",
     source: {
       en: "Department of Agriculture, Govt of Andhra Pradesh",
       te: "వ్యవసాయ శాఖ, ఆంధ్రప్రదేశ్ ప్రభుత్వం"
     },
-    verified_date: "2026-08-15",
-    url: "https://ysrrythubharosa.ap.gov.in/",
+    verified_date: "2026-08-24",
+    url: "https://annadatasukhibhava.ap.gov.in/",
     btn_text: {
-      en: "Apply on Rythu Bharosa Portal",
-      te: "రైతు భరోసా పోర్టల్‌లో దరఖాస్తు చేయండి"
+      en: "Apply on Annadata Sukhibhava Portal",
+      te: "అన్నదాత సుఖీభవ పోర్టల్‌లో దరఖాస్తు చేయండి"
     }
   },
   {
@@ -4776,23 +4776,23 @@ const EXTENSION_SCHEMES = [
       te: "ప్రకృతి వైపరీత్యాల వల్ల పంట నష్టపోతే ఆర్థిక సహాయం."
     },
     eligibility: {
-      en: "All farmers growing notified crops (e.g. Rice, Chilli, Maize).",
-      te: "నోటిఫై చేయబడిన పంటలు (వరి, మిర్చి, మొక్కజొన్న మొదలైనవి) సాగు చేసే రైతులు."
+      en: "All farmers growing notified crops in notified areas.",
+      te: "నోటిఫై చేయబడిన ప్రాంతాలలో నోటిఫై చేయబడిన పంటలు సాగు చేసే రైతులు."
     },
     documents: {
-      en: "Land sowing certificate, Land registry, Aadhaar, Bank Details.",
+      en: "Land sowing certificate, Land ownership registry, Aadhaar, Bank Details.",
       te: "పంట సాగు ధృవీకరణ పత్రం, భూమి పత్రాలు, ఆధార్, బ్యాంక్ వివరాలు."
     },
     last_date: {
-      en: "31st December 2026",
-      te: "31 డిసెంబర్ 2026"
+      en: "Depends on state, season and notified crop (Check official notification)",
+      te: "రాష్ట్రం, పంట కాలం మరియు నోటిఫై చేయబడిన పంట ఆధారంగా మారుతుంది (అధికారిక నోటిఫికేషన్‌ను చూడండి)"
     },
     status: "active",
     source: {
       en: "Ministry of Agriculture & Farmers Welfare, Govt of India",
       te: "వ్యవసాయ & రైతు సంక్షేమ మంత్రిత్వ శాఖ, భారత ప్రభుత్వం"
     },
-    verified_date: "2026-08-01",
+    verified_date: "2026-08-24",
     url: "https://pmfby.gov.in/",
     btn_text: {
       en: "Apply on PMFBY Portal",
@@ -4818,15 +4818,15 @@ const EXTENSION_SCHEMES = [
       te: "ఆధార్ కార్డు, భూమి యాజమాన్య పత్రాలు, బ్యాంక్ వివరాలు, కుల ధృవీకరణ పత్రం."
     },
     last_date: {
-      en: "30th September 2026",
-      te: "30 సెప్టెంబర్ 2026"
+      en: "Deadline: Check current official notification",
+      te: "చివరి తేదీ: ప్రస్తుత అధికారిక నోటిఫికేషన్‌ను చూడండి"
     },
-    status: "closing_soon",
+    status: "active",
     source: {
       en: "Department of Agriculture & Farmers Welfare, Govt of India",
       te: "వ్యవసాయ & రైతు సంక్షేమ శాఖ, భారత ప్రభుత్వం"
     },
-    verified_date: "2026-08-18",
+    verified_date: "2026-08-24",
     url: "https://agrimachinery.nic.in/",
     btn_text: {
       en: "Apply on Agrimachinery Portal",
@@ -4967,9 +4967,7 @@ function renderExtensionServices() {
   const landSize = registeredFarmer ? Number(registeredFarmer.land_size_acres) : 3.0;
   const farmerLoc = (registeredFarmer ? registeredFarmer.location : "").toLowerCase();
 
-  schemesList.innerHTML = `
-    <span class="badge" style="background:rgba(100,116,139,0.1); color:#475569; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:600; display:inline-block; margin-bottom:12px;">ℹ ${isTe ? "ప్రదర్శన పథకాలు (Demo Data)" : "Demo Schemes Data"}</span>
-  `;
+  schemesList.innerHTML = ""; // Verified real data is used, demo schemes badge removed!
 
   const schemeSearch = document.getElementById("scheme-search-input").value.toLowerCase();
 
@@ -4993,7 +4991,7 @@ function renderExtensionServices() {
       eligMsgEn = "Not Eligible (Land > 5 acres)";
       eligMsgTe = "అనర్హులు (భూమి > 5 ఎకరాలు)";
     }
-    if (s.id === "ysr_rythu_bharosa" && farmerLoc && !farmerLoc.includes("andhra prado") && !farmerLoc.includes("andhra pradesh") && !farmerLoc.includes("ap") && !farmerLoc.includes("nellore") && !farmerLoc.includes("guntur") && !farmerLoc.includes("kavali") && !farmerLoc.includes("visakhapatnam") && !farmerLoc.includes("vijayawada")) {
+    if (s.id === "ap_annadata_sukhibhava" && farmerLoc && !farmerLoc.includes("andhra prado") && !farmerLoc.includes("andhra pradesh") && !farmerLoc.includes("ap") && !farmerLoc.includes("nellore") && !farmerLoc.includes("guntur") && !farmerLoc.includes("kavali") && !farmerLoc.includes("visakhapatnam") && !farmerLoc.includes("vijayawada")) {
       eligible = false;
       eligMsgEn = "Not Eligible (Only for AP residents)";
       eligMsgTe = "అనర్హులు (కేవలం AP నివాసితులకు)";
@@ -5020,7 +5018,7 @@ function renderExtensionServices() {
       <p style="font-size:13px; margin: 4px 0; color: var(--text-main); line-height:1.4;"><strong>${isTe ? "పత్రాలు:" : "Documents:"}</strong> ${isTe ? s.documents.te : s.documents.en}</p>
       <p style="font-size:13px; margin: 4px 0; color: var(--text-main); line-height:1.4;"><strong>${isTe ? "చివరి తేదీ:" : "Last Date:"}</strong> ${isTe ? s.last_date.te : s.last_date.en}</p>
       <p style="font-size:12px; margin: 8px 0 2px; color: var(--text-muted);"><strong>${isTe ? "మూలం:" : "Source:"}</strong> ${isTe ? s.source.te : s.source.en}</p>
-      <p style="font-size:11px; margin: 2px 0 10px; color: var(--text-muted); font-style:italic;">${isTe ? "చివరిగా ధృవీకరించబడింది:" : "Last verified:"} ${s.verified_date}</p>
+      <p style="font-size:11px; margin: 2px 0 10px; color: var(--text-muted); font-style:italic;">${isTe ? "చివరిగా తనిఖీ చేయబడింది:" : "Last checked:"} ${s.verified_date}</p>
       <a href="${s.url}" target="_blank" rel="noopener noreferrer" class="btn primary-btn" style="display:inline-block; font-size:12px; padding: 6px 12px; text-decoration:none; text-align:center; box-sizing:border-box;">${isTe ? s.btn_text.te : s.btn_text.en} <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
     `;
     schemesList.appendChild(schemeDiv);
