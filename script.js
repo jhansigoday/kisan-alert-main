@@ -1953,21 +1953,74 @@ async function loadFarmRiskAssessment(profile, lat, lon) {
   const fillElem = document.querySelector(".status-gauge-bar .gauge-fill");
   const detailsContainer = document.querySelector(".status-details");
 
+  // Calculate baseline parameters
+  let cropName = profile.crop_type || "Rice";
+  if (cropName.length > 0) {
+    cropName = cropName.charAt(0).toUpperCase() + cropName.slice(1).toLowerCase();
+  }
+
+  const weather = latestWeatherState || { temp: 28, humidity: 75, rainfall: 850 };
+  let healthScore = 75;
+  let reasonEn = "Optimal Soil & Water state";
+  let reasonTe = "అనుకూలమైన నేల మరియు నీటి స్థితి";
+
   try {
-    // 1. Normalize Crop Name
-    let cropName = profile.crop_type || "Rice";
-    if (cropName.length > 0) {
-      cropName = cropName.charAt(0).toUpperCase() + cropName.slice(1).toLowerCase();
+    // 1. Calculate realistic health score based on whatever inputs are available
+    if (CROP_KNOWLEDGE_BASE[cropName]) {
+      const suitability = CropEngine.calculateSuitability(cropName, profile, weather);
+      if (suitability) {
+        healthScore = suitability.overallSuitability || 75;
+      }
+    } else {
+      const farmerPh = parseFloat(profile.soil_ph) || 6.5;
+      const phDiff = Math.abs(farmerPh - 6.5);
+      const phSubScore = Math.max(40, Math.round(100 - phDiff * 30));
+      
+      const farmerSoil = (profile.soil_type || "loamy").toLowerCase();
+      let soilSubScore = 70;
+      if (farmerSoil === "loamy" || farmerSoil === "alluvial") soilSubScore = 95;
+      else if (farmerSoil === "black") soilSubScore = 85;
+      else if (farmerSoil === "red") soilSubScore = 75;
+      else if (farmerSoil === "sandy") soilSubScore = 60;
+      
+      const waterAvail = (profile.water_availability || "Medium").toLowerCase();
+      let waterSubScore = 80;
+      if (waterAvail === "high") waterSubScore = 95;
+      else if (waterAvail === "medium") waterSubScore = 100;
+      else if (waterAvail === "low") waterSubScore = 60;
+
+      healthScore = Math.round((phSubScore * 0.3) + (soilSubScore * 0.3) + (waterSubScore * 0.4));
     }
-    
-    // Check if crop exists in knowledge base
+
+    healthScore = Math.max(0, Math.min(100, healthScore));
+
+    const phVal = parseFloat(profile.soil_ph) || 6.5;
+    const soilType = profile.soil_type || "loamy";
+    const waterAvail = profile.water_availability || "Medium";
+
+    if (healthScore >= 85) {
+      reasonEn = `Excellent compatibility with ${soilType} soil (pH ${phVal}) and optimal ${waterAvail} water.`;
+      reasonTe = `అద్భుతమైన నేల అనుకూలత (pH ${phVal}) మరియు తగినంత ${waterAvail} నీటి వనరులు ఉన్నాయి.`;
+    } else if (healthScore >= 70) {
+      reasonEn = `Favorable soil and weather. Balanced ${waterAvail} water support keeps the farm state stable.`;
+      reasonTe = `అనుకూలమైన నేల మరియు వాతావరణం. సమతుల్య ${waterAvail} నీటి సరఫరా పొలాన్ని స్థిరంగా ఉంచుతుంది.`;
+    } else {
+      reasonEn = `Sub-optimal pH (${phVal}) or low water availability detected. Recommend soil enrichment.`;
+      reasonTe = `తక్కువ పిహెచ్ (${phVal}) లేదా నీటి కొరత ఉంది. నేల సారాన్ని పెంచడానికి సేంద్రీయ ఎరువులు వేయండి.`;
+    }
+
+    // Always display the score & reason on the Dial!
+    if (scoreElem) scoreElem.textContent = healthScore;
+    if (msgElem) msgElem.textContent = isTe ? reasonTe : reasonEn;
+
+    // 2. Check if crop exists in knowledge base for card details
     if (!CROP_KNOWLEDGE_BASE[cropName]) {
       throw new Error(`Crop ${cropName} not supported in knowledge base`);
     }
 
     const cropSeasons = CROP_KNOWLEDGE_BASE[cropName].seasons || ["Kharif"];
     
-    // 2. Detect Season based on current date (August 2026 -> Kharif)
+    // 3. Detect Season based on current date (August 2026 -> Kharif)
     const currentMonth = new Date().getMonth();
     let currentSeasonName = "Kharif"; // June to October
     if (currentMonth >= 10 || currentMonth <= 2) {
@@ -1979,7 +2032,7 @@ async function loadFarmRiskAssessment(profile, lat, lon) {
     const isInSeason = cropSeasons.includes(currentSeasonName);
     const isSown = (profile.sowing_status === "sown" || profile.sown === true || (profile.sowing_date && profile.sowing_date !== ""));
 
-    // 3. Generate recommendations for off-season or not-yet-sown crops
+    // 4. Generate recommendations for off-season or not-yet-sown crops
     let recommendationText = "";
     if (cropName === "Wheat") {
       recommendationText = isTe 
@@ -2027,9 +2080,6 @@ async function loadFarmRiskAssessment(profile, lat, lon) {
         `;
       }
 
-      // Hide arbitrary health score dial parameters
-      if (scoreElem) scoreElem.textContent = "--";
-      if (msgElem) msgElem.textContent = recommendationText;
       if (fillElem) {
         fillElem.style.width = `0%`;
         fillElem.className = `gauge-fill`;
@@ -2037,14 +2087,8 @@ async function loadFarmRiskAssessment(profile, lat, lon) {
       return;
     }
 
-    // 4. In-season and sown: calculate and render dynamic calculations
-    const weather = latestWeatherState || { temp: 28, humidity: 75, rainfall: 850 };
-    const suitability = CropEngine.calculateSuitability(cropName, profile, weather);
-    if (!suitability) {
-      throw new Error("Suitability calculation returned null");
-    }
-    
-    const suitabilityScore = suitability.overallSuitability || 0;
+    // 5. In-season and sown: calculate and render dynamic calculations
+    const suitabilityScore = healthScore;
     const landSize = parseFloat(profile.land_size_acres) || 5.0;
     const yieldRange = CropEngine.estimateYieldRange(cropName, suitabilityScore, landSize);
     const growthInfo = getDynamicGrowthStageAndMessage(cropName, suitabilityScore);
@@ -2083,18 +2127,12 @@ async function loadFarmRiskAssessment(profile, lat, lon) {
       `;
     }
 
-    if (scoreElem) {
-      scoreElem.textContent = suitabilityScore;
-    }
-    if (msgElem) {
-      msgElem.textContent = `${growthInfo.message} (${isTe ? "ఉష్ణోగ్రత" : "Temp"}: ${weather.temp}°C, ${isTe ? "నేల" : "Soil"}: ${profile.soil_type || "loamy"})`;
-    }
     if (fillElem) {
       fillElem.style.width = `${suitabilityScore}%`;
       fillElem.className = `gauge-fill ${suitabilityScore >= 80 ? "green-fill" : suitabilityScore >= 60 ? "yellow-fill" : "red-fill"}`;
     }
 
-    // 5. Background API check with a 4s timeout AbortController
+    // 6. Background API check with a 4s timeout AbortController
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 4000);
     const params = new URLSearchParams({
@@ -2118,6 +2156,9 @@ async function loadFarmRiskAssessment(profile, lat, lon) {
   } catch (err) {
     console.error("Risk assessment calculation failed:", err);
     
+    if (scoreElem) scoreElem.textContent = healthScore;
+    if (msgElem) msgElem.textContent = isTe ? reasonTe : reasonEn;
+
     // Graceful error fallback
     if (cropNameElem) {
       cropNameElem.textContent = translateMandiTerm(profile.crop_type || "Rice");
@@ -2137,21 +2178,12 @@ async function loadFarmRiskAssessment(profile, lat, lon) {
       `;
     }
 
-    if (scoreElem) {
-      scoreElem.textContent = "--";
-    }
-    if (msgElem) {
-      msgElem.textContent = isTe 
-        ? "సాగు వివరాలు లేదా వాతావరణ సమాచారం లేనందున ప్రమాద అంచనా వేయలేకపోయాము." 
-        : "Could not calculate risk. Please check your farm details and network connection.";
-    }
     if (fillElem) {
       fillElem.style.width = `0%`;
       fillElem.className = `gauge-fill`;
     }
   }
 }
-
 // ---------- API LIVE FETCH WEATHER SERVICES ----------
 async function fetchWeatherForCoordinates(lat, lon) {
   try {
