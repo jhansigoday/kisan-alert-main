@@ -4851,6 +4851,41 @@ let nearbyCentersCache = null;
 let lastQueriedCoords = null;
 let isFetchingCenters = false;
 
+window.requestGpsForCenters = function() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        detectedLat = position.coords.latitude;
+        detectedLon = position.coords.longitude;
+        
+        const geoResult = await reverseGeocode(detectedLat, detectedLon);
+        if (geoResult) {
+          detectedLocationName = geoResult.district || geoResult.village || geoResult.state;
+          if (registeredFarmer) {
+            registeredFarmer.latitude = detectedLat;
+            registeredFarmer.longitude = detectedLon;
+            registeredFarmer.location = `${geoResult.district}, ${geoResult.state}`;
+            updateDashboardWithProfile(registeredFarmer);
+          }
+        }
+        
+        nearbyCentersCache = null;
+        renderExtensionServices();
+      },
+      (error) => {
+        console.error("Location request failed:", error);
+        alert(currentLang === "te" 
+          ? "స్థాన అనుమతి నిరాకరించబడింది లేదా అందుబాటులో లేదు. దయచేసి బ్రౌజర్ సెట్టింగ్స్ లో లొకేషన్ అనుమతిని ప్రారంభించండి." 
+          : "Location permission denied or unavailable. Please enable location access in your browser settings.");
+        renderExtensionServices();
+      },
+      { timeout: 10000, enableHighAccuracy: true }
+    );
+  } else {
+    alert(currentLang === "te" ? "మీ బ్రౌజర్ స్థాన సేవలకు మద్దతు ఇవ్వదు." : "Your browser does not support geolocation.");
+  }
+};
+
 async function fetchNearbyCenters(lat, lon) {
   if (isFetchingCenters) return;
   isFetchingCenters = true;
@@ -4987,9 +5022,24 @@ function renderExtensionServices() {
 
   if (!lat || !lon) {
     centersList.innerHTML = `
-      <div style="padding:16px; border:1px dashed var(--border-color); border-radius:12px; text-align:center; color:var(--text-muted); font-size:13px;">
-        <i class="fa-solid fa-triangle-exclamation" style="margin-bottom:8px; font-size:18px; color:#ef4444;"></i>
-        <p>${isTe ? "స్థాన సమాచారం అందుబాటులో లేదు" : "Location data unavailable"}</p>
+      <div style="padding:24px 16px; border:1px dashed var(--border-color); border-radius:12px; text-align:center; background: var(--bg-card); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;">
+        <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(59,130,246,0.1); display: flex; align-items: center; justify-content: center; color: #3b82f6; font-size: 20px;">
+          <i class="fa-solid fa-location-crosshairs"></i>
+        </div>
+        <div style="max-width: 280px; margin: 0 auto;">
+          <h4 style="margin: 0 0 6px 0; font-size: 14px; font-weight: 600; color: var(--text-main);">
+            ${isTe ? "స్థాన అనుమతి అవసరం" : "Location Access Required"}
+          </h4>
+          <p style="margin: 0; font-size: 12px; color: var(--text-muted); line-height: 1.4;">
+            ${isTe 
+              ? "సమీప ప్రభుత్వ రైతు సేవా కేంద్రాలు, భూసార పరీక్షా కేంద్రాలను కనుగొనడానికి మీ స్థానాన్ని పంచుకోండి." 
+              : "Please share your location to find nearby government Rythu Seva Kendras and soil testing labs."}
+          </p>
+        </div>
+        <button onclick="window.requestGpsForCenters()" class="btn primary-btn" style="font-size: 12px; padding: 8px 16px; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+          <i class="fa-solid fa-location-dot"></i>
+          <span>${isTe ? "స్థానాన్ని అనుమతించండి" : "Enable Location"}</span>
+        </button>
       </div>
     `;
     return;
@@ -5009,9 +5059,24 @@ function renderExtensionServices() {
 
   if (nearbyCentersCache.length === 0) {
     centersList.innerHTML = `
-      <div style="padding:16px; border:1px dashed var(--border-color); border-radius:12px; text-align:center; color:var(--text-muted); font-size:13px;">
-        <i class="fa-solid fa-triangle-exclamation" style="margin-bottom:8px; font-size:18px; color:#ef4444;"></i>
-        <p>${isTe ? "స్థాన సమాచారం అందుబాటులో లేదు" : "Location data unavailable"}</p>
+      <div style="padding:24px 16px; border:1px dashed var(--border-color); border-radius:12px; text-align:center; background: var(--bg-card); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;">
+        <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(239,68,68,0.1); display: flex; align-items: center; justify-content: center; color: #ef4444; font-size: 20px;">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <div style="max-width: 280px; margin: 0 auto;">
+          <h4 style="margin: 0 0 6px 0; font-size: 14px; font-weight: 600; color: var(--text-main);">
+            ${isTe ? "కేంద్రాలు కనుగొనబడలేదు" : "No Centers Found"}
+          </h4>
+          <p style="margin: 0 0 12px 0; font-size: 12px; color: var(--text-muted); line-height: 1.4;">
+            ${isTe 
+              ? "మీ స్థానానికి 25 కిలోమీటర్ల పరిధిలో ప్రభుత్వ వ్యవసాయ సేవా కేంద్రాలేవీ కనుగొనబడలేదు." 
+              : "No government agricultural service centers found within a 25km radius of your location."}
+          </p>
+        </div>
+        <button onclick="window.requestGpsForCenters()" class="btn primary-btn" style="font-size: 12px; padding: 8px 16px; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+          <i class="fa-solid fa-location-dot"></i>
+          <span>${isTe ? "మళ్లీ ప్రయత్నించండి" : "Try Again"}</span>
+        </button>
       </div>
     `;
     return;
