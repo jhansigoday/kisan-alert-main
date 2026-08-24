@@ -512,14 +512,12 @@ def sos_web_step():
 
 @app.route("/api/farmer-profile", methods=["POST"])
 def farmer_profile_create():
-    # Farmer profiles are deliberately owned by the browser.  Echoing the
-    # submitted profile lets the existing registration UI complete without
-    # writing to Vercel's read-only filesystem.
     data = request.get_json(silent=True) or {}
     phone = normalize_phone(data.get("phone", ""))
     if not phone:
         return jsonify({"error": "Missing 'phone' field"}), 400
     data["phone"] = phone
+    create_or_update_profile(phone, data)
     return jsonify(data), 200
 
 @app.route("/api/farmer-profile/<phone>", methods=["GET"])

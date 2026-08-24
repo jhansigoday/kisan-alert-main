@@ -631,16 +631,30 @@ document.getElementById("loginNoOtpBtn").addEventListener("click", async () => {
     return;
   }
 
-  const allProfiles = JSON.parse(localStorage.getItem("krushakseva_all_profiles") || "{}");
-  const localProfile = Object.values(allProfiles).find(
-    profile => normalizePhone(profile && profile.phone) === cleanPhone
-  );
-  if (!localProfile) {
-    alert("Account not found on this browser. Please Sign Up first.");
+  let profileToUse = null;
+
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/farmer-profile/${cleanPhone}`);
+    if (res.ok) {
+      profileToUse = await res.json();
+    }
+  } catch (err) {
+    console.warn("Could not fetch profile from server, checking local fallback:", err);
+  }
+
+  if (!profileToUse) {
+    const allProfiles = JSON.parse(localStorage.getItem("krushakseva_all_profiles") || "{}");
+    profileToUse = Object.values(allProfiles).find(
+      p => normalizePhone(p && p.phone) === cleanPhone
+    );
+  }
+
+  if (!profileToUse) {
+    alert("Account not found. Please Sign Up first.");
     return;
   }
 
-  saveLocalProfile(localProfile);
+  saveLocalProfile(profileToUse);
   document.getElementById("auth-portal-box").style.display = "none";
   document.getElementById("farmerRegistrationForm").style.display = "none";
   updateDashboardWithProfile(registeredFarmer);
