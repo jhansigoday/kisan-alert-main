@@ -8,6 +8,7 @@ let currentLang = "en";
 let isDarkMode = false;
 let registeredFarmer = null;
 let chatHistory = [];
+let detectedLocationName = null;
 
 function normalizePhone(phone) {
   const digits = String(phone || "").replace(/\D/g, "");
@@ -643,6 +644,7 @@ document.getElementById("detectGpsBtn").addEventListener("click", () => {
       const geoResult = await reverseGeocode(detectedLat, detectedLon);
       
       if (geoResult) {
+        detectedLocationName = geoResult.village || geoResult.district || geoResult.state;
         if (geoResult.state) document.getElementById("reg-state").value = geoResult.state;
         if (geoResult.district) document.getElementById("reg-district").value = geoResult.district;
         if (geoResult.mandal) document.getElementById("reg-mandal").value = geoResult.mandal;
@@ -2004,7 +2006,7 @@ function getFarmAnalyticsRecord(crop, season, year, location) {
   const livePrice = getMandiPriceForCrop(crop);
   const finalPrice = livePrice || defaultPrice;
   
-  const yearMult = year === 2025 ? 1.08 : 0.95;
+  const yearMult = year === 2026 ? 1.15 : year === 2025 ? 1.08 : 0.95;
   const seasonMult = season === "Kharif" ? 1.0 : 0.8;
   
   let irrigationMult = 1.0;
@@ -2031,7 +2033,7 @@ function getFarmAnalyticsRecord(crop, season, year, location) {
     if (locLower.includes("visakhapatnam")) normalRainfall = 450;
     else if (locLower.includes("nellore")) normalRainfall = 380;
   }
-  const rainYearMult = year === 2025 ? 0.88 : 1.06;
+  const rainYearMult = year === 2026 ? 1.02 : year === 2025 ? 0.88 : 1.06;
   const rainfall = Math.round(normalRainfall * rainYearMult * (0.95 + rand() * 0.1));
   
   const waterUsageVal = calculateWaterUsage(irrigation);
@@ -2073,7 +2075,7 @@ function getMonthlyRainfallData(crop, season, year, location) {
   for (let i = 0; i < 6; i++) {
     const factor = 0.85 + rand() * 0.3;
     normalRain.push(Math.round(baseRainVal[i] * factor));
-    const rainYearMult = year === 2025 ? 0.88 : 1.06;
+    const rainYearMult = year === 2026 ? 1.02 : year === 2025 ? 0.88 : 1.06;
     actualRain.push(Math.round(baseRainVal[i] * factor * rainYearMult * (0.9 + rand() * 0.2)));
   }
   return { normalRain, actualRain };
@@ -2082,8 +2084,6 @@ function getMonthlyRainfallData(crop, season, year, location) {
 let analyticsFiltersInitialized = false;
 
 function initAnalyticsFilters() {
-  if (analyticsFiltersInitialized) return;
-
   const yearSelect = document.getElementById("filter-year");
   const seasonSelect = document.getElementById("filter-season");
   const cropSelect = document.getElementById("filter-crop");
@@ -2091,19 +2091,32 @@ function initAnalyticsFilters() {
 
   if (!yearSelect || !seasonSelect || !cropSelect || !locationSelect) return;
 
+  // Preserve selections
+  const currentYear = yearSelect.value;
+  const currentSeason = seasonSelect.value;
+  const currentCrop = cropSelect.value;
+  const currentLocation = locationSelect.value;
+
   yearSelect.innerHTML = "";
   seasonSelect.innerHTML = "";
   cropSelect.innerHTML = "";
   locationSelect.innerHTML = "";
 
-  const years = [2025, 2024];
+  // 1. Years
+  const years = [2026, 2025, 2024];
   years.forEach(y => {
     const opt = document.createElement("option");
     opt.value = y;
     opt.textContent = y;
     yearSelect.appendChild(opt);
   });
+  if (currentYear && Array.from(yearSelect.options).some(o => o.value === currentYear)) {
+    yearSelect.value = currentYear;
+  } else {
+    yearSelect.value = "2026";
+  }
 
+  // 2. Seasons
   const seasons = [
     { value: "Kharif", label: currentLang === "te" ? "ఖరీఫ్ (Kharif)" : "Kharif" },
     { value: "Rabi", label: currentLang === "te" ? "రబీ (Rabi)" : "Rabi" }
@@ -2114,7 +2127,9 @@ function initAnalyticsFilters() {
     opt.textContent = s.label;
     seasonSelect.appendChild(opt);
   });
+  if (currentSeason) seasonSelect.value = currentSeason;
 
+  // 3. Crops
   const crops = [
     { value: "Rice", label: currentLang === "te" ? "వరి (Rice)" : "Rice" },
     { value: "Maize", label: currentLang === "te" ? "మొక్కజొన్న (Maize)" : "Maize" },
@@ -2135,15 +2150,30 @@ function initAnalyticsFilters() {
     cropSelect.appendChild(opt);
   });
 
-  if (farmerCrop) {
+  if (currentCrop && Array.from(cropSelect.options).some(o => o.value === currentCrop)) {
+    cropSelect.value = currentCrop;
+  } else if (farmerCrop) {
     const found = Array.from(cropSelect.options).find(opt => opt.value.toLowerCase() === farmerCrop.toLowerCase());
     if (found) cropSelect.value = found.value;
   }
 
+  // 4. Locations (Autodetected + Profile + Fallbacks)
   const locations = ["Visakhapatnam", "Nellore", "Guntur", "Vijayawada", "Kavali"];
   const farmerLoc = registeredFarmer ? registeredFarmer.location : null;
-  if (farmerLoc && !locations.some(l => l.toLowerCase() === farmerLoc.toLowerCase())) {
-    locations.unshift(farmerLoc);
+  
+  function getShortLocName(locStr) {
+    if (!locStr) return null;
+    return locStr.split(",")[0].trim();
+  }
+
+  const shortFarmerLoc = getShortLocName(farmerLoc);
+  const shortDetectedLoc = getShortLocName(detectedLocationName);
+
+  if (shortFarmerLoc && !locations.some(l => l.toLowerCase() === shortFarmerLoc.toLowerCase())) {
+    locations.unshift(shortFarmerLoc);
+  }
+  if (shortDetectedLoc && !locations.some(l => l.toLowerCase() === shortDetectedLoc.toLowerCase())) {
+    locations.unshift(shortDetectedLoc);
   }
 
   locations.forEach(l => {
@@ -2153,18 +2183,24 @@ function initAnalyticsFilters() {
     locationSelect.appendChild(opt);
   });
 
-  if (farmerLoc) {
-    const found = Array.from(locationSelect.options).find(opt => opt.value.toLowerCase() === farmerLoc.toLowerCase());
+  if (currentLocation && Array.from(locationSelect.options).some(o => o.value === currentLocation)) {
+    locationSelect.value = currentLocation;
+  } else if (shortFarmerLoc) {
+    const found = Array.from(locationSelect.options).find(opt => opt.value.toLowerCase() === shortFarmerLoc.toLowerCase());
+    if (found) locationSelect.value = found.value;
+  } else if (shortDetectedLoc) {
+    const found = Array.from(locationSelect.options).find(opt => opt.value.toLowerCase() === shortDetectedLoc.toLowerCase());
     if (found) locationSelect.value = found.value;
   }
 
-  [yearSelect, seasonSelect, cropSelect, locationSelect].forEach(selectEl => {
-    selectEl.addEventListener("change", () => {
-      renderDynamicDashboard();
+  if (!analyticsFiltersInitialized) {
+    [yearSelect, seasonSelect, cropSelect, locationSelect].forEach(selectEl => {
+      selectEl.addEventListener("change", () => {
+        renderDynamicDashboard();
+      });
     });
-  });
-
-  analyticsFiltersInitialized = true;
+    analyticsFiltersInitialized = true;
+  }
 }
 
 function renderDynamicDashboard() {
@@ -2302,13 +2338,15 @@ function renderDynamicDashboard() {
     { season: "Kharif", year: 2024 },
     { season: "Rabi", year: 2024 },
     { season: "Kharif", year: 2025 },
-    { season: "Rabi", year: 2025 }
+    { season: "Rabi", year: 2025 },
+    { season: "Kharif", year: 2026 },
+    { season: "Rabi", year: 2026 }
   ];
   const chartRecords = seasonsList.map(s => getFarmAnalyticsRecord(crop, s.season, s.year, location));
   
   const seasonLabels = currentLang === "te"
-    ? ['ఖరీఫ్ 2024', 'రబీ 2024', 'ఖరీఫ్ 2025', 'రబీ 2025']
-    : ['Kharif 2024', 'Rabi 2024', 'Kharif 2025', 'Rabi 2025'];
+    ? ['ఖరీఫ్ 2024', 'రబీ 2024', 'ఖరీఫ్ 2025', 'రబీ 2025', 'ఖరీఫ్ 2026', 'రబీ 2026']
+    : ['Kharif 2024', 'Rabi 2024', 'Kharif 2025', 'Rabi 2025', 'Kharif 2026', 'Rabi 2026'];
 
   const profits = chartRecords.map(r => r.netProfit);
   const revenues = chartRecords.map(r => r.revenue);
@@ -2783,6 +2821,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       detectedLon = position.coords.longitude;
       const geoResult = await reverseGeocode(detectedLat, detectedLon);
       if (geoResult) {
+        detectedLocationName = geoResult.village || geoResult.district || geoResult.state;
         document.getElementById("reg-state").value = geoResult.state;
         document.getElementById("reg-district").value = geoResult.district;
         document.getElementById("reg-mandal").value = geoResult.mandal;
