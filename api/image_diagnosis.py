@@ -280,7 +280,7 @@ Do not return any markdown formatting or text outside the JSON. Return only a ra
         except Exception as groq_error:
             print("Groq Vision classification failed, falling back to Hugging Face:", groq_error)
             error_str = str(groq_error).lower()
-            if "rate_limit" in error_str or "429" in error_str or "limit_exceeded" in error_str:
+            if "rate" in error_str or "limit" in error_str or "429" in error_str:
                 return _uncertain(
                     "rate_limited",
                     "⚠️ You have temporarily reached the free AI request limit. Please wait 1 minute and try again."

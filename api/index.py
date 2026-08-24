@@ -189,7 +189,7 @@ def photo_query():
 
         spoken_explanation = report.get("spoken_explanation", advisory_text)
         try:
-            audio_reply_url = synthesize_speech(spoken_explanation, language=lang)
+            audio_reply_url = synthesize_speech_data_url(spoken_explanation, language=lang)
         except Exception as error:
             # A diagnosis must still be shown if the optional audio provider
             # is unavailable.

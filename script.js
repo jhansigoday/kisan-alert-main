@@ -1412,7 +1412,7 @@ document.getElementById("getDiagnosisBtn").addEventListener("click", async () =>
         ${data.audio_reply_url ? `
           <div class="report-section-details" style="background: var(--bg-card); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
             <strong style="color: var(--text-main); font-size: 13px;"><i class="fa-solid fa-volume-high"></i> ${lblVoice}</strong>
-            <audio controls src="${BACKEND_URL}${data.audio_reply_url}" style="width:100%; margin-top:8px;"></audio>
+            <audio controls src="${data.audio_reply_url.startsWith('data:') ? data.audio_reply_url : (BACKEND_URL + data.audio_reply_url)}" style="width:100%; margin-top:8px;"></audio>
           </div>
         ` : ""}
 
