@@ -193,12 +193,14 @@ def generate_crop_doctor_report(disease_label: str, confidence: float, lang: str
             content = res.choices[0].message.content.strip()
             import re
             content = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL).strip()
-            if content.startswith("```json"):
-                content = content[7:]
-            if content.endswith("```"):
-                content = content[:-3]
-            content = content.strip()
-            report_data = json.loads(content)
+            json_match = re.search(r"\{.*\}", content, re.DOTALL)
+            if json_match:
+                content = json_match.group(0)
+            try:
+                report_data = json.loads(content)
+            except Exception as parse_error:
+                print("Failed to parse advisory report JSON. Raw content:", content)
+                raise parse_error
             return {
                 "crop_name": crop_name,
                 "disease_name": disease_label,

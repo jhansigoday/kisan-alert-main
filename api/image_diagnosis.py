@@ -254,14 +254,20 @@ Do not return any markdown formatting or text outside the JSON. Return only a ra
                 temperature=0.1
             )
             
-            import json
+            import json, re
             content = response.choices[0].message.content.strip()
-            if content.startswith("```json"):
-                content = content[7:]
-            if content.endswith("```"):
-                content = content[:-3]
-            content = content.strip()
-            report_data = json.loads(content)
+            # Remove any thinking block if present in content
+            content = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL).strip()
+            # Extract the raw JSON matching the outermost curly braces
+            json_match = re.search(r"\{.*\}", content, re.DOTALL)
+            if json_match:
+                content = json_match.group(0)
+            
+            try:
+                report_data = json.loads(content)
+            except Exception as parse_error:
+                print("Failed to parse JSON. Raw content:", content)
+                raise parse_error
             
             state = report_data.get("diagnosis_state", "high")
             return {
