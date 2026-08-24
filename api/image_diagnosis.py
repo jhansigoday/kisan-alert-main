@@ -256,7 +256,13 @@ Do not return any markdown formatting or text outside the JSON. Return only a ra
             )
             
             import json
-            report_data = json.loads(response.choices[0].message.content.strip())
+            content = response.choices[0].message.content.strip()
+            if content.startswith("```json"):
+                content = content[7:]
+            if content.endswith("```"):
+                content = content[:-3]
+            content = content.strip()
+            report_data = json.loads(content)
             
             state = report_data.get("diagnosis_state", "high")
             return {
@@ -278,13 +284,17 @@ Do not return any markdown formatting or text outside the JSON. Return only a ra
                 }
             }
         except Exception as groq_error:
-            print("Groq Vision classification failed, falling back to Hugging Face:", groq_error)
+            print("Groq Vision classification failed:", groq_error)
             error_str = str(groq_error).lower()
             if "rate" in error_str or "limit" in error_str or "429" in error_str:
                 return _uncertain(
                     "rate_limited",
                     "⚠️ You have temporarily reached the free AI request limit. Please wait 1 minute and try again."
                 )
+            return _uncertain(
+                "groq_error",
+                f"⚠️ Groq Vision error: {str(groq_error)[:100]}. Please try again shortly."
+            )
 
     headers = {}
     # Accept Hugging Face's standard variable name as well as the app's
