@@ -1901,12 +1901,85 @@ function updateMarketComparisonChart(cropName, markets) {
   });
 }
 
+function getDynamicAnalyticsData() {
+  const crop = registeredFarmer ? (registeredFarmer.crop_type || "Rice") : "Rice";
+  const acres = parseFloat(registeredFarmer ? (registeredFarmer.land_size_acres || 5) : 5) || 5;
+  const irrigation = registeredFarmer ? (registeredFarmer.irrigation_method || "Flood") : "Flood";
+  const stateName = registeredFarmer ? (registeredFarmer.location || "Andhra Pradesh") : "Andhra Pradesh";
+
+  // Base profit per acre per season (Kharif, Rabi)
+  let baseProfitKharif = 25000;
+  let baseProfitRabi = 18000;
+
+  const cropLower = crop.toLowerCase();
+  if (cropLower.includes("rice") || cropLower.includes("paddy")) {
+    baseProfitKharif = 22000;
+    baseProfitRabi = 16000;
+  } else if (cropLower.includes("maize") || cropLower.includes("corn")) {
+    baseProfitKharif = 28000;
+    baseProfitRabi = 20000;
+  } else if (cropLower.includes("groundnut")) {
+    baseProfitKharif = 35000;
+    baseProfitRabi = 26000;
+  } else if (cropLower.includes("cotton")) {
+    baseProfitKharif = 30000;
+    baseProfitRabi = 0; // Cotton is long duration
+  } else if (cropLower.includes("tomato")) {
+    baseProfitKharif = 85000;
+    baseProfitRabi = 65000;
+  } else {
+    baseProfitKharif = 24000;
+    baseProfitRabi = 17000;
+  }
+
+  // Adjust for irrigation method
+  let multiplier = 1.0;
+  let savingsLabel = "0% (Flood Irrigation)";
+  const irrLower = irrigation.toLowerCase();
+  if (irrLower.includes("drip")) {
+    multiplier = 1.25; 
+    savingsLabel = "+35% efficiency";
+  } else if (irrLower.includes("sprinkler")) {
+    multiplier = 1.15;
+    savingsLabel = "+20% efficiency";
+  } else if (irrLower.includes("rainfed")) {
+    multiplier = 0.85; 
+    savingsLabel = "N/A (Rainfed)";
+  }
+
+  const k24 = Math.round(baseProfitKharif * acres * multiplier * 0.9);
+  const r24 = Math.round(baseProfitRabi * acres * multiplier * 0.95);
+  const k25 = Math.round(baseProfitKharif * acres * multiplier * 1.05);
+  const r25 = Math.round(baseProfitRabi * acres * multiplier * 1.0);
+
+  const totalProfit2025 = k25 + r25;
+
+  let baseRain = [120, 180, 230, 140, 70, 15]; 
+  const locLower = stateName.toLowerCase();
+  if (locLower.includes("telangana")) {
+    baseRain = [100, 160, 200, 130, 50, 10];
+  } else if (locLower.includes("karnataka")) {
+    baseRain = [140, 210, 250, 160, 90, 20];
+  } else if (locLower.includes("maharashtra")) {
+    baseRain = [150, 250, 280, 180, 80, 10];
+  }
+
+  return {
+    profits: [k24, r24, k25, r25],
+    rainfall: baseRain,
+    totalProfit: totalProfit2025,
+    waterSavings: savingsLabel
+  };
+}
+
 function renderAnalyticsCharts() {
   const ctxProfit = document.getElementById("profitTrendChart").getContext("2d");
   const ctxRain = document.getElementById("rainHistoryChart").getContext("2d");
   
   if (profitTrendChartInstance) profitTrendChartInstance.destroy();
   if (rainHistoryChartInstance) rainHistoryChartInstance.destroy();
+
+  const analyticsData = getDynamicAnalyticsData();
 
   const profitLabels = currentLang === "te"
     ? ['ఖరీఫ్ 2024', 'రబీ 2024', 'ఖరీఫ్ 2025', 'రబీ 2025']
@@ -1918,7 +1991,7 @@ function renderAnalyticsCharts() {
       labels: profitLabels,
       datasets: [{
         label: currentLang === "te" ? 'నికర లాభాలు (₹)' : 'Net Profits (₹)',
-        data: [180000, 140000, 210000, 160000],
+        data: analyticsData.profits,
         backgroundColor: '#10b981'
       }]
     },
@@ -1938,7 +2011,7 @@ function renderAnalyticsCharts() {
       labels: rainLabels,
       datasets: [{
         label: currentLang === "te" ? 'వర్షపాతం (మిమీ)' : 'Rainfall (mm)',
-        data: [110, 190, 240, 150, 80, 20],
+        data: analyticsData.rainfall,
         borderColor: '#0ea5e9',
         backgroundColor: 'rgba(14, 165, 233, 0.08)',
         fill: true
@@ -1949,6 +2022,17 @@ function renderAnalyticsCharts() {
       maintainAspectRatio: false
     }
   });
+
+  const profitValEl = document.getElementById("analytics-total-profit");
+  if (profitValEl) {
+    profitValEl.textContent = "₹" + analyticsData.totalProfit.toLocaleString("en-IN");
+  }
+  const savingsValEl = document.getElementById("analytics-water-savings");
+  if (savingsValEl) {
+    savingsValEl.textContent = currentLang === "te" 
+      ? translateMandiTerm(analyticsData.waterSavings) 
+      : analyticsData.waterSavings;
+  }
 }
 
 function toggleAnalyticsState() {
