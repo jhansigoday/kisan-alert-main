@@ -300,7 +300,13 @@ const TRANSLATIONS = {
     th_source: "Source",
     awaiting_data_title: "Awaiting official price data",
     awaiting_data_desc: "Loading official mandi prices for your crop and saved location.",
-    mandi_insights_title: "Mandi Market Insights"
+    mandi_insights_title: "Mandi Market Insights",
+    ext_title: "Agriculture Extension Services",
+    ext_desc: "Access active government welfare subsidies and check nearby Rythu Seva Kendras (RSK).",
+    ext_schemes: "Personalized Government Schemes",
+    ext_centers: "Nearby RSK & Seeds Centers",
+    placeholder_search_schemes: "Search schemes by keyword...",
+    placeholder_search_centers: "Search centers by name or service..."
   },
   te: {
     app_subtitle: "ఓ రైతు, వర్ధిల్లు!",
@@ -477,7 +483,13 @@ const TRANSLATIONS = {
     th_source: "మూలం",
     awaiting_data_title: "అధికారిక ధరల సమాచారం కోసం వేచి ఉంది",
     awaiting_data_desc: "మీ పంట మరియు సేవ్ చేసిన ప్రదేశానికి సంబంధించిన అధికారిక మండి ధరలను లోడ్ చేస్తోంది.",
-    mandi_insights_title: "మండి మార్కెట్ విశ్లేషణ"
+    mandi_insights_title: "మండి మార్కెట్ విశేష్లణ",
+    ext_title: "ద్విభాషా వ్యవసాయ విస్తరణ సేవలు",
+    ext_desc: "ప్రభుత్వ సంక్షేమ పథకాలను చూడండి మరియు సమీపంలోని రైతు సేవా కేంద్రాలను (RSK) తెలుసుకోండి.",
+    ext_schemes: "వ్యక్తిగతీకరించిన ప్రభుత్వ పథకాలు",
+    ext_centers: "సమీప రైతు సేవా కేంద్రాలు (RSK) & విత్తన కేంద్రాలు",
+    placeholder_search_schemes: "కీవర్డ్ ద్వారా పథకాలను శోధించండి...",
+    placeholder_search_centers: "పేరు లేదా సేవ ద్వారా కేంద్రాలను శోధించండి..."
   }
 };
 
